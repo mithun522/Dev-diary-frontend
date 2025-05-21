@@ -17,9 +17,11 @@ const TopNav = () => {
 
   return (
     <header className="border-b flex items-center justify-between p-4">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center jusify-center gap-10">
         <SidebarTrigger />
-        <h1 className="text-xl font-bold hidden md:block">CodePrep Compass</h1>
+        <h1 className="text-xl font-bold hidden md:block mt-2">
+          CodePrep Compass
+        </h1>
       </div>
 
       <div className="flex items-center gap-4">

@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MainLayout from "./layout/MainLayout";
+import { SidebarProvider } from "./ui/sidebar";
 
 const ProtectedRoute: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -20,9 +21,11 @@ const ProtectedRoute: React.FC = () => {
 
   return (
     <div>
-      <MainLayout>
-        <Outlet />
-      </MainLayout>
+      <SidebarProvider>
+        <MainLayout>
+          <Outlet />
+        </MainLayout>
+      </SidebarProvider>
     </div>
   );
 };
