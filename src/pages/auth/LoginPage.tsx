@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/ui/button";
 import {
   Card,
@@ -14,14 +14,16 @@ import { Label } from "../../components/ui/label";
 import { Checkbox } from "../../components/ui/checkbox";
 import { toast } from "react-toastify";
 import AuthLayout from "../../components/layout/AuthLayout";
-import { useAuth } from "../../context/AuthContext";
+import axios from "axios";
+import { LOGIN } from "../../constants/Api";
+import { setAccessToken } from "../../utils/auth";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,18 +35,22 @@ const LoginPage = () => {
 
     try {
       setIsLoading(true);
-      await login(email, password, rememberMe);
-
-      toast.success("You have been logged in successfully");
+      const request = {
+        email,
+        password,
+      };
+      const response = await axios.post(LOGIN, request);
+      if (response.data.message.toLowerCase() === "success") {
+        setAccessToken(response.data.accessToken);
+        navigate("/dsa");
+        toast.success("You have been logged in successfully");
+      } else {
+        throw new Error(response.data.message);
+      }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to login. Please try again."
-      );
+      toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // ✅ Spinner now properly stops
     }
   };
 
@@ -108,6 +114,7 @@ const LoginPage = () => {
               variant="primary"
               className="w-full"
               disabled={isLoading}
+              onClick={(e) => handleSubmit(e)}
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">

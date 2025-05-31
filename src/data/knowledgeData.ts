@@ -1,3 +1,6 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
+
 export type KnowledgeTag =
   | "algorithms"
   | "data-structures"
@@ -30,6 +33,7 @@ export type KnowledgeBlog = {
   content: string; // Markdown content
   tags: KnowledgeTag[];
   coverImage?: string;
+  coverImageUrl?: string;
   published: boolean;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -328,6 +332,39 @@ Regularly profile your app to identify performance bottlenecks.`,
     isFavorite: true,
   },
 ];
+
+export const KnowledgeBlogs = () => {
+  const [blog, setBlog] = useState<KnowledgeBlog[]>([]);
+
+  const token =
+    "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtaXRodW5tYXRoaTAzQGdtYWlsLmNvbSIsImlhdCI6MTc0ODQzNjI4OCwiZXhwIjoxNzQ4NDM2Mjg5fQ.e9OSw-1nHL-VjwylhbrAKSr8KaYpT08iUWFFTAiZgBI";
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/v1/knowledge",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
+        setBlog(response.data);
+      } catch (e: unknown) {
+        console.error(e);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
+
+  return blog;
+};
+
+export default KnowledgeBlogs;
 
 export const knowledgeBlogs: KnowledgeBlog[] = [
   {

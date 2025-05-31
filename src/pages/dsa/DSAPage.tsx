@@ -1,5 +1,4 @@
 import { useState } from "react";
-import MainLayout from "../../components/layout/MainLayout";
 import {
   Card,
   CardContent,
@@ -61,7 +60,7 @@ import {
 import { EllipsisVertical } from "lucide-react";
 import AddDsaModel from "./AddDsaModel";
 
-const DSAPage = () => {
+const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");

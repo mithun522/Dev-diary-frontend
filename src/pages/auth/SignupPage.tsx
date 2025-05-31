@@ -13,7 +13,6 @@ import {
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Progress } from "../../components/ui/progress";
-import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 
 const SignupPage = () => {
@@ -23,7 +22,6 @@ const SignupPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
 
   // Calculate password strength
   const calculatePasswordStrength = (password: string): number => {
@@ -89,7 +87,7 @@ const SignupPage = () => {
 
     try {
       setIsLoading(true);
-      await signup(name, email, password);
+      // await signup(name, email, password);
 
       toast.success("Your account has been created successfully");
     } catch (error) {

@@ -2,7 +2,6 @@ import { Bell, User } from "lucide-react";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import Button from "../../components/ui/button";
 import { SidebarTrigger } from "../../components/ui/sidebar";
-import { useAuth } from "../../context/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,9 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
+import { useUserStore } from "../../store/UserStore";
 
 const TopNav = () => {
-  const { user, logout } = useAuth();
+  const user = useUserStore((state) => state.user);
+
+  console.log(user);
 
   return (
     <header className="border-b flex items-center justify-between p-4">
@@ -37,11 +39,12 @@ const TopNav = () => {
               {user ? (
                 <div className="flex items-center gap-2">
                   <span className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
+                    {user.name &&
+                      user.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
                   </span>
                   <span className="hidden md:inline">{user.name}</span>
                 </div>
@@ -59,9 +62,9 @@ const TopNav = () => {
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-destructive">
+            {/* <DropdownMenuItem onClick={logout} className="text-destructive">
               Logout
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

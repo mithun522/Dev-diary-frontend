@@ -1,8 +1,7 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { TooltipProvider } from "./components/ui/tooltip";
-import { AuthProvider } from "./context/AuthContext";
 import LandingPage from "./pages/Landing";
 import LoginPage from "./pages/auth/LoginPage";
 import { ToastContainer } from "react-toastify";
@@ -16,21 +15,24 @@ import InterviewPage from "./pages/interview/InterviewPage";
 import SystemDesignPage from "./pages/system-design/SystemDesign";
 import KnowledgePage from "./pages/knowledge/KnowledgePage";
 import AnalyticsPage from "./pages/analytics/AnalyticsPage";
+import MyProfilePage from "./pages/MyProfilePage";
+import SettingsPage from "./pages/SettingsPage";
+import { getAccessToken } from "./utils/auth";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system">
-      <TooltipProvider>
-        <BrowserRouter>
-          <ToastContainer />
-          <AuthProvider>
-            <Routes>
-              {/* Public route */}
-              <Route path="/" element={<LandingPage />} />
+const App = () => {
+  const token = getAccessToken();
 
-              {/* Auth routes */}
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system">
+        <TooltipProvider>
+          <BrowserRouter>
+            <ToastContainer />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/auth/login" element={<LoginPage />} />
               <Route path="/auth/signup" element={<SignupPage />} />
               <Route
@@ -43,20 +45,35 @@ const App = () => (
                 element={<ResetPasswordPage />}
               />
 
+              {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/dsa" element={<DSAPage />} />
                 <Route path="/interview" element={<InterviewPage />} />
                 <Route path="/system-design" element={<SystemDesignPage />} />
                 <Route path="/knowledge" element={<KnowledgePage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/profile" element={<MyProfilePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
               </Route>
+
+              <Route
+                path="*"
+                element={
+                  token ? (
+                    <Navigate to="/dsa" replace />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                }
+              />
+
               {/* <Route path="*" element={<NotFound />} /> */}
             </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

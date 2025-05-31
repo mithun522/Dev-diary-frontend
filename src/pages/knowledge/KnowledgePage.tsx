@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -24,19 +24,30 @@ import {
 import Button from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
-import { Bookmark, Clock, Edit, Heart, Pin, Search } from "lucide-react";
+import {
+  Bookmark,
+  Clock,
+  Edit,
+  Heart,
+  Newspaper,
+  Pin,
+  Search,
+} from "lucide-react";
 import {
   knowledgeNotes,
-  knowledgeBlogs,
   type KnowledgeNote,
-  type KnowledgeBlog,
   type KnowledgeTag,
 } from "../../data/knowledgeData";
+import AddBlogForm from "./AddBlogForm";
+import { BLOGS } from "../../constants/Api";
+import Blog from "./Blog";
+import AxiosInstance from "../../utils/AxiosInstance";
+import { formatDate } from "../../utils/formatDate";
 
-const KnowledgePage = () => {
+const KnowledgePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNote, setSelectedNote] = useState<KnowledgeNote | null>(null);
-  const [selectedBlog, setSelectedBlog] = useState<KnowledgeBlog | null>(null);
+  const [isAddNewBlog, setIsAddNewBlog] = useState<boolean>(false);
 
   // Filter notes based on search
   const filteredNotes = knowledgeNotes.filter(
@@ -48,28 +59,6 @@ const KnowledgePage = () => {
       ) ||
       note.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Filter blogs based on search
-  const filteredBlogs = knowledgeBlogs.filter(
-    (blog) =>
-      searchQuery === "" ||
-      blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      blog.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      ) ||
-      blog.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      blog.summary.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(date);
-  };
 
   // Get tag color
   const getTagColor = (tag: KnowledgeTag): string => {
@@ -100,6 +89,48 @@ const KnowledgePage = () => {
     return colors[tag];
   };
 
+  const handleSubmitBlog = async (blogData: {
+    title: string;
+    summary: string;
+    content: string;
+    tags: KnowledgeTag[];
+    coverImage: File; // Changed to match the form's expectation
+    published: boolean;
+    readTime: number;
+  }) => {
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append("title", blogData.title);
+      formData.append("summary", blogData.summary);
+      formData.append("content", blogData.content);
+      formData.append("published", String(blogData.published));
+      formData.append("readTime", String(blogData.readTime));
+      blogData.tags.forEach((tag) => formData.append("tags[]", tag));
+      formData.append("coverImage", blogData.coverImage);
+
+      const response = await AxiosInstance.post(BLOGS, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log(response.data);
+      setIsAddNewBlog(false);
+    } catch (error) {
+      console.error("Error adding blog:", error);
+    }
+  };
+
+  if (isAddNewBlog) {
+    return (
+      <AddBlogForm
+        onSubmit={handleSubmitBlog}
+        onCancel={() => setIsAddNewBlog(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -121,11 +152,18 @@ const KnowledgePage = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button>
+          <Button className="flex justify-center items-center">
             <Edit className="h-4 w-4 mr-2" />
             New Note
           </Button>
-          <Button variant="outlinePrimary">New Blog</Button>
+          <Button
+            className="flex justify-center items-center"
+            variant="outlinePrimary"
+            onClick={() => setIsAddNewBlog(true)}
+          >
+            <Newspaper className="h-4 w-4 mr-2" />
+            New Blog
+          </Button>
         </div>
       </div>
 
@@ -184,7 +222,7 @@ const KnowledgePage = () => {
                         </div>
                       </div>
                       <CardDescription className="flex flex-wrap gap-1 mt-1">
-                        {note.tags.slice(0, 2).map((tag, index) => (
+                        {note?.tags.slice(0, 2).map((tag, index) => (
                           <Badge
                             key={index}
                             className={`text-xs ${getTagColor(tag)}`}
@@ -300,189 +338,8 @@ const KnowledgePage = () => {
             </div>
           </div>
         </TabsContent>
-
-        {/* Blogs Tab */}
         <TabsContent value="blogs" className="pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 space-y-6">
-              <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant="outline"
-                  className="cursor-pointer hover:bg-muted"
-                >
-                  All
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className="cursor-pointer hover:bg-muted"
-                >
-                  Published
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className="cursor-pointer hover:bg-muted"
-                >
-                  Drafts
-                </Badge>
-              </div>
-
-              <div className="space-y-4">
-                {filteredBlogs.map((blog) => (
-                  <Card
-                    key={blog.id}
-                    className={`cursor-pointer hover:ring-1 hover:ring-primary/20 transition-shadow ${
-                      selectedBlog?.id === blog.id ? "ring-1 ring-primary" : ""
-                    }`}
-                    onClick={() => setSelectedBlog(blog)}
-                  >
-                    {blog.coverImage && (
-                      <div className="relative h-32 overflow-hidden rounded-t-lg">
-                        <img
-                          src={blog.coverImage}
-                          alt={blog.title}
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <CardHeader
-                      className={`p-4 ${blog.coverImage ? "pb-0" : ""}`}
-                    >
-                      <div className="flex justify-between gap-2">
-                        <CardTitle className="text-base line-clamp-1">
-                          {blog.title}
-                        </CardTitle>
-                        {!blog.published && (
-                          <Badge variant="outline">Draft</Badge>
-                        )}
-                      </div>
-                      <CardDescription className="line-clamp-2 mt-1">
-                        {blog.summary}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-2">
-                      <div className="flex flex-wrap gap-1">
-                        {blog.tags.slice(0, 2).map((tag, index) => (
-                          <Badge
-                            key={index}
-                            className={`text-xs ${getTagColor(tag)}`}
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                        {blog.tags.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{blog.tags.length - 2}
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0">
-                      <div className="flex justify-between items-center w-full text-xs text-muted-foreground">
-                        <span>{formatDate(blog.updatedAt)}</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {blog.readTime} min read
-                        </span>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))}
-
-                {filteredBlogs.length === 0 && (
-                  <div className="text-center py-8 bg-muted/50 rounded-lg">
-                    <p className="text-muted-foreground">
-                      No blogs found matching your search.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="md:col-span-2">
-              {selectedBlog ? (
-                <Card>
-                  {selectedBlog.coverImage && (
-                    <div className="relative h-48 md:h-64 overflow-hidden rounded-t-lg">
-                      <img
-                        src={selectedBlog.coverImage}
-                        alt={selectedBlog.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-center">
-                      <CardTitle>{selectedBlog.title}</CardTitle>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="md">
-                            ⋮
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>Edit Blog</DropdownMenuItem>
-                          <DropdownMenuItem>
-                            {selectedBlog.published ? "Unpublish" : "Publish"}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
-                            Delete Blog
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <CardDescription className="mt-1">
-                      {selectedBlog.summary}
-                    </CardDescription>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {selectedBlog.tags.map((tag, index) => (
-                        <Badge key={index} className={getTagColor(tag)}>
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{selectedBlog.readTime} min read</span>
-                      </div>
-                      <div>{formatDate(selectedBlog.updatedAt)}</div>
-                      {!selectedBlog.published && (
-                        <Badge variant="outline">Draft</Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose dark:prose-invert max-w-none">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: selectedBlog.content
-                            .replace(/^# (.*$)/gm, "<h1>$1</h1>")
-                            .replace(/^## (.*$)/gm, "<h2>$1</h2>")
-                            .replace(/^### (.*$)/gm, "<h3>$1</h3>")
-                            .replace(/\n/g, "<br>")
-                            .replace(
-                              /```([^`]+)```/g,
-                              "<pre><code>$1</code></pre>"
-                            ),
-                        }}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full min-h-[400px] bg-muted/50 rounded-lg">
-                  <Edit className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-medium mb-2">Select a blog</h3>
-                  <p className="text-muted-foreground text-center max-w-md">
-                    Choose a blog from the sidebar or create a new one to get
-                    started.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+          <Blog searchQuery={searchQuery} />
         </TabsContent>
       </Tabs>
     </div>
