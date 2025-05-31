@@ -23,7 +23,7 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
     id: "",
     title: "",
     difficulty: "Easy",
-    tags: [],
+    topic: [],
     link: "",
     status: "Solved",
     lastSolved: "",

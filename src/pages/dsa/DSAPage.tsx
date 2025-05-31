@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -40,7 +40,6 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import {
-  dsaProblems,
   weeklyProgress,
   topicProgress,
   DifficultyLevel,
@@ -59,6 +58,11 @@ import {
 } from "recharts";
 import { EllipsisVertical } from "lucide-react";
 import AddDsaModel from "./AddDsaModel";
+import AxiosInstance from "../../utils/AxiosInstance";
+import { DSA } from "../../constants/Api";
+import { convertToPascalCase } from "../../utils/convertToPascalCase";
+import { TopicColors, type Topic } from "../../constants/Topics";
+import AskForConfirmationModal from "../../components/AskForConfirmationModal";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,14 +72,30 @@ const DSAPage: React.FC = () => {
     null
   );
   const [isAddModelOpen, setIsAddModelOpen] = useState<boolean>(false);
+  const [dsaProblems, setDsaProblems] = useState<DSAProblem[]>([]);
+  const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
+
+  useEffect(() => {
+    const fetchDsaProblems = async () => {
+      try {
+        const response = await AxiosInstance.get(DSA);
+        console.log(response.data[0].topic);
+        setDsaProblems(response.data);
+      } catch (error) {
+        console.error("Error fetching DSA problems:", error);
+      }
+    };
+
+    fetchDsaProblems();
+  }, []);
 
   // Filter problems based on search query and selected filters
   const filteredProblems = dsaProblems.filter((problem: DSAProblem) => {
     const matchesSearch =
       searchQuery === "" ||
       problem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      problem.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
+      problem.topic.some((topic) =>
+        topic.toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
 
     const matchesDifficulty =
@@ -91,12 +111,12 @@ const DSAPage: React.FC = () => {
 
   // Get difficulty badge color
   const getDifficultyColor = (difficulty: DifficultyLevel) => {
-    switch (difficulty) {
-      case "Easy":
+    switch (difficulty.toLowerCase()) {
+      case "easy":
         return "bg-green-500";
-      case "Medium":
+      case "medium":
         return "bg-amber-500";
-      case "Hard":
+      case "hard":
         return "bg-red-500";
       default:
         return "bg-gray-500";
@@ -138,6 +158,22 @@ const DSAPage: React.FC = () => {
     "#8884d8",
     "#82ca9d",
   ];
+
+  const deleteDsaProblem = () => {
+    AxiosInstance.delete(`${DSA}?id=${selectedProblem?.id}`)
+      .then(() => {
+        setSelectedProblem(null);
+        setDsaProblems((prevProblems) =>
+          prevProblems.filter((problem) => problem.id !== selectedProblem?.id)
+        );
+      })
+      .catch((error) => {
+        console.error("Error deleting DSA problem:", error);
+      })
+      .finally(() => {
+        setIsOpenConfirmationModal(false);
+      });
+  };
 
   return (
     <div className="space-y-6">
@@ -241,20 +277,22 @@ const DSAPage: React.FC = () => {
                               problem.difficulty
                             )} text-white`}
                           >
-                            {problem.difficulty}
+                            {convertToPascalCase(problem.difficulty)}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
-                            {problem.tags.map((tag: string, index: number) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
+                            {problem.topic.map(
+                              (topic: Topic, index: number) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className={`text-xs ${TopicColors[topic]}`}
+                                >
+                                  {topic}
+                                </Badge>
+                              )
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -282,7 +320,10 @@ const DSAPage: React.FC = () => {
                               <DropdownMenuItem>Add Solution</DropdownMenuItem>
                               <DropdownMenuItem>Add Notes</DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => setIsOpenConfirmationModal(true)}
+                              >
                                 Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -327,15 +368,18 @@ const DSAPage: React.FC = () => {
                 </CardTitle>
                 <CardDescription>
                   <div className="flex flex-wrap gap-1">
-                    {selectedProblem.tags.map((tag: string, index: number) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="text-xs"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
+                    <div className="flex flex-wrap gap-1">
+                      {selectedProblem.topic.map(
+                        (topic: Topic, index: number) => (
+                          <Badge
+                            key={index}
+                            className={`text-xs ${TopicColors[topic]}`}
+                          >
+                            {topic}
+                          </Badge>
+                        )
+                      )}
+                    </div>
                   </div>
                 </CardDescription>
               </CardHeader>
@@ -546,6 +590,13 @@ const DSAPage: React.FC = () => {
       </Tabs>
       {isAddModelOpen && (
         <AddDsaModel open={isAddModelOpen} setOpen={setIsAddModelOpen} />
+      )}
+      {isOpenConfirmationModal && (
+        <AskForConfirmationModal
+          showDelete
+          onCancel={() => setIsOpenConfirmationModal(false)}
+          onDelete={deleteDsaProblem}
+        />
       )}
     </div>
   );
