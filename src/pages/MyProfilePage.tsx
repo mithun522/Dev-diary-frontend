@@ -74,9 +74,7 @@ const MyProfilePage = () => {
     },
   ];
 
-  useEffect(() => {
-    console.log("user: " + user);
-  }, [user]);
+  useEffect(() => {}, [user]);
 
   return (
     <MainLayout>

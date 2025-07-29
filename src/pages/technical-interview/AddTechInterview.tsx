@@ -1,0 +1,240 @@
+import { useState } from "react";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { Edit, Plus } from "lucide-react";
+import Button from "../../components/ui/button";
+import NumberedTextarea from "./NumberedTextArea";
+import { Languages } from "../../constants/Languages";
+import type { TechnicalQuestion } from "./Index";
+
+interface AddTechnicalQuestionFormProps {
+  row?: TechnicalQuestion;
+  isEdit: boolean;
+  onAddOrEdit: (question: {
+    id?: number;
+    question: string;
+    answer: string;
+    notes: string;
+    language: string;
+  }) => void;
+}
+
+const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
+  isEdit,
+  row,
+  onAddOrEdit,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    id: row?.id || null,
+    question: row?.question || "",
+    answer: row?.answer || "",
+    notes: row?.notes || "",
+    language: row?.language || "",
+  });
+  const [error, setError] = useState({
+    question: "",
+    answer: "",
+    language: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let err = false;
+
+    const newErrors = {
+      question: "",
+      answer: "",
+      language: "",
+    };
+
+    if (formData.question.trim() === "") {
+      newErrors.question = "Please enter a question";
+      err = true;
+    }
+
+    if (formData.answer.trim() === "") {
+      newErrors.answer = "Please enter an answer";
+      err = true;
+    }
+
+    if (formData.language.trim() === "") {
+      newErrors.language = "Please select a language";
+      err = true;
+    }
+
+    if (err) {
+      setError(newErrors);
+      return;
+    }
+
+    // Clear errors if valid
+    setError({
+      question: "",
+      answer: "",
+      language: "",
+    });
+
+    onAddOrEdit({
+      id: formData.id || undefined,
+      question: formData.question,
+      answer: formData.answer,
+      notes: formData.notes,
+      language: formData.language,
+    });
+
+    // Reset form
+    setFormData({
+      id: null,
+      question: "",
+      answer: "",
+      notes: "",
+      language: "",
+    });
+
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant={isEdit ? "ghost" : "primary"}
+          className="flex whitespace-nowrap"
+        >
+          {isEdit ? (
+            <Edit className="w-3 hover:scale-110" />
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-2 mt-1" />
+              Add Question
+            </>
+          )}
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        onClose={() => setOpen(false)}
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
+        <DialogHeader>
+          <DialogTitle>{row ? "Edit" : "Add"} Technical Question</DialogTitle>
+          <DialogDescription>
+            Add a new technical interview question with answer and notes.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label isMandatory={true} htmlFor="question">
+              Question
+            </Label>
+            <Textarea
+              id="question"
+              placeholder="Enter the technical question..."
+              value={formData.question}
+              onChange={(e) => {
+                setFormData((prev) => ({ ...prev, question: e.target.value }));
+                setError((prev) => ({ ...prev, question: "" }));
+              }}
+              error={error.question !== ""}
+              className="min-h-[80px]"
+            />
+            {error.question && <p className="text-red-500">{error.question}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="language" isMandatory={true}>
+                Programming Language
+              </Label>
+              <Select
+                value={formData.language}
+                onValueChange={(value) => {
+                  setFormData((prev) => ({ ...prev, language: value }));
+                  setError((prev) => ({ ...prev, language: "" }));
+                }}
+              >
+                <SelectTrigger error={error.language !== ""}>
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Languages.map((lang) => (
+                    <SelectItem key={lang} value={lang}>
+                      {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {error.language && (
+                <p className="text-red-500">{error.language}</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="answer" isMandatory={true}>
+              Answer
+            </Label>
+            <NumberedTextarea
+              value={formData.answer}
+              onChange={(value) => {
+                setFormData((prev) => ({ ...prev, answer: value }));
+                setError((prev) => ({ ...prev, answer: "" }));
+              }}
+              placeholder="Type your answer in numbered points. Press Enter to auto-increment numbers..."
+              className="min-h-[150px]"
+              error={error.answer !== ""}
+            />
+            <p className="text-xs text-muted-foreground">
+              Tip: Type "1. " and press Enter to start numbered points, or just
+              press Enter to begin numbering.
+            </p>
+            {error.answer && <p className="text-red-500">{error.answer}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <NumberedTextarea
+              value={formData.notes}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, notes: value }))
+              }
+              placeholder="Additional notes, key points to remember..."
+              className="min-h-[100px]"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outlinePrimary"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">{isEdit ? "Update" : "Save"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddTechnicalQuestionForm;

@@ -1,12 +1,17 @@
 import { type Topic } from "../constants/Topics";
 // Types
-export type DifficultyLevel = "Easy" | "Medium" | "Hard";
-export type ProblemStatus = "Solved" | "Attempted" | "Unsolved";
+export type ProblemStatus = "SOLVED" | "ATTEMPTED" | "UNSOLVED";
+
+export const DifficultyLevels = {
+  EASY: "EASY",
+  MEDIUM: "MEDIUM",
+  HARD: "HARD",
+} as const;
 
 export type DSAProblem = {
   id: string;
   title: string;
-  difficulty: DifficultyLevel;
+  difficulty: (typeof DifficultyLevels)[keyof typeof DifficultyLevels];
   topic: Topic[];
   link: string;
   status: ProblemStatus;

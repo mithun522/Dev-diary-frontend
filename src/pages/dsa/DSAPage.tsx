@@ -42,7 +42,6 @@ import {
 import {
   weeklyProgress,
   topicProgress,
-  DifficultyLevel,
   type DSAProblem,
 } from "../../data/dsaProblemsData";
 import {
@@ -57,12 +56,15 @@ import {
   Tooltip,
 } from "recharts";
 import { EllipsisVertical } from "lucide-react";
-import AddDsaModel from "./AddDsaModel";
+import AddDsaModel, { type DifficultyLevel } from "./AddDsaModel";
 import AxiosInstance from "../../utils/AxiosInstance";
 import { DSA } from "../../constants/Api";
 import { convertToPascalCase } from "../../utils/convertToPascalCase";
 import { TopicColors, type Topic } from "../../constants/Topics";
 import AskForConfirmationModal from "../../components/AskForConfirmationModal";
+import MarkdownPreview from "@uiw/react-markdown-preview";
+import { formatDate } from "../../utils/formatDate";
+import { logger } from "../../utils/logger";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,20 +76,6 @@ const DSAPage: React.FC = () => {
   const [isAddModelOpen, setIsAddModelOpen] = useState<boolean>(false);
   const [dsaProblems, setDsaProblems] = useState<DSAProblem[]>([]);
   const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
-
-  useEffect(() => {
-    const fetchDsaProblems = async () => {
-      try {
-        const response = await AxiosInstance.get(DSA);
-        console.log(response.data[0].topic);
-        setDsaProblems(response.data);
-      } catch (error) {
-        console.error("Error fetching DSA problems:", error);
-      }
-    };
-
-    fetchDsaProblems();
-  }, []);
 
   // Filter problems based on search query and selected filters
   const filteredProblems = dsaProblems.filter((problem: DSAProblem) => {
@@ -137,18 +125,6 @@ const DSAPage: React.FC = () => {
     }
   };
 
-  // Format date to be more readable
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Never";
-
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(date);
-  };
-
   // Chart colors
   const COLORS = [
     "#0088FE",
@@ -168,12 +144,25 @@ const DSAPage: React.FC = () => {
         );
       })
       .catch((error) => {
-        console.error("Error deleting DSA problem:", error);
+        logger.error("Error deleting DSA problem:", error);
       })
       .finally(() => {
         setIsOpenConfirmationModal(false);
       });
   };
+
+  useEffect(() => {
+    const fetchDsaProblems = async () => {
+      try {
+        const response = await AxiosInstance.get(DSA);
+        setDsaProblems(response.data);
+      } catch (error) {
+        logger.error("Error fetching DSA problems:", error);
+      }
+    };
+
+    fetchDsaProblems();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -300,7 +289,11 @@ const DSAPage: React.FC = () => {
                             {problem.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>{formatDate(problem.lastSolved)}</TableCell>
+                        <TableCell>
+                          {problem.lastSolved
+                            ? formatDate(problem.lastSolved)
+                            : "-"}
+                        </TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger
@@ -395,12 +388,8 @@ const DSAPage: React.FC = () => {
                     className="pt-4 prose prose-pre:bg-muted prose-pre:text-muted-foreground dark:prose-pre:bg-muted/80 max-w-none"
                   >
                     {selectedProblem.solution ? (
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: selectedProblem.solution
-                            .replace(/```[a-z]*\n/g, "<pre><code>")
-                            .replace(/```/g, "</code></pre>"),
-                        }}
+                      <MarkdownPreview
+                        source={`\`\`\`javascript\n${selectedProblem.solution}\n\`\`\``}
                       />
                     ) : (
                       <p>No solution added yet for this problem.</p>
@@ -435,19 +424,19 @@ const DSAPage: React.FC = () => {
                         {
                           name: "Solved",
                           value: dsaProblems.filter(
-                            (p: DSAProblem) => p.status === "Solved"
+                            (p: DSAProblem) => p.status === "SOLVED"
                           ).length,
                         },
                         {
                           name: "Attempted",
                           value: dsaProblems.filter(
-                            (p: DSAProblem) => p.status === "Attempted"
+                            (p: DSAProblem) => p.status === "ATTEMPTED"
                           ).length,
                         },
                         {
                           name: "Unsolved",
                           value: dsaProblems.filter(
-                            (p: DSAProblem) => p.status === "Unsolved"
+                            (p: DSAProblem) => p.status === "UNSOLVED"
                           ).length,
                         },
                       ]}
@@ -474,7 +463,7 @@ const DSAPage: React.FC = () => {
                     <div className="font-bold text-xl">
                       {
                         dsaProblems.filter(
-                          (p: DSAProblem) => p.status === "Solved"
+                          (p: DSAProblem) => p.status === "SOLVED"
                         ).length
                       }
                     </div>
@@ -484,7 +473,7 @@ const DSAPage: React.FC = () => {
                     <div className="font-bold text-xl">
                       {
                         dsaProblems.filter(
-                          (p: DSAProblem) => p.status === "Attempted"
+                          (p: DSAProblem) => p.status === "ATTEMPTED"
                         ).length
                       }
                     </div>
@@ -496,7 +485,7 @@ const DSAPage: React.FC = () => {
                     <div className="font-bold text-xl">
                       {
                         dsaProblems.filter(
-                          (p: DSAProblem) => p.status === "Unsolved"
+                          (p: DSAProblem) => p.status === "UNSOLVED"
                         ).length
                       }
                     </div>

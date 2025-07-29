@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { SERVER_BASE_URL } from "../constants/Api";
+import { getAccessToken } from "./auth";
 
 // Create Axios instance
 const AxiosInstance = axios.create({
@@ -13,7 +14,7 @@ const AxiosInstance = axios.create({
 // Add a request interceptor to inject the token
 AxiosInstance.interceptors.request.use(
   (config: AxiosRequestConfig) => {
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;

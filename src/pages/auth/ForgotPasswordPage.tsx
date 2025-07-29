@@ -26,10 +26,6 @@ const ForgotPasswordPage = () => {
       return;
     }
 
-    // Handle forgot password logic here
-    console.log("Send OTP to", email);
-
-    // Mock success - would send to OTP verification page
     setIsSubmitted(true);
     setError(null);
   };
@@ -56,11 +52,7 @@ const ForgotPasswordPage = () => {
               </div>
               <div className="flex justify-end">
                 <Button>
-                  <Link
-                    to={`/auth/verify-otp?email=${encodeURIComponent(email)}`}
-                  >
-                    Enter OTP
-                  </Link>
+                  <Link to={`/auth/verify-otp?email=${email}`}>Enter OTP</Link>
                 </Button>
               </div>
             </div>

@@ -14,41 +14,52 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Progress } from "../../components/ui/progress";
 import { toast } from "react-toastify";
+import axios, { AxiosError } from "axios";
+import { REGISTER } from "../../constants/Api";
+
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const SignupPage = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [form, setForm] = useState<FormData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Calculate password strength
   const calculatePasswordStrength = (password: string): number => {
     if (!password) return 0;
 
     let strength = 0;
-
-    // Length check
     if (password.length >= 8) strength += 25;
-
-    // Contains uppercase
     if (/[A-Z]/.test(password)) strength += 25;
-
-    // Contains lowercase
     if (/[a-z]/.test(password)) strength += 25;
-
-    // Contains number or special character
     if (/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) strength += 25;
 
     return strength;
   };
 
-  // Update strength when password changes
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    setPasswordStrength(calculatePasswordStrength(newPassword));
+  // Handle form field changes
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    await setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (name === "password") {
+      setPasswordStrength(calculatePasswordStrength(value));
+    }
   };
 
   const getPasswordStrengthText = (): { text: string; color: string } => {
@@ -69,8 +80,9 @@ const SignupPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const { firstName, lastName, email, password, confirmPassword } = form;
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!firstName || !email || !password || !confirmPassword) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -85,17 +97,27 @@ const SignupPage = () => {
       return;
     }
 
+    const requestBody = {
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      password: password,
+    };
+
     try {
       setIsLoading(true);
-      // await signup(name, email, password);
+      const response = await axios.post(REGISTER, requestBody);
 
-      toast.success("Your account has been created successfully");
+      if (response.status === 200) {
+        toast.success("Your account has been created successfully");
+      } else {
+        toast.error("Registration failed!");
+      }
     } catch (error) {
-      console.error("Signup error:", error);
+      const err = error as AxiosError;
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to create account. Please try again."
+        (err.response?.data as { message: string }).message ||
+          "Registration failed"
       );
     } finally {
       setIsLoading(false);
@@ -116,12 +138,24 @@ const SignupPage = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="firstName">First Name</Label>
               <Input
-                id="name"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="firstName"
+                name="firstName"
+                placeholder="Enter your first name"
+                value={form.firstName}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                placeholder="Enter your last name"
+                value={form.lastName}
+                onChange={handleChange}
                 disabled={isLoading}
               />
             </div>
@@ -130,10 +164,11 @@ const SignupPage = () => {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="johndoe@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={form.email}
+                onChange={handleChange}
                 disabled={isLoading}
               />
             </div>
@@ -142,13 +177,14 @@ const SignupPage = () => {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={handlePasswordChange}
+                value={form.password}
+                onChange={handleChange}
                 disabled={isLoading}
               />
-              {password && (
+              {form.password && (
                 <div className="mt-2">
                   <div className="flex justify-between text-xs mb-1">
                     <span>Password strength</span>
@@ -166,13 +202,14 @@ const SignupPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
-                id="confirm-password"
+                id="confirmPassword"
+                name="confirmPassword"
                 type="password"
                 placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                value={form.confirmPassword}
+                onChange={handleChange}
                 disabled={isLoading}
               />
             </div>

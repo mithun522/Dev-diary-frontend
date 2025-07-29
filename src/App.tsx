@@ -8,7 +8,7 @@ import { ToastContainer } from "react-toastify";
 import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
-import VerifyOTPPage from "./pages/auth/InitialCommit";
+import VerifyOTPPage from "./pages/auth/VerifyOtp";
 import DSAPage from "./pages/dsa/DSAPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import InterviewPage from "./pages/interview/InterviewPage";
@@ -18,6 +18,7 @@ import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import { getAccessToken } from "./utils/auth";
+import TechnicalInterviewPage from "./pages/technical-interview/Index";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,10 @@ const App = () => {
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/profile" element={<MyProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route
+                  path="/technical-interview"
+                  element={<TechnicalInterviewPage />}
+                />
               </Route>
 
               <Route

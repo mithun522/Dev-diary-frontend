@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Button from "../../components/ui/button";
 import {
   Card,
@@ -14,7 +14,7 @@ import { Label } from "../../components/ui/label";
 import { Checkbox } from "../../components/ui/checkbox";
 import { toast } from "react-toastify";
 import AuthLayout from "../../components/layout/AuthLayout";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { LOGIN } from "../../constants/Api";
 import { setAccessToken } from "../../utils/auth";
 
@@ -23,7 +23,9 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginFromWelcome, setLoginFromWelcome] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,19 +42,32 @@ const LoginPage = () => {
         password,
       };
       const response = await axios.post(LOGIN, request);
-      if (response.data.message.toLowerCase() === "success") {
-        setAccessToken(response.data.accessToken);
+      if (response.data.message.toLowerCase() === "login successful") {
+        setAccessToken(response.data.token);
         navigate("/dsa");
         toast.success("You have been logged in successfully");
       } else {
         throw new Error(response.data.message);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Login failed");
+      const err = error as AxiosError;
+
+      toast.error(
+        (err.response?.data as { message: string }).message || "Login failed"
+      );
     } finally {
       setIsLoading(false); // ✅ Spinner now properly stops
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const emailFromUrl = params.get("email");
+    if (emailFromUrl) {
+      setEmail(emailFromUrl);
+      setLoginFromWelcome(true);
+    }
+  }, [location.search]);
 
   return (
     <AuthLayout>
@@ -73,7 +88,7 @@ const LoginPage = () => {
                 placeholder="johndoe@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || loginFromWelcome}
               />
             </div>
 

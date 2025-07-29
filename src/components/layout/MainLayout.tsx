@@ -16,6 +16,7 @@ import {
   Book,
   Building,
   Code,
+  Laptop,
   LogOut,
   MessageSquareCode,
   PieChart,
@@ -123,6 +124,21 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
                 >
                   <Book />
                   {state !== "collapsed" && <span>Knowledge Base</span>}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Knowledge Base">
+                <Link
+                  to="/technical-interview"
+                  className={`flex items-center gap-2 ${
+                    location.pathname.startsWith("/technical-interview")
+                      ? "bg-accent text-accent-foreground"
+                      : ""
+                  }`}
+                >
+                  <Laptop />
+                  {state !== "collapsed" && <span>Technical Interview</span>}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

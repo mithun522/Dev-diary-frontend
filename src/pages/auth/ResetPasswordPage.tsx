@@ -89,11 +89,6 @@ const ResetPasswordPage = () => {
       setError("Please use a stronger password");
       return;
     }
-
-    // Handle password reset logic here
-    console.log("Reset password for", email, password);
-
-    // Mock success - navigate to login with success message
     navigate("/auth/login?reset=success");
   };
 

@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { InputOTP, InputOTPSlot } from "../../components/ui/input-otp";
+import { unstable_OneTimePasswordField as OneTimePasswordField } from "radix-ui";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { toast } from "react-toastify";
@@ -35,15 +35,14 @@ const VerifyOTPPage = () => {
     try {
       setIsLoading(true);
 
-      // Simulate API call with timeout
+      // TODO: Replace this with actual OTP verification API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // For demo, any 6-digit OTP is valid
       toast.success("OTP verified successfully");
 
       navigate("/auth/reset-password", { state: { email } });
     } catch (error) {
-      console.error("OTP verification error:", error);
+      const err = error as Error;
       toast.error("Failed to verify OTP. Please try again.");
     } finally {
       setIsLoading(false);
@@ -51,7 +50,14 @@ const VerifyOTPPage = () => {
   };
 
   const handleResendOTP = async () => {
-    toast.done("A new OTP has been sent to your email");
+    try {
+      // TODO: Replace with resend OTP API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success("A new OTP has been sent to your email");
+    } catch (error) {
+      console.error("Resend OTP error:", error);
+      toast.error("Failed to resend OTP");
+    }
   };
 
   return (
@@ -60,7 +66,7 @@ const VerifyOTPPage = () => {
         <CardHeader>
           <CardTitle className="text-2xl">Verify OTP</CardTitle>
           <CardDescription>
-            Enter the 6-digit code sent to your email
+            Enter the 6-digit code sent to your email address.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,22 +81,21 @@ const VerifyOTPPage = () => {
                 className="bg-muted/50"
               />
             </div>
-
             <div className="space-y-2">
-              <Label>One-Time Password</Label>
-              <InputOTP
-                maxLength={6}
+              <Label htmlFor="otp">One-Time Password</Label>
+              <OneTimePasswordField.Root
+                className="flex justify-left items-center gap-2"
                 value={otp}
-                onChange={setOtp}
-                disabled={isLoading}
-                render={({ slots }) => (
-                  <div className="flex justify-center gap-2">
-                    {slots.map((slot, index) => (
-                      <InputOTPSlot index={index} key={index} {...slot} />
-                    ))}
-                  </div>
-                )}
-              />
+                onValueChange={(e) => setOtp(e)}
+              >
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <OneTimePasswordField.Input
+                    key={index}
+                    className="w-12 h-12 rounded-md border border-input text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all"
+                  />
+                ))}
+                <OneTimePasswordField.HiddenInput />
+              </OneTimePasswordField.Root>
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
