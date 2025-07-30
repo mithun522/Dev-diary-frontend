@@ -69,10 +69,10 @@ const LandingPage = () => {
           </nav>
           <ThemeToggle />
           <div className="flex gap-2">
-            <Button variant="light">
+            <Button variant="light" data-cy="login">
               <Link to="/auth/login">Login</Link>
             </Button>
-            <Button>
+            <Button data-cy="signup">
               <Link to="/auth/signup">Sign Up</Link>
             </Button>
           </div>

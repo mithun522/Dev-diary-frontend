@@ -17,6 +17,10 @@ import AuthLayout from "../../components/layout/AuthLayout";
 import axios, { AxiosError } from "axios";
 import { LOGIN } from "../../constants/Api";
 import { setAccessToken } from "../../utils/auth";
+import {
+  ENTER_EMAIL_AND_PASSWORD,
+  LOGIN_SUCCESSFUL,
+} from "../../constants/ToastMessage";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -31,7 +35,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (!email || !password) {
-      toast.error("Please enter email and password");
+      toast.error(ENTER_EMAIL_AND_PASSWORD);
       return;
     }
 
@@ -45,7 +49,7 @@ const LoginPage = () => {
       if (response.data.message.toLowerCase() === "login successful") {
         setAccessToken(response.data.token);
         navigate("/dsa");
-        toast.success("You have been logged in successfully");
+        toast.success(LOGIN_SUCCESSFUL);
       } else {
         throw new Error(response.data.message);
       }
@@ -83,6 +87,7 @@ const LoginPage = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
+                data-cy="login-email"
                 id="email"
                 type="email"
                 placeholder="johndoe@example.com"
@@ -96,6 +101,7 @@ const LoginPage = () => {
               <div className="flex justify-between">
                 <Label htmlFor="password">Password</Label>
                 <Link
+                  data-cy="login-forgot-password"
                   to="/auth/forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
@@ -103,6 +109,7 @@ const LoginPage = () => {
                 </Link>
               </div>
               <Input
+                data-cy="login-password"
                 id="password"
                 type="password"
                 placeholder="••••••••"
@@ -125,6 +132,7 @@ const LoginPage = () => {
             </div>
 
             <Button
+              data-cy="login-button"
               type="submit"
               variant="primary"
               className="w-full"
@@ -132,7 +140,10 @@ const LoginPage = () => {
               onClick={(e) => handleSubmit(e)}
             >
               {isLoading ? (
-                <span className="flex items-center gap-2">
+                <span
+                  className="flex items-center gap-2"
+                  data-cy="login-spinner"
+                >
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   Logging in...
                 </span>
@@ -161,7 +172,11 @@ const LoginPage = () => {
         <CardFooter className="flex justify-center border-t pt-6">
           <p className="text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/auth/signup" className="text-primary hover:underline">
+            <Link
+              to="/auth/signup"
+              className="text-primary hover:underline"
+              data-cy="login-signup"
+            >
               Sign up
             </Link>
           </p>
