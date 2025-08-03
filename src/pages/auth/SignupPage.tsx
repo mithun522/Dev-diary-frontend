@@ -16,6 +16,11 @@ import { Progress } from "../../components/ui/progress";
 import { toast } from "react-toastify";
 import axios, { AxiosError } from "axios";
 import { REGISTER } from "../../constants/Api";
+import {
+  REGISTER_SUCCESSFUL,
+  REGISTRATION_FAILED,
+} from "../../constants/ToastMessage";
+import { FIRST_NAME_REQUIRED } from "../../constants/ErrorMessage";
 
 interface FormData {
   firstName: string;
@@ -27,6 +32,13 @@ interface FormData {
 
 const SignupPage = () => {
   const [form, setForm] = useState<FormData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState({
     firstName: "",
     lastName: "",
     email: "",
@@ -82,26 +94,69 @@ const SignupPage = () => {
     e.preventDefault();
     const { firstName, lastName, email, password, confirmPassword } = form;
 
-    if (!firstName || !email || !password || !confirmPassword) {
-      toast.error("Please fill in all fields");
+    const newErrors = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+
+    let hasError = false;
+
+    if (!firstName.trim()) {
+      newErrors.firstName = FIRST_NAME_REQUIRED;
+      hasError = true;
+    }
+
+    if (!lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+      hasError = true;
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+      hasError = true;
+    }
+
+    if (!password.trim()) {
+      newErrors.password = "Password is required";
+      hasError = true;
+    }
+
+    if (!confirmPassword.trim()) {
+      newErrors.confirmPassword = "Confirm password is required";
+      hasError = true;
+    }
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+      hasError = true;
+    }
+
+    if (password && passwordStrength < 50) {
+      newErrors.password = "Please use a stronger password";
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (passwordStrength < 50) {
-      toast.error("Please use a stronger password");
-      return;
-    }
+    setErrors({
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
 
     const requestBody = {
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      password: password,
+      firstName,
+      lastName,
+      email,
+      password,
     };
 
     try {
@@ -109,15 +164,15 @@ const SignupPage = () => {
       const response = await axios.post(REGISTER, requestBody);
 
       if (response.status === 200) {
-        toast.success("Your account has been created successfully");
+        toast.success(REGISTER_SUCCESSFUL);
       } else {
-        toast.error("Registration failed!");
+        toast.error(REGISTRATION_FAILED);
       }
     } catch (error) {
       const err = error as AxiosError;
       toast.error(
-        (err.response?.data as { message: string }).message ||
-          "Registration failed"
+        (err.response?.data as { message: string })?.message ||
+          REGISTRATION_FAILED
       );
     } finally {
       setIsLoading(false);
@@ -130,7 +185,9 @@ const SignupPage = () => {
     <AuthLayout>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
+          <CardTitle className="text-2xl" data-cy="register">
+            Create an account
+          </CardTitle>
           <CardDescription>
             Enter your information to get started
           </CardDescription>
@@ -138,31 +195,42 @@ const SignupPage = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="firstName" isMandatory={true}>
+                First Name
+              </Label>
               <Input
+                data-cy="register-first-name"
                 id="firstName"
                 name="firstName"
                 placeholder="Enter your first name"
                 value={form.firstName}
                 onChange={handleChange}
                 disabled={isLoading}
+                error={errors.firstName}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label htmlFor="lastName" isMandatory={true}>
+                Last Name
+              </Label>
               <Input
+                data-cy="register-last-name"
                 id="lastName"
                 name="lastName"
                 placeholder="Enter your last name"
                 value={form.lastName}
                 onChange={handleChange}
                 disabled={isLoading}
+                error={errors.lastName}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" isMandatory={true}>
+                Email
+              </Label>
               <Input
+                data-cy="register-email"
                 id="email"
                 name="email"
                 type="email"
@@ -170,12 +238,16 @@ const SignupPage = () => {
                 value={form.email}
                 onChange={handleChange}
                 disabled={isLoading}
+                error={errors.email}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" isMandatory={true}>
+                Password
+              </Label>
               <Input
+                data-cy="register-password"
                 id="password"
                 name="password"
                 type="password"
@@ -183,6 +255,7 @@ const SignupPage = () => {
                 value={form.password}
                 onChange={handleChange}
                 disabled={isLoading}
+                error={errors.password}
               />
               {form.password && (
                 <div className="mt-2">
@@ -204,6 +277,7 @@ const SignupPage = () => {
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
+                data-cy="register-confirm-password"
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
@@ -211,12 +285,21 @@ const SignupPage = () => {
                 value={form.confirmPassword}
                 onChange={handleChange}
                 disabled={isLoading}
+                error={errors.confirmPassword}
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+              data-cy="register-button"
+            >
               {isLoading ? (
-                <span className="flex items-center gap-2">
+                <span
+                  className="flex items-center gap-2"
+                  data-cy="register-creatingAccount"
+                >
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   Creating account...
                 </span>
@@ -229,7 +312,11 @@ const SignupPage = () => {
         <CardFooter className="flex justify-center border-t pt-6">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/auth/login" className="text-primary hover:underline">
+            <Link
+              to="/auth/login"
+              className="text-primary hover:underline"
+              data-cy="register-loginButton"
+            >
               Log in
             </Link>
           </p>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "../../components/ui/input";
 import {
   Select,
@@ -7,8 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import Button from "../../components/ui/button";
-import { Search, Trash2, BookOpen } from "lucide-react";
+import { Search, BookOpen } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,9 +19,23 @@ import { Languages } from "../../constants/Languages";
 import { TECHNICAL_INTERVIEW } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
 import { toast } from "react-toastify";
-import type { AxiosError, AxiosResponse } from "axios";
+import type { AxiosError } from "axios";
 import AskForConfirmationModal from "../../components/AskForConfirmationModal";
 import { logger } from "../../utils/logger";
+import {
+  useFetchTechInterview,
+  useSearchTechInterview,
+} from "../../api/hooks/useFetchTechInterview";
+import { useQueryClient } from "@tanstack/react-query";
+import QuestionsCard from "./QuestionsCard";
+import { useDebounce } from "../../api/hooks/use-debounce";
+import {
+  ERROR_OCCURRED,
+  QUESTION_ADD_SUCCESS,
+  QUESTION_DELETE_FAILED,
+  QUESTION_DELETE_SUCCESS,
+  QUESTION_UPDATED_SUCCESS,
+} from "../../constants/ToastMessage";
 
 export interface TechnicalQuestion {
   id: number;
@@ -35,26 +48,46 @@ export interface TechnicalQuestion {
 }
 
 const TechnicalInterviewPage = () => {
-  const [questions, setQuestions] = useState<TechnicalQuestion[]>([]);
+  // const [questions, setQuestions] = useState<TechnicalQuestion[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("JAVASCRIPT");
   const [selectedQuestion, setSelectedQuestion] =
     useState<TechnicalQuestion | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<number>(0);
   const [isOpenDelete, setIsOpenDelete] = useState(false);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Filter questions based on search and filters
-  const filteredQuestions = questions?.filter((question) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      question.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      question.answer.toLowerCase().includes(searchQuery.toLowerCase());
+  const queryClient = useQueryClient();
 
-    const matchesLanguage =
-      selectedLanguage === "all" || question.language === selectedLanguage;
+  const {
+    data: fetchedQuestions = [],
+    isLoading: isLoadingFetch,
+    isFetching: isFetchingFetch,
+    error: errorFetch,
+  } = useFetchTechInterview(selectedLanguage);
 
-    return matchesSearch && matchesLanguage;
-  });
+  const {
+    data: searchedQuestions = [],
+    isLoading: isLoadingSearch,
+    isFetching: isFetchingSearch,
+    error: errorSearch,
+  } = useSearchTechInterview(debouncedSearchQuery, selectedLanguage);
+
+  // select data based on searchQuery
+  const questions = searchQuery ? searchedQuestions : fetchedQuestions;
+  const isLoading = searchQuery ? isLoadingSearch : isLoadingFetch;
+  const isFetching = searchQuery ? isFetchingSearch : isFetchingFetch;
+  const error = searchQuery ? errorSearch : errorFetch;
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[40vh]">
+        <p className="text-red-500 text-lg font-medium">
+          Failed to load questions. Please try again.
+        </p>
+      </div>
+    );
+  }
 
   const handleAddOrEditQuestion = async (newQuestionData: {
     id?: number;
@@ -64,55 +97,26 @@ const TechnicalInterviewPage = () => {
     language: string;
   }) => {
     try {
-      let response: AxiosResponse<TechnicalQuestion>;
-
       if (newQuestionData.id) {
-        // Edit existing question
-        response = await AxiosInstance.put(
+        await AxiosInstance.put(
           `${TECHNICAL_INTERVIEW}/${newQuestionData.id}`,
           newQuestionData
         );
-        if (response.status === 200) {
-          toast.success("Question updated successfully");
-          setQuestions((prev) =>
-            prev.map((q) => (q.id === newQuestionData.id ? response.data : q))
-          );
-        }
+        toast.success(QUESTION_UPDATED_SUCCESS);
       } else {
-        // Add new question
-        response = await AxiosInstance.post(
-          TECHNICAL_INTERVIEW,
-          newQuestionData
-        );
-        if (response.status === 200) {
-          toast.success("Question added successfully");
-          setQuestions((prev) => [...prev, response.data]);
-        }
+        await AxiosInstance.post(TECHNICAL_INTERVIEW, newQuestionData);
+        toast.success(QUESTION_ADD_SUCCESS);
       }
-    } catch (error) {
-      logger.error("Error adding or updating question:", error);
-      toast.error("An error occurred. Please try again.");
-    }
-  };
 
-  const handleDeleteQuestion = async () => {
-    try {
-      const response = await AxiosInstance.delete(
-        `${TECHNICAL_INTERVIEW}/${selectedQuestionId}`
-      );
-      if (response.status === 200) {
-        toast.success("Question deleted successfully");
-      }
-      setQuestions((prev) => prev.filter((q) => q.id !== selectedQuestionId));
+      await queryClient.invalidateQueries({
+        queryKey: ["techInterview", selectedLanguage],
+      });
     } catch (error) {
       const err = error as AxiosError;
-
       toast.error(
-        (err.response?.data as { message: string }).message ||
-          "Failed to delete"
+        (err.response?.data as { message: string }).message || ERROR_OCCURRED
       );
-    } finally {
-      setIsOpenDelete(false);
+      logger.error("Error adding or updating question:", error);
     }
   };
 
@@ -121,31 +125,30 @@ const TechnicalInterviewPage = () => {
     setIsOpenDelete(true);
   };
 
-  useEffect(() => {
-    const handleFetch = async () => {
-      try {
-        const response = await AxiosInstance.get(
-          `${TECHNICAL_INTERVIEW}?language=${selectedLanguage}`
-        );
-        setQuestions(response.data);
-      } catch (error) {
-        const err = error as AxiosError;
-        toast.error(
-          (err.response?.data as { message: string }).message ||
-            "Error fetching questions"
-        );
-        logger.error("Error fetching questions:", error);
+  const handleDeleteQuestion = async () => {
+    try {
+      const response = await AxiosInstance.delete(
+        `${TECHNICAL_INTERVIEW}/${selectedQuestionId}`
+      );
+      if (response.status === 200) {
+        toast.success(QUESTION_DELETE_SUCCESS);
       }
-    };
-    if (selectedLanguage !== "all") {
-      handleFetch();
+    } catch (error) {
+      const err = error as AxiosError;
+
+      toast.error(
+        (err.response?.data as { message: string }).message ||
+          QUESTION_DELETE_FAILED
+      );
+    } finally {
+      setIsOpenDelete(false);
     }
-  }, [selectedLanguage]);
+  };
 
   return (
     <div className="space-y-6 max-h-[80vh] overflow-auto ">
       <div className="flex justify-between items-start">
-        <div>
+        <div data-cy="tech-interview">
           <h1 className="text-3xl font-bold">Technical Interview Q&A</h1>
           <p className="text-muted-foreground">
             Manage your technical interview questions and answers with
@@ -186,66 +189,30 @@ const TechnicalInterviewPage = () => {
         </Select>
       </div>
 
-      {/* Questions Grid */}
-      <div className="grid gap-4">
-        {filteredQuestions.map((question, index) => (
-          <div key={question.id} className="h-fit max-h-[100vh]">
-            <div className="pb-3">
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex flex-col">
-                  <h4 className="text-sm font-medium line-clamp-2">
-                    {index + 1 + "."} {question.question}
-                  </h4>
-                  <p className="text-xs ml-6 text-gray-700">
-                    {/\d+\.\s/.test(question.answer) ? (
-                      question.answer
-                        .split(/(\d+\.)\s+/)
-                        .reduce<string[]>((acc, val, i, arr) => {
-                          if (val.match(/\d+\./)) {
-                            acc.push(`${val} ${arr[i + 1]}`);
-                          } else {
-                            return acc;
-                          }
-                          return acc;
-                        }, [])
-                        .map((point, index) => (
-                          <div className="flex flex-col" key={index}>
-                            {point}
-                          </div>
-                        ))
-                    ) : (
-                      <div className="flex flex-col">{question.answer}</div>
-                    )}
-                  </p>
-                </div>
-                <div className="flex flex-shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedQuestion(question)}
-                  >
-                    <BookOpen className="h-3 w-3" />
-                  </Button>
-                  <AddTechnicalQuestionForm
-                    isEdit={true}
-                    row={question ? question : undefined}
-                    onAddOrEdit={handleAddOrEditQuestion}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteOpen(question.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
+      {isLoading || isFetching ? (
+        <div className="flex justify-center items-center min-h-[40vh]">
+          <p className="text-muted-foreground text-lg font-medium">
+            Loading questions...
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {questions.map((question: TechnicalQuestion, index) => (
+            <div key={question.id}>
+              <QuestionsCard
+                index={index}
+                key={question.id}
+                question={question}
+                onEdit={() => setSelectedQuestion(question)}
+                onDelete={() => handleDeleteOpen(question.id)}
+                handleEdit={handleAddOrEditQuestion}
+              />
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {filteredQuestions.length === 0 && (
+      {!isLoading && !isFetching && questions.length === 0 && (
         <div className="text-center py-12">
           <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">No questions found</h3>
@@ -257,7 +224,6 @@ const TechnicalInterviewPage = () => {
         </div>
       )}
 
-      {/* Question Detail Dialog */}
       <Dialog
         open={!!selectedQuestion}
         onOpenChange={() => setSelectedQuestion(null)}

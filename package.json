@@ -2,13 +2,14 @@
   "name": "vite-project",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "e2e": "cypress run"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.0",
@@ -29,6 +30,7 @@
     "react": "^19.1.0",
     "react-day-picker": "^9.7.0",
     "react-dom": "^19.1.0",
+    "react-hook-form": "^7.62.0",
     "react-router-dom": "^7.6.0",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.3",

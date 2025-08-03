@@ -29,6 +29,7 @@
     "src/vite-env.d.ts",
     "vite-env.d.ts",
     "cypress",
-    "cypress.config.ts"
+    "cypress.config.ts",
+    "cypress/support/index.d.ts"
   ]
 }

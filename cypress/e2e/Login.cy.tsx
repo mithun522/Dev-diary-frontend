@@ -1,6 +1,5 @@
 import {
   ENTER_EMAIL_AND_PASSWORD,
-  LOGIN_SUCCESSFUL,
   PASSWORD_INCORRECT,
   USER_DOESNT_EXIST,
 } from "../../src/constants/ToastMessage";
@@ -15,26 +14,19 @@ import {
   LOGIN_EMAIL,
   LOGIN_PASSWORD,
   LOGIN_SIGNUP,
-  LOGIN_SPINNER,
   TOAST_ERROR,
-  TOAST_SUCCESS,
 } from "../constants/Selectors";
 
 describe("Login Component", () => {
+  before(() => {
+    cy.Register();
+    cy.login();
+  });
+
   it("Navigates to Login Page", () => {
     cy.visit("/");
     cy.get('[data-cy="login"]').click();
     cy.url().should("include", "/auth/login");
-  });
-
-  it("Login with valid credentials", () => {
-    cy.visit("/auth/login");
-    cy.get(LOGIN_EMAIL).type(CORRECT_EMAIL);
-    cy.get(LOGIN_PASSWORD).type(CORRECT_PASSWORD);
-    cy.get(LOGIN_BUTTON).click();
-    cy.get(LOGIN_SPINNER).should("be.visible");
-    cy.get(TOAST_SUCCESS).contains(LOGIN_SUCCESSFUL).should("be.visible");
-    cy.url().should("include", "/dsa");
   });
 
   it("Should throw error for invalid credentials", () => {

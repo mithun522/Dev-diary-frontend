@@ -22,6 +22,9 @@ import Button from "../../components/ui/button";
 import NumberedTextarea from "./NumberedTextArea";
 import { Languages } from "../../constants/Languages";
 import type { TechnicalQuestion } from "./Index";
+import type { AxiosError } from "axios";
+import { toast } from "react-toastify";
+import { logger } from "../../utils/logger";
 
 interface AddTechnicalQuestionFormProps {
   row?: TechnicalQuestion;
@@ -92,24 +95,35 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
       language: "",
     });
 
-    onAddOrEdit({
-      id: formData.id || undefined,
-      question: formData.question,
-      answer: formData.answer,
-      notes: formData.notes,
-      language: formData.language,
-    });
+    try {
+      onAddOrEdit({
+        id: formData.id || undefined,
+        question: formData.question,
+        answer: formData.answer,
+        notes: formData.notes,
+        language: formData.language,
+      });
 
-    // Reset form
-    setFormData({
-      id: null,
-      question: "",
-      answer: "",
-      notes: "",
-      language: "",
-    });
+      if (!isEdit) {
+        setFormData({
+          id: null,
+          question: "",
+          answer: "",
+          notes: "",
+          language: "",
+        });
+      }
 
-    setOpen(false);
+      setOpen(false);
+    } catch (error) {
+      const err = error as AxiosError;
+
+      toast.error(
+        (err.response?.data as { message: string }).message ||
+          "An error occurred. Please try again."
+      );
+      logger.error("Error adding or updating question:", error);
+    }
   };
 
   return (
