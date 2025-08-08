@@ -57,7 +57,7 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
     language: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     let err = false;
@@ -96,7 +96,7 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
     });
 
     try {
-      onAddOrEdit({
+      await onAddOrEdit({
         id: formData.id || undefined,
         question: formData.question,
         answer: formData.answer,

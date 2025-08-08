@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import MarkdownPreview from "@uiw/react-markdown-preview";
-import { getTagColor } from "../../utils/colorTags";
+import { getTagColor } from "../../utils/colorVariations";
 import type { KnowledgeTag } from "../../data/knowledgeData";
 import Button from "../../components/ui/button";
 

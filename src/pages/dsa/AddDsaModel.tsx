@@ -20,25 +20,34 @@ import AxiosInstance from "../../utils/AxiosInstance";
 import { DSA } from "../../constants/Api";
 import { convertToPascalCase } from "../../utils/convertToPascalCase";
 import { MultiSelect } from "../../components/ui/multiselect";
+import { logger } from "../../utils/logger";
+import { ProgrammingLanguages } from "../../constants/Languages";
+import { toast } from "react-toastify";
 
 type AddDsaModelProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  setDsaProblems: React.Dispatch<React.SetStateAction<DSAProblem[]>>;
 };
 export type DifficultyLevel = "EASY" | "MEDIUM" | "HARD";
 
-const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
+const AddDsaModel: React.FC<AddDsaModelProps> = ({
+  open,
+  setOpen,
+  setDsaProblems,
+}) => {
   const [dsaProblem, setDsaProblem] = useState<DSAProblem>({
-    id: "",
-    title: "",
+    problem: "",
     difficulty: DifficultyLevels.EASY,
-    topic: [],
+    language: ProgrammingLanguages.JAVASCRIPT,
+    topics: [],
     link: "",
     status: "SOLVED",
-    lastSolved: "",
+    updatedAt: "",
     notes: "",
     solution: "",
   });
+  const [disabled, setDisabled] = useState<boolean>(false);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -51,28 +60,19 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setDisabled(true);
     try {
       const response = await AxiosInstance.post(DSA, dsaProblem);
-      const addedDsaProblem = response.data;
+      if (response.status === 200) {
+        toast.success("DSA problem added successfully");
+        setDsaProblems((prev) => [...prev, response.data]);
 
-      if (response.status === 201) {
-        setDsaProblem((prev) => ({
-          ...prev,
-          id: addedDsaProblem.id,
-          title: addedDsaProblem.title,
-          difficulty: addedDsaProblem.EASY,
-          topic: addedDsaProblem.topic,
-          link: addedDsaProblem.link,
-          status: addedDsaProblem.status,
-          lastSolved: addedDsaProblem.lastSolved,
-          notes: addedDsaProblem.notes,
-          solution: addedDsaProblem.solution,
-        }));
+        setOpen(false);
       }
     } catch (error) {
-      console.error("Error submitting problem:", error);
+      logger.error("Error submitting problem:", error);
     } finally {
-      setOpen(false);
+      setDisabled(false);
     }
   };
 
@@ -92,14 +92,15 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <Input
-              name="title"
+              name="problem"
               placeholder="Title"
-              value={dsaProblem.title}
+              value={dsaProblem.problem}
               onChange={handleChange}
               className="w-full p-2 border rounded-md dark:bg-gray-800"
             />
             <Select
               value={dsaProblem.difficulty}
+              name="difficulty"
               onValueChange={(value) =>
                 setDsaProblem({
                   ...dsaProblem,
@@ -118,6 +119,28 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={dsaProblem.language}
+              name="language"
+              onValueChange={(value) =>
+                setDsaProblem({
+                  ...dsaProblem,
+                  language:
+                    value as (typeof ProgrammingLanguages)[keyof typeof ProgrammingLanguages],
+                })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-[102]">
+                {Object.values(ProgrammingLanguages).map((languages) => (
+                  <SelectItem key={languages} value={languages}>
+                    {convertToPascalCase(languages)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div>
               <label
                 htmlFor="topics"
@@ -127,11 +150,11 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
               </label>
               <MultiSelect
                 className="z-[102]"
-                selected={dsaProblem.topic}
+                selected={dsaProblem.topics}
                 onSelectedChange={(value) => {
                   setDsaProblem({
                     ...dsaProblem,
-                    topic: value,
+                    topics: value,
                   });
                 }}
                 placeholder="Select problem topics..."
@@ -159,7 +182,7 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
               <Dialog.Close asChild>
                 <Button variant="danger">Cancel</Button>
               </Dialog.Close>
-              <Button variant="primary" type="submit">
+              <Button variant="primary" type="submit" disabled={disabled}>
                 Save
               </Button>
             </div>

@@ -13,7 +13,7 @@ export const useFetchTechInterview = (language: string) => {
       return response;
     },
     staleTime: 10 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     enabled: language !== "all",
   } as UseQueryOptions<TechnicalQuestion[], Error>);
 };

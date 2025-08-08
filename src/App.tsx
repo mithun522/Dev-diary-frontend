@@ -25,6 +25,8 @@ const queryClient = new QueryClient();
 const App = () => {
   const token = getAccessToken();
 
+  if (!token) return <Navigate to="/auth/login" />;
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">

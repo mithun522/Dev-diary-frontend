@@ -1,4 +1,5 @@
 import { type Topic } from "../constants/Topics";
+import { type ProgrammingLanguages } from "../constants/Languages";
 // Types
 export type ProblemStatus = "SOLVED" | "ATTEMPTED" | "UNSOLVED";
 
@@ -9,13 +10,14 @@ export const DifficultyLevels = {
 } as const;
 
 export type DSAProblem = {
-  id: string;
-  title: string;
+  id?: string;
+  problem: string;
   difficulty: (typeof DifficultyLevels)[keyof typeof DifficultyLevels];
-  topic: Topic[];
+  language: (typeof ProgrammingLanguages)[keyof typeof ProgrammingLanguages];
+  topics: Topic[];
   link: string;
   status: ProblemStatus;
-  lastSolved?: string; // ISO date string
+  updatedAt?: string; // ISO date string
   notes?: string;
   solution?: string; // Markdown solution
 };

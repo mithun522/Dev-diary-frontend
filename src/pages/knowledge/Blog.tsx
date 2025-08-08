@@ -24,7 +24,7 @@ import { BLOGS } from "../../constants/Api";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { toast } from "react-toastify";
 import { formatDate } from "../../utils/formatDate";
-import { getTagColor } from "../../utils/colorTags";
+import { getTagColor } from "../../utils/colorVariations";
 
 type BlogsProps = {
   searchQuery: string;

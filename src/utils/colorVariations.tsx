@@ -1,4 +1,5 @@
-import type { KnowledgeTag } from "../../data/knowledgeData";
+import type { KnowledgeTag } from "../data/knowledgeData";
+import type { DifficultyLevel } from "../pages/dsa/AddDsaModel";
 
 export const getTagColor = (tag: KnowledgeTag): string => {
   const colors: Record<KnowledgeTag, string> = {
@@ -22,4 +23,30 @@ export const getTagColor = (tag: KnowledgeTag): string => {
       "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
   };
   return colors[tag];
+};
+
+export const getDifficultyColor = (difficulty: DifficultyLevel) => {
+  switch (difficulty.toLowerCase()) {
+    case "easy":
+      return "bg-green-500";
+    case "medium":
+      return "bg-amber-500";
+    case "hard":
+      return "bg-red-500";
+    default:
+      return "bg-gray-500";
+  }
+};
+
+export const getStatusVariant = (status: string) => {
+  switch (status) {
+    case "Solved":
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    case "Attempted":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300";
+    case "Unsolved":
+      return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+    default:
+      return "";
+  }
 };

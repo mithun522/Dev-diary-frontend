@@ -15,7 +15,7 @@ import { Badge } from "../../components/ui/badge";
 import { toast } from "react-toastify";
 import LivePreview from "./LivePreview";
 import { availableTags } from "../../constants/AvailableTags";
-import { getTagColor } from "../../utils/colorTags";
+import { getTagColor } from "../../utils/colorVariations";
 
 interface AddBlogFormProps {
   onSubmit: (blogData: {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -6,22 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
 import Button from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import {
@@ -32,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import { Badge } from "../../components/ui/badge";
 import {
   Tabs,
   TabsContent,
@@ -55,16 +38,17 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
-import { EllipsisVertical } from "lucide-react";
-import AddDsaModel, { type DifficultyLevel } from "./AddDsaModel";
+import AddDsaModel from "./AddDsaModel";
 import AxiosInstance from "../../utils/AxiosInstance";
 import { DSA } from "../../constants/Api";
-import { convertToPascalCase } from "../../utils/convertToPascalCase";
-import { TopicColors, type Topic } from "../../constants/Topics";
 import AskForConfirmationModal from "../../components/AskForConfirmationModal";
-import MarkdownPreview from "@uiw/react-markdown-preview";
-import { formatDate } from "../../utils/formatDate";
 import { logger } from "../../utils/logger";
+import { toast } from "react-toastify";
+import { AxiosError } from "axios";
+import SolutionModal from "./SolutionModal";
+import { useFetchDsaProblemByUser } from "../../api/hooks/useFetchDsa";
+import DsaTable from "./DsaTable";
+import ErrorPage from "../ErrorPage";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,54 +60,14 @@ const DSAPage: React.FC = () => {
   const [isAddModelOpen, setIsAddModelOpen] = useState<boolean>(false);
   const [dsaProblems, setDsaProblems] = useState<DSAProblem[]>([]);
   const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
+  const [isSolutionModalOpen, setIsSolutionModalOpen] = useState(false);
 
-  // Filter problems based on search query and selected filters
-  const filteredProblems = dsaProblems.filter((problem: DSAProblem) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      problem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      problem.topic.some((topic) =>
-        topic.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-    const matchesDifficulty =
-      difficultyFilter === "all" ||
-      problem.difficulty.toLowerCase() === difficultyFilter.toLowerCase();
-
-    const matchesStatus =
-      statusFilter === "all" ||
-      problem.status.toLowerCase() === statusFilter.toLowerCase();
-
-    return matchesSearch && matchesDifficulty && matchesStatus;
-  });
-
-  // Get difficulty badge color
-  const getDifficultyColor = (difficulty: DifficultyLevel) => {
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "bg-green-500";
-      case "medium":
-        return "bg-amber-500";
-      case "hard":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
-
-  // Get status badge variant
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "Solved":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "Attempted":
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300";
-      case "Unsolved":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
-      default:
-        return "";
-    }
-  };
+  const {
+    data: fetchedProblems = [],
+    isLoading: isLoadingFetch,
+    isFetching: isFetchingFetch,
+    error: errorFetch,
+  } = useFetchDsaProblemByUser();
 
   // Chart colors
   const COLORS = [
@@ -135,15 +79,25 @@ const DSAPage: React.FC = () => {
     "#82ca9d",
   ];
 
-  const deleteDsaProblem = () => {
-    AxiosInstance.delete(`${DSA}?id=${selectedProblem?.id}`)
-      .then(() => {
+  const deleteDsaProblem = async () => {
+    await AxiosInstance.delete(`${DSA}/${selectedProblem?.id}`)
+      .then((res) => {
         setSelectedProblem(null);
-        setDsaProblems((prevProblems) =>
-          prevProblems.filter((problem) => problem.id !== selectedProblem?.id)
-        );
+
+        if (res.status === 200) {
+          toast.success(res.data);
+          setDsaProblems((prevProblems) =>
+            prevProblems.filter((problem) => problem.id !== selectedProblem?.id)
+          );
+        }
       })
       .catch((error) => {
+        const err = error as AxiosError;
+
+        toast.error(
+          (err.response?.data as { message: string }).message ||
+            "Failed to Delete DSA problem"
+        );
         logger.error("Error deleting DSA problem:", error);
       })
       .finally(() => {
@@ -151,18 +105,7 @@ const DSAPage: React.FC = () => {
       });
   };
 
-  useEffect(() => {
-    const fetchDsaProblems = async () => {
-      try {
-        const response = await AxiosInstance.get(DSA);
-        setDsaProblems(response.data);
-      } catch (error) {
-        logger.error("Error fetching DSA problems:", error);
-      }
-    };
-
-    fetchDsaProblems();
-  }, []);
+  if (errorFetch) return <ErrorPage message="Failed to fetch DSA problems" />;
 
   return (
     <div className="space-y-6">
@@ -226,186 +169,16 @@ const DSAPage: React.FC = () => {
               </Button>
             </div>
           </div>
-
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Difficulty</TableHead>
-                    <TableHead>Tags</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Solved</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProblems.length > 0 ? (
-                    filteredProblems.map((problem: DSAProblem) => (
-                      <TableRow
-                        key={problem.id}
-                        onClick={() => setSelectedProblem(problem)}
-                        className="cursor-pointer"
-                      >
-                        <TableCell className="font-medium">
-                          <a
-                            href={problem.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {problem.title}
-                          </a>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={`${getDifficultyColor(
-                              problem.difficulty
-                            )} text-white`}
-                          >
-                            {convertToPascalCase(problem.difficulty)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {problem.topic.map(
-                              (topic: Topic, index: number) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className={`text-xs ${TopicColors[topic]}`}
-                                >
-                                  {topic}
-                                </Badge>
-                              )
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getStatusVariant(problem.status)}>
-                            {problem.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {problem.lastSolved
-                            ? formatDate(problem.lastSolved)
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              asChild
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Button variant="ghost" size="sm">
-                                <EllipsisVertical />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem>
-                                Mark as Solved
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>Add Solution</DropdownMenuItem>
-                              <DropdownMenuItem>Add Notes</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => setIsOpenConfirmationModal(true)}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-6">
-                        No problems found matching your filters.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          {selectedProblem && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {selectedProblem.title}
-                    <Badge
-                      variant="outline"
-                      className={`${getDifficultyColor(
-                        selectedProblem.difficulty
-                      )} text-white`}
-                    >
-                      {selectedProblem.difficulty}
-                    </Badge>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedProblem(null)}
-                  >
-                    ×
-                  </Button>
-                </CardTitle>
-                <CardDescription>
-                  <div className="flex flex-wrap gap-1">
-                    <div className="flex flex-wrap gap-1">
-                      {selectedProblem.topic.map(
-                        (topic: Topic, index: number) => (
-                          <Badge
-                            key={index}
-                            className={`text-xs ${TopicColors[topic]}`}
-                          >
-                            {topic}
-                          </Badge>
-                        )
-                      )}
-                    </div>
-                  </div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="solution">
-                  <TabsList>
-                    <TabsTrigger value="solution">Solution</TabsTrigger>
-                    <TabsTrigger value="notes">Notes</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent
-                    value="solution"
-                    className="pt-4 prose prose-pre:bg-muted prose-pre:text-muted-foreground dark:prose-pre:bg-muted/80 max-w-none"
-                  >
-                    {selectedProblem.solution ? (
-                      <MarkdownPreview
-                        source={`\`\`\`javascript\n${selectedProblem.solution}\n\`\`\``}
-                      />
-                    ) : (
-                      <p>No solution added yet for this problem.</p>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="notes" className="pt-4">
-                    {selectedProblem.notes ? (
-                      <p>{selectedProblem.notes}</p>
-                    ) : (
-                      <p>No notes added yet for this problem.</p>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+          {fetchedProblems && (
+            <DsaTable
+              isLoadingFetch={isLoadingFetch}
+              isFetching={isFetchingFetch}
+              fetchedProblems={fetchedProblems}
+              setIsOpenConfirmationModal={setIsOpenConfirmationModal}
+              setSelectedProblem={setSelectedProblem}
+              setIsSolutionModalOpen={setIsSolutionModalOpen}
+              errorFetch={errorFetch}
+            />
           )}
         </TabsContent>
 
@@ -578,13 +351,25 @@ const DSAPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       {isAddModelOpen && (
-        <AddDsaModel open={isAddModelOpen} setOpen={setIsAddModelOpen} />
+        <AddDsaModel
+          setDsaProblems={setDsaProblems}
+          open={isAddModelOpen}
+          setOpen={setIsAddModelOpen}
+        />
       )}
       {isOpenConfirmationModal && (
         <AskForConfirmationModal
           showDelete
           onCancel={() => setIsOpenConfirmationModal(false)}
           onDelete={deleteDsaProblem}
+        />
+      )}
+      {isSolutionModalOpen && selectedProblem && (
+        <SolutionModal
+          selectedProblem={selectedProblem}
+          setSelectedProblem={setSelectedProblem}
+          open={isSolutionModalOpen}
+          setOpen={setIsSolutionModalOpen}
         />
       )}
     </div>

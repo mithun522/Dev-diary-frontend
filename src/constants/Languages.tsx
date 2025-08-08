@@ -13,3 +13,9 @@ export const Languages: string[] = [
   "JEST",
   "CYPRESS",
 ];
+
+export const ProgrammingLanguages = {
+  JAVASCRIPT: "JAVASCRIPT",
+  TYPESCRIPT: "TYPESCRIPT",
+  JAVA: "JAVA",
+};
