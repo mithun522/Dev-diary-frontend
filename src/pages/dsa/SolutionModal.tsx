@@ -17,6 +17,8 @@ import Button from "../../components/ui/button";
 import type { DSAProblem } from "../../data/dsaProblemsData";
 import { TopicColors, type Topic } from "../../constants/Topics";
 import { getDifficultyColor } from "../../utils/colorVariations";
+import { MoveLeft, MoveRightIcon } from "lucide-react";
+import { useState } from "react";
 
 interface SolutionModalProps {
   selectedProblem: DSAProblem;
@@ -31,7 +33,37 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
   open,
   setOpen,
 }) => {
+  const [index, setIndex] = useState<number>(0);
+
   if (!open || !selectedProblem) return null;
+
+  const solutionMapper = () => {
+    return [
+      {
+        label: "Brute Force",
+        code: selectedProblem.bruteForceSolution,
+      },
+      {
+        label: "Better",
+        code: selectedProblem.betterSolution,
+      },
+      {
+        label: "Optimised",
+        code: selectedProblem.optimisedSolution,
+      },
+    ].filter((solution) => solution.code); // remove empty solutions
+  };
+
+  const moveNext = () => {
+    if (index < solutionMapper().length - 1) {
+      setIndex(index + 1);
+    }
+  };
+  const movePrevious = () => {
+    if (index > 0) {
+      setIndex(index - 1);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center">
@@ -91,10 +123,26 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
             value="solution"
             className="pt-4 prose prose-pre:bg-muted prose-pre:text-muted-foreground dark:prose-pre:bg-muted/80 max-w-none"
           >
-            {selectedProblem.bruteForceSolution ? (
-              <MarkdownPreview
-                source={`\`\`\`javascript\n${selectedProblem.bruteForceSolution}\n\`\`\``}
-              />
+            {selectedProblem ? (
+              <div className="w-full min-h-[200px]">
+                <h3 className="text-lg font-semibold mb-2">{`Solution ${
+                  index + 1
+                }: ${solutionMapper()[index].label}`}</h3>
+                <div className="flex flex-1">
+                  <Button variant="ghost" onClick={movePrevious}>
+                    <MoveLeft />
+                  </Button>
+                  <MarkdownPreview
+                    className="w-full"
+                    source={`\`\`\`javascript\n${
+                      solutionMapper()[index].code
+                    }\n\`\`\``}
+                  />
+                  <Button variant="ghost" onClick={moveNext}>
+                    <MoveRightIcon />
+                  </Button>
+                </div>
+              </div>
             ) : (
               <p>No solution added yet for this problem.</p>
             )}

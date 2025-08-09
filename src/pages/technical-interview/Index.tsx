@@ -36,6 +36,7 @@ import {
   QUESTION_DELETE_SUCCESS,
   QUESTION_UPDATED_SUCCESS,
 } from "../../constants/ToastMessage";
+import QuestionsShimmer from "./QuestionsShimmer";
 
 export interface TechnicalQuestion {
   id: number;
@@ -190,11 +191,7 @@ const TechnicalInterviewPage = () => {
       </div>
 
       {isLoading || isFetching ? (
-        <div className="flex justify-center items-center min-h-[40vh]">
-          <p className="text-muted-foreground text-lg font-medium">
-            Loading questions...
-          </p>
-        </div>
+        <QuestionsShimmer />
       ) : (
         <div className="grid gap-4">
           {questions.map((question: TechnicalQuestion, index) => (
