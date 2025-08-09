@@ -91,9 +91,9 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
             value="solution"
             className="pt-4 prose prose-pre:bg-muted prose-pre:text-muted-foreground dark:prose-pre:bg-muted/80 max-w-none"
           >
-            {selectedProblem.solution ? (
+            {selectedProblem.bruteForceSolution ? (
               <MarkdownPreview
-                source={`\`\`\`javascript\n${selectedProblem.solution}\n\`\`\``}
+                source={`\`\`\`javascript\n${selectedProblem.bruteForceSolution}\n\`\`\``}
               />
             ) : (
               <p>No solution added yet for this problem.</p>

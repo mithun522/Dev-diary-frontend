@@ -40,7 +40,6 @@ interface DsaTableProps {
 
 const DsaTable: React.FC<DsaTableProps> = ({
   isLoadingFetch,
-  isFetching,
   fetchedProblems,
   setIsOpenConfirmationModal,
   setSelectedProblem,

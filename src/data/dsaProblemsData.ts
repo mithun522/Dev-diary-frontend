@@ -19,7 +19,9 @@ export type DSAProblem = {
   status: ProblemStatus;
   updatedAt?: string; // ISO date string
   notes?: string;
-  solution?: string; // Markdown solution
+  bruteForceSolution?: string; // Markdown solution
+  betterSolution?: string; // Markdown solution
+  optimisedSolution?: string; // Markdown solution
 };
 
 // Progress data

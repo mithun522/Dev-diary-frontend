@@ -23,6 +23,7 @@ import { MultiSelect } from "../../components/ui/multiselect";
 import { logger } from "../../utils/logger";
 import { ProgrammingLanguages } from "../../constants/Languages";
 import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 
 type AddDsaModelProps = {
   open: boolean;
@@ -31,11 +32,7 @@ type AddDsaModelProps = {
 };
 export type DifficultyLevel = "EASY" | "MEDIUM" | "HARD";
 
-const AddDsaModel: React.FC<AddDsaModelProps> = ({
-  open,
-  setOpen,
-  setDsaProblems,
-}) => {
+const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
   const [dsaProblem, setDsaProblem] = useState<DSAProblem>({
     problem: "",
     difficulty: DifficultyLevels.EASY,
@@ -45,8 +42,11 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({
     status: "SOLVED",
     updatedAt: "",
     notes: "",
-    solution: "",
+    bruteForceSolution: "",
+    betterSolution: "",
+    optimisedSolution: "",
   });
+  const queryClient = useQueryClient();
   const [disabled, setDisabled] = useState<boolean>(false);
 
   const handleChange = (
@@ -65,8 +65,9 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({
       const response = await AxiosInstance.post(DSA, dsaProblem);
       if (response.status === 200) {
         toast.success("DSA problem added successfully");
-        setDsaProblems((prev) => [...prev, response.data]);
-
+        queryClient.invalidateQueries({
+          queryKey: ["dsa"],
+        });
         setOpen(false);
       }
     } catch (error) {
@@ -175,7 +176,7 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({
             <Textarea
               name="solution"
               placeholder="Solution"
-              value={dsaProblem.solution}
+              value={dsaProblem.bruteForceSolution}
               onChange={handleChange}
             />
             <div className="flex justify-end gap-2 pt-4">
