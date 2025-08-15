@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { SERVER_BASE_URL } from "../constants/Api";
 import { getAccessToken } from "./auth";

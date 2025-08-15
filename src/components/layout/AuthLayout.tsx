@@ -7,7 +7,7 @@ interface AuthLayoutProps {
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen grid md:grid-cols-2">
-      <div className="hidden md:flex flex-col bg-gray-100 p-10">
+      <div className="hidden md:flex flex-col bg-gray-100 dark:bg-gray-800 p-10">
         <div className="flex items-center gap-2 mb-12">
           <span className="text-2xl font-bold text-primary">
             CodePrep Compass

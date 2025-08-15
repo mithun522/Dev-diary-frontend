@@ -11,4 +11,4 @@ export const DSA_BY_USER = `${DSA}/user`;
 export const TECHNICAL_INTERVIEW = `${SERVER_BASE_URL}/techinterview`;
 
 export const SEND_OTP = `${AUTH}/otp`;
-export const VERIFY_OTP = `${AUTH}/verify-otp`;
+export const VERIFY_OTP = `${AUTH}/verifyotp`;

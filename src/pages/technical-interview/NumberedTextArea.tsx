@@ -7,6 +7,7 @@ interface NumberedTextareaProps {
   placeholder?: string;
   className?: string;
   error?: boolean;
+  dataCy: string;
 }
 
 const NumberedTextarea: React.FC<NumberedTextareaProps> = ({
@@ -15,6 +16,7 @@ const NumberedTextarea: React.FC<NumberedTextareaProps> = ({
   placeholder,
   className,
   error,
+  dataCy,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -203,6 +205,7 @@ const NumberedTextarea: React.FC<NumberedTextareaProps> = ({
 
   return (
     <Textarea
+      data-cy={dataCy}
       ref={textareaRef}
       value={value}
       onChange={(e) => onChange(e.target.value)}

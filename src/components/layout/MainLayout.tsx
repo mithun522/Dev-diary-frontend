@@ -22,6 +22,7 @@ import {
   PieChart,
   Users2,
 } from "lucide-react";
+import { removeAccessToken } from "../../utils/auth";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -163,7 +164,11 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
 
         <SidebarFooter className="mt-auto p-4 border-t">
           <SidebarMenuButton asChild>
-            <Link to="/auth/login" className="flex items-center gap-2">
+            <Link
+              to="/auth/login"
+              onClick={removeAccessToken}
+              className="flex items-center gap-2"
+            >
               <LogOut />
               {state !== "collapsed" && <span>Logout</span>}
             </Link>

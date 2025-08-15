@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/layout/AuthLayout";
 import Button from "../../components/ui/button";
 import {
@@ -47,6 +47,7 @@ const SignupPage = () => {
   });
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const calculatePasswordStrength = (password: string): number => {
     if (!password) return 0;
@@ -165,6 +166,9 @@ const SignupPage = () => {
 
       if (response.status === 200) {
         toast.success(REGISTER_SUCCESSFUL);
+        setTimeout(() => {
+          navigate("/auth/login");
+        }, 1000);
       } else {
         toast.error(REGISTRATION_FAILED);
       }
@@ -185,7 +189,7 @@ const SignupPage = () => {
     <AuthLayout>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl" data-cy="register">
+          <CardTitle className="text-2xl" data-cy="register-title">
             Create an account
           </CardTitle>
           <CardDescription>
@@ -193,7 +197,11 @@ const SignupPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+            data-cy="register-form"
+          >
             <div className="space-y-2">
               <Label htmlFor="firstName" isMandatory={true}>
                 First Name
@@ -296,11 +304,11 @@ const SignupPage = () => {
               data-cy="register-button"
             >
               {isLoading ? (
-                <span
-                  className="flex items-center gap-2"
-                  data-cy="register-creatingAccount"
-                >
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                    data-cy="register-creating-account"
+                  />
                   Creating account...
                 </span>
               ) : (

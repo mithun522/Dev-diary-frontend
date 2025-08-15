@@ -132,6 +132,7 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
         <Button
           variant={isEdit ? "ghost" : "primary"}
           className="flex whitespace-nowrap"
+          data-cy="add-tech-question-button"
         >
           {isEdit ? (
             <Edit className="w-3 hover:scale-110" />
@@ -148,7 +149,9 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
       >
         <DialogHeader>
-          <DialogTitle>{row ? "Edit" : "Add"} Technical Question</DialogTitle>
+          <DialogTitle data-cy="add-tech-interview-title">
+            {row ? "Edit" : "Add"} Technical Question
+          </DialogTitle>
           <DialogDescription>
             Add a new technical interview question with answer and notes.
           </DialogDescription>
@@ -169,6 +172,7 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
               }}
               error={error.question !== ""}
               className="min-h-[80px]"
+              data-cy="add-tech-interview-question"
             />
             {error.question && <p className="text-red-500">{error.question}</p>}
           </div>
@@ -185,12 +189,19 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
                   setError((prev) => ({ ...prev, language: "" }));
                 }}
               >
-                <SelectTrigger error={error.language !== ""}>
+                <SelectTrigger
+                  error={error.language !== ""}
+                  data-cy="open-select-tech-question-language"
+                >
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
                 <SelectContent>
                   {Languages.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
+                    <SelectItem
+                      data-cy="select-tech-question-language"
+                      key={lang}
+                      value={lang}
+                    >
                       {lang}
                     </SelectItem>
                   ))}
@@ -215,6 +226,7 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
               placeholder="Type your answer in numbered points. Press Enter to auto-increment numbers..."
               className="min-h-[150px]"
               error={error.answer !== ""}
+              dataCy="add-tech-question-answer"
             />
             <p className="text-xs text-muted-foreground">
               Tip: Type "1. " and press Enter to start numbered points, or just
@@ -232,6 +244,7 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
               }
               placeholder="Additional notes, key points to remember..."
               className="min-h-[100px]"
+              dataCy="add-tech-question-notes"
             />
           </div>
 
@@ -240,10 +253,13 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
               type="button"
               variant="outlinePrimary"
               onClick={() => setOpen(false)}
+              data-cy="add-tech-question-cancel"
             >
               Cancel
             </Button>
-            <Button type="submit">{isEdit ? "Update" : "Save"}</Button>
+            <Button data-cy="add-tech-question-save-button" type="submit">
+              {isEdit ? "Update" : "Save"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -12,18 +12,34 @@ import {
 } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import axios, { AxiosError } from "axios";
+import { SEND_OTP } from "../../constants/Api";
+import { toast } from "react-toastify";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email) {
       setError("Please enter your email address");
       return;
+    }
+
+    try {
+      const response = await axios.post(SEND_OTP, { email: email });
+      if (response.status === 200) {
+        setEmail(email);
+      }
+    } catch (error) {
+      const err = error as AxiosError;
+
+      toast.error(
+        (err.response?.data as { message: string }).message || "Login failed"
+      );
     }
 
     setIsSubmitted(true);

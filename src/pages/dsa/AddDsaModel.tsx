@@ -1,10 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState } from "react";
-import {
-  DifficultyLevel,
-  DifficultyLevels,
-  type DSAProblem,
-} from "../../data/dsaProblemsData";
+import { DifficultyLevels, type DSAProblem } from "../../data/dsaProblemsData";
 import { X } from "lucide-react";
 import Button from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -24,51 +20,49 @@ import { logger } from "../../utils/logger";
 import { ProgrammingLanguages } from "../../constants/Languages";
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
+import { Label } from "../../components/ui/label";
+import { useForm, Controller } from "react-hook-form";
 
 type AddDsaModelProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  setDsaProblems: React.Dispatch<React.SetStateAction<DSAProblem[]>>;
 };
-export type DifficultyLevel = "EASY" | "MEDIUM" | "HARD";
 
 const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
-  const [dsaProblem, setDsaProblem] = useState<DSAProblem>({
-    problem: "",
-    difficulty: DifficultyLevels.EASY,
-    language: ProgrammingLanguages.JAVASCRIPT,
-    topics: [],
-    link: "",
-    status: "SOLVED",
-    updatedAt: "",
-    notes: "",
-    bruteForceSolution: "",
-    betterSolution: "",
-    optimisedSolution: "",
-  });
   const queryClient = useQueryClient();
   const [disabled, setDisabled] = useState<boolean>(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setDsaProblem((prev) => ({ ...prev, [name]: value }));
-  };
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm<DSAProblem>({
+    defaultValues: {
+      problem: "",
+      difficulty: DifficultyLevels.EASY,
+      language: ProgrammingLanguages.JAVASCRIPT,
+      topics: [],
+      link: "",
+      status: "SOLVED",
+      updatedAt: "",
+      notes: "",
+      bruteForceSolution: "",
+      betterSolution: "",
+      optimisedSolution: "",
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: DSAProblem) => {
     setDisabled(true);
     try {
-      const response = await AxiosInstance.post(DSA, dsaProblem);
+      const response = await AxiosInstance.post(DSA, data);
       if (response.status === 200) {
         toast.success("DSA problem added successfully");
-        queryClient.invalidateQueries({
-          queryKey: ["dsa"],
-        });
+        queryClient.invalidateQueries({ queryKey: ["dsa"] });
         setOpen(false);
+        reset();
       }
     } catch (error) {
       logger.error("Error submitting problem:", error);
@@ -81,7 +75,7 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[100]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl p-6 shadow-xl bg-background dark:text-white border border-white z-[101]">
+        <Dialog.Content className="fixed left-1/2 top-1/2 w-[90vw] max-w-md max-h-[600px] overflow-auto -translate-x-1/2 -translate-y-1/2 rounded-xl p-6 shadow-xl bg-background dark:text-white border border-white z-[101]">
           <div className="flex items-center justify-between mb-4">
             <Dialog.Title className="text-lg font-semibold">
               Add DSA Problem
@@ -91,94 +85,108 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
             </Dialog.Close>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <Input
-              name="problem"
-              placeholder="Title"
-              value={dsaProblem.problem}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md dark:bg-gray-800"
-            />
-            <Select
-              value={dsaProblem.difficulty}
-              name="difficulty"
-              onValueChange={(value) =>
-                setDsaProblem({
-                  ...dsaProblem,
-                  difficulty: value as DifficultyLevel,
-                })
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-[102]">
-                {Object.values(DifficultyLevels).map((level) => (
-                  <SelectItem key={level} value={level}>
-                    {convertToPascalCase(level)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={dsaProblem.language}
-              name="language"
-              onValueChange={(value) =>
-                setDsaProblem({
-                  ...dsaProblem,
-                  language:
-                    value as (typeof ProgrammingLanguages)[keyof typeof ProgrammingLanguages],
-                })
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-[102]">
-                {Object.values(ProgrammingLanguages).map((languages) => (
-                  <SelectItem key={languages} value={languages}>
-                    {convertToPascalCase(languages)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            <Label htmlFor="problem" isMandatory>
+              Problem
+            </Label>
             <div>
-              <label
-                htmlFor="topics"
-                className="block text-sm font-medium mb-1"
-              >
-                Problem Topics
-              </label>
-              <MultiSelect
-                className="z-[102]"
-                selected={dsaProblem.topics}
-                onSelectedChange={(value) => {
-                  setDsaProblem({
-                    ...dsaProblem,
-                    topics: value,
-                  });
-                }}
-                placeholder="Select problem topics..."
+              <Input
+                id="problem"
+                placeholder="Problem title"
+                {...register("problem", {
+                  required: "Problem title is required",
+                })}
+                className={errors.problem ? "border border-red-600" : ""}
               />
+              {errors.problem && (
+                <p className="text-red-500 text-sm">{errors.problem.message}</p>
+              )}
             </div>
-            <Input
-              name="link"
-              placeholder="Link"
-              value={dsaProblem.link}
-              onChange={handleChange}
+
+            <Label htmlFor="difficulty">Difficulty</Label>
+            <Controller
+              name="difficulty"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(DifficultyLevels).map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {convertToPascalCase(level)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
+
+            <Label htmlFor="language">Language</Label>
+            <Controller
+              name="language"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(ProgrammingLanguages).map((lang) => (
+                      <SelectItem key={lang} value={lang}>
+                        {convertToPascalCase(lang)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+
+            <Label htmlFor="topics">Topics</Label>
+            <Controller
+              name="topics"
+              control={control}
+              render={({ field }) => (
+                <MultiSelect
+                  selected={field.value}
+                  onSelectedChange={field.onChange}
+                  placeholder="Select problem topics..."
+                />
+              )}
+            />
+
+            <Label htmlFor="link">Problem Link</Label>
+            <Input id="link" placeholder="https://..." {...register("link")} />
+
+            <Label htmlFor="notes">Notes</Label>
             <Textarea
-              name="notes"
-              placeholder="Notes"
-              value={dsaProblem.notes}
-              onChange={handleChange}
+              id="notes"
+              placeholder="Notes..."
+              {...register("notes")}
             />
-            <Textarea
-              name="solution"
-              placeholder="Solution"
-              value={dsaProblem.bruteForceSolution}
-              onChange={handleChange}
-            />
+
+            <Label htmlFor="bruteForceSolution" isMandatory>
+              Solution
+            </Label>
+            <div>
+              <Textarea
+                id="bruteForceSolution"
+                placeholder="Write your solution here..."
+                {...register("bruteForceSolution", {
+                  required: "Solution is required",
+                })}
+                className={
+                  errors.bruteForceSolution ? "border border-red-600" : ""
+                }
+              />
+              {errors.bruteForceSolution && (
+                <p className="text-red-500 text-sm">
+                  {errors.bruteForceSolution.message}
+                </p>
+              )}
+            </div>
+
             <div className="flex justify-end gap-2 pt-4">
               <Dialog.Close asChild>
                 <Button variant="danger">Cancel</Button>

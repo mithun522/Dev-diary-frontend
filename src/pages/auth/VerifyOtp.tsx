@@ -14,6 +14,10 @@ import { unstable_OneTimePasswordField as OneTimePasswordField } from "radix-ui"
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { toast } from "react-toastify";
+import type { AxiosError } from "axios";
+import { logger } from "../../utils/logger";
+import axios from "axios";
+import { VERIFY_OTP } from "../../constants/Api";
 
 const VerifyOTPPage = () => {
   const [otp, setOtp] = useState("");
@@ -22,12 +26,13 @@ const VerifyOTPPage = () => {
   const location = useLocation();
 
   // Get email from state or use a placeholder
-  const email = (location.state?.email || "user@example.com") as string;
+  const params = new URLSearchParams(location.search);
+  const email = params.get("email") || "user@example.com";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (otp.length !== 6) {
+    if (otp.length !== 4) {
       toast.error("Please enter a valid 6-digit OTP");
       return;
     }
@@ -35,15 +40,22 @@ const VerifyOTPPage = () => {
     try {
       setIsLoading(true);
 
-      // TODO: Replace this with actual OTP verification API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await axios.post(VERIFY_OTP, {
+        email: email,
+        otp,
+      });
 
-      toast.success("OTP verified successfully");
-
-      navigate("/auth/reset-password", { state: { email } });
+      if (response.status === 200) {
+        toast.success("OTP verified successfully");
+        navigate("/auth/reset-password", { state: { email } });
+      }
     } catch (error) {
-      const err = error as Error;
-      toast.error("Failed to verify OTP. Please try again.");
+      const err = error as AxiosError;
+
+      toast.error(
+        (err.response?.data as { message: string }).message ||
+          "Failed to verify OTP. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +67,7 @@ const VerifyOTPPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       toast.success("A new OTP has been sent to your email");
     } catch (error) {
-      console.error("Resend OTP error:", error);
+      logger.error(error);
       toast.error("Failed to resend OTP");
     }
   };
@@ -88,7 +100,7 @@ const VerifyOTPPage = () => {
                 value={otp}
                 onValueChange={(e) => setOtp(e)}
               >
-                {Array.from({ length: 6 }).map((_, index) => (
+                {Array.from({ length: 4 }).map((_, index) => (
                   <OneTimePasswordField.Input
                     key={index}
                     className="w-12 h-12 rounded-md border border-input text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all"

@@ -16,7 +16,7 @@ export const buttonVariants = cva(
         dark: "bg-dark text-dark-foreground",
         light: "bg-light text-black border border-gray-300",
         link: "bg-transparent text-primary",
-        ghost: "bg-transparent text-dark",
+        ghost: "bg-transparent dark:bg-gray-600 text-dark dark:text-dark",
         outlinePrimary: "bg-transparent border border-primary text-primary",
         outlineSecondary:
           "bg-transparent border border-secondary text-secondary",

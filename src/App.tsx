@@ -17,16 +17,11 @@ import KnowledgePage from "./pages/knowledge/KnowledgePage";
 import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import SettingsPage from "./pages/SettingsPage";
-import { getAccessToken } from "./utils/auth";
 import TechnicalInterviewPage from "./pages/technical-interview/Index";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const token = getAccessToken();
-
-  if (!token) return <Navigate to="/auth/login" />;
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
@@ -63,18 +58,7 @@ const App = () => {
                 />
               </Route>
 
-              <Route
-                path="*"
-                element={
-                  token ? (
-                    <Navigate to="/dsa" replace />
-                  ) : (
-                    <Navigate to="/" replace />
-                  )
-                }
-              />
-
-              {/* <Route path="*" element={<NotFound />} /> */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

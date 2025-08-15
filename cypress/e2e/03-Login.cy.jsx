@@ -19,7 +19,6 @@ import {
 
 describe("Login Component", () => {
   before(() => {
-    cy.Register();
     cy.login();
   });
 

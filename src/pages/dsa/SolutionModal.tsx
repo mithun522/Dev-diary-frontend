@@ -127,7 +127,7 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
               <div className="w-full min-h-[200px]">
                 <h3 className="text-lg font-semibold mb-2">{`Solution ${
                   index + 1
-                }: ${solutionMapper()[index].label}`}</h3>
+                }: ${solutionMapper()[index]?.label}`}</h3>
                 <div className="flex flex-1">
                   <Button variant="ghost" onClick={movePrevious}>
                     <MoveLeft />
@@ -135,7 +135,7 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
                   <MarkdownPreview
                     className="w-full"
                     source={`\`\`\`javascript\n${
-                      solutionMapper()[index].code
+                      solutionMapper()[index]?.code
                     }\n\`\`\``}
                   />
                   <Button variant="ghost" onClick={moveNext}>

@@ -19,6 +19,7 @@ import {
   REGISTER_FIRST_NAME,
   REGISTER_LAST_NAME,
   REGISTER_PASSWORD,
+  REGISTER_SPINNER,
   TOAST_SUCCESS,
 } from "../constants/Selectors";
 
@@ -33,16 +34,17 @@ Cypress.Commands.add("login", () => {
   cy.url().should("include", "/dsa");
 });
 
-Cypress.Commands.add("Register", () => {
-  it("Should register a user", () => {
-    cy.visit("/auth/signup");
-    cy.get(REGISTER_FIRST_NAME).type(FIRST_NAME);
-    cy.get(REGISTER_LAST_NAME).type(LAST_NAME);
-    cy.get(REGISTER_EMAIL).type(CORRECT_EMAIL);
-    cy.get(REGISTER_PASSWORD).type(CORRECT_PASSWORD);
-    cy.get(REGISTER_CONFIRM_PASSWORD).type(CORRECT_PASSWORD);
-    cy.get(REGISTER_BUTTON).click();
-    cy.wait(2000);
-    cy.get(TOAST_SUCCESS).contains(REGISTER_SUCCESSFUL).should("be.visible");
-  });
+Cypress.Commands.add("register", () => {
+  cy.visit("/auth/signup");
+  cy.get(REGISTER_FIRST_NAME).type(FIRST_NAME);
+  cy.get(REGISTER_LAST_NAME).type(LAST_NAME);
+  cy.get(REGISTER_EMAIL).type(CORRECT_EMAIL);
+  cy.get(REGISTER_PASSWORD).type(CORRECT_PASSWORD);
+  cy.get(REGISTER_CONFIRM_PASSWORD).type(CORRECT_PASSWORD);
+  cy.get(REGISTER_BUTTON).click();
+  cy.get(REGISTER_SPINNER).should("be.visible");
+  cy.get(TOAST_SUCCESS, { timeout: 10000 })
+    .contains(REGISTER_SUCCESSFUL)
+    .should("be.visible");
+  cy.url().should("include", "/auth/login");
 });

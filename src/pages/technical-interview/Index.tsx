@@ -191,11 +191,11 @@ const TechnicalInterviewPage = () => {
       </div>
 
       {isLoading || isFetching ? (
-        <QuestionsShimmer />
+        <QuestionsShimmer data-cy="questions-shimmer" />
       ) : (
         <div className="grid gap-4">
           {questions.map((question: TechnicalQuestion, index) => (
-            <div key={question.id}>
+            <div key={question.id} data-cy="questions-card">
               <QuestionsCard
                 index={index}
                 key={question.id}

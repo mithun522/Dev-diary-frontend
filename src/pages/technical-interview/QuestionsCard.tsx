@@ -143,10 +143,18 @@ const QuestionsCard = ({
       <div className="pb-3">
         <div className="flex justify-between items-start gap-2">
           <div className="flex flex-col">
-            <h4 className="text-sm font-medium line-clamp-2">
+            <h4
+              className="text-sm font-medium line-clamp-2"
+              data-cy="tech-interview-rendered-question"
+            >
               {index + 1 + "."} {question.question}
             </h4>
-            <div className="text-gray-700">{renderAnswer(question.answer)}</div>
+            <div
+              className="text-gray-700"
+              data-cy="tech-interview-rendered-answer"
+            >
+              {renderAnswer(question.answer)}
+            </div>
           </div>
           <div className="flex flex-shrink-0">
             <Button variant="ghost" size="sm" onClick={() => onEdit(question)}>
