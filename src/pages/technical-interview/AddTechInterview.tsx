@@ -25,25 +25,26 @@ import type { TechnicalQuestion } from "./Index";
 import type { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { logger } from "../../utils/logger";
+import AxiosInstance from "../../utils/AxiosInstance";
+import { TECHNICAL_INTERVIEW } from "../../constants/Api";
+import {
+  QUESTION_ADD_SUCCESS,
+  QUESTION_UPDATED_SUCCESS,
+} from "../../constants/ToastMessage";
+import { useQueryClient } from "@tanstack/react-query";
+import { TechInterviewStore } from "../../store/TechInterviewStore";
 
 interface AddTechnicalQuestionFormProps {
   row?: TechnicalQuestion;
   isEdit: boolean;
-  onAddOrEdit: (question: {
-    id?: number;
-    question: string;
-    answer: string;
-    notes: string;
-    language: string;
-  }) => void;
 }
 
 const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
   isEdit,
   row,
-  onAddOrEdit,
 }) => {
   const [open, setOpen] = useState(false);
+  const { selectedLanguage } = TechInterviewStore();
   const [formData, setFormData] = useState({
     id: row?.id || null,
     question: row?.question || "",
@@ -56,6 +57,7 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
     answer: "",
     language: "",
   });
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,13 +98,30 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
     });
 
     try {
-      await onAddOrEdit({
-        id: formData.id || undefined,
-        question: formData.question,
-        answer: formData.answer,
-        notes: formData.notes,
-        language: formData.language,
-      });
+      if (formData.id) {
+        const response = await AxiosInstance.put(
+          `${TECHNICAL_INTERVIEW}/${formData.id}`,
+          formData
+        );
+
+        if (response.status === 200) {
+          await queryClient.invalidateQueries({
+            queryKey: ["techInterview", selectedLanguage],
+          });
+        }
+        toast.success(QUESTION_UPDATED_SUCCESS);
+      } else {
+        const response = await AxiosInstance.post(
+          TECHNICAL_INTERVIEW,
+          formData
+        );
+        if (response.status === 200) {
+          await queryClient.invalidateQueries({
+            queryKey: ["techInterview", selectedLanguage],
+          });
+        }
+        toast.success(QUESTION_ADD_SUCCESS);
+      }
 
       if (!isEdit) {
         setFormData({

@@ -21,22 +21,19 @@ import AxiosInstance from "../../utils/AxiosInstance";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import AskForConfirmationModal from "../../components/AskForConfirmationModal";
-import { logger } from "../../utils/logger";
 import {
   useFetchTechInterview,
   useSearchTechInterview,
 } from "../../api/hooks/useFetchTechInterview";
-import { useQueryClient } from "@tanstack/react-query";
 import QuestionsCard from "./QuestionsCard";
 import { useDebounce } from "../../api/hooks/use-debounce";
 import {
-  ERROR_OCCURRED,
-  QUESTION_ADD_SUCCESS,
   QUESTION_DELETE_FAILED,
   QUESTION_DELETE_SUCCESS,
-  QUESTION_UPDATED_SUCCESS,
 } from "../../constants/ToastMessage";
 import QuestionsShimmer from "./QuestionsShimmer";
+import ErrorPage from "../ErrorPage";
+import { TechInterviewStore } from "../../store/TechInterviewStore";
 
 export interface TechnicalQuestion {
   id: number;
@@ -51,14 +48,12 @@ export interface TechnicalQuestion {
 const TechnicalInterviewPage = () => {
   // const [questions, setQuestions] = useState<TechnicalQuestion[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState("JAVASCRIPT");
+  const { selectedLanguage, setSelectedLanguage } = TechInterviewStore();
   const [selectedQuestion, setSelectedQuestion] =
     useState<TechnicalQuestion | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<number>(0);
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-
-  const queryClient = useQueryClient();
 
   const {
     data: fetchedQuestions = [],
@@ -81,45 +76,8 @@ const TechnicalInterviewPage = () => {
   const error = searchQuery ? errorSearch : errorFetch;
 
   if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-[40vh]">
-        <p className="text-red-500 text-lg font-medium">
-          Failed to load questions. Please try again.
-        </p>
-      </div>
-    );
+    return <ErrorPage message="Failed to load questions. Please try again." />;
   }
-
-  const handleAddOrEditQuestion = async (newQuestionData: {
-    id?: number;
-    question: string;
-    answer: string;
-    notes: string;
-    language: string;
-  }) => {
-    try {
-      if (newQuestionData.id) {
-        await AxiosInstance.put(
-          `${TECHNICAL_INTERVIEW}/${newQuestionData.id}`,
-          newQuestionData
-        );
-        toast.success(QUESTION_UPDATED_SUCCESS);
-      } else {
-        await AxiosInstance.post(TECHNICAL_INTERVIEW, newQuestionData);
-        toast.success(QUESTION_ADD_SUCCESS);
-      }
-
-      await queryClient.invalidateQueries({
-        queryKey: ["techInterview", selectedLanguage],
-      });
-    } catch (error) {
-      const err = error as AxiosError;
-      toast.error(
-        (err.response?.data as { message: string }).message || ERROR_OCCURRED
-      );
-      logger.error("Error adding or updating question:", error);
-    }
-  };
 
   const handleDeleteOpen = (questionId: number) => {
     setSelectedQuestionId(questionId);
@@ -159,7 +117,6 @@ const TechnicalInterviewPage = () => {
         <AddTechnicalQuestionForm
           isEdit={false}
           row={selectedQuestion ? selectedQuestion : undefined}
-          onAddOrEdit={handleAddOrEditQuestion}
         />
       </div>
 
@@ -202,7 +159,6 @@ const TechnicalInterviewPage = () => {
                 question={question}
                 onEdit={() => setSelectedQuestion(question)}
                 onDelete={() => handleDeleteOpen(question.id)}
-                handleEdit={handleAddOrEditQuestion}
               />
             </div>
           ))}

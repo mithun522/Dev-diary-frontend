@@ -8,7 +8,6 @@ interface Props {
   question: TechnicalQuestion;
   onEdit: (question: TechnicalQuestion) => void;
   onDelete: () => void;
-  handleEdit: (question: TechnicalQuestion) => Promise<void>;
 }
 
 interface AnswerPart {
@@ -18,13 +17,7 @@ interface AnswerPart {
   letter?: string;
 }
 
-const QuestionsCard = ({
-  index,
-  question,
-  onEdit,
-  onDelete,
-  handleEdit,
-}: Props) => {
+const QuestionsCard = ({ index, question, onEdit, onDelete }: Props) => {
   const renderAnswer = (answer: string) => {
     // Check if the answer contains numbered points
     const hasNumberedPoints = /\d+\.\s/.test(answer);
@@ -160,11 +153,7 @@ const QuestionsCard = ({
             <Button variant="ghost" size="sm" onClick={() => onEdit(question)}>
               <BookOpen className="h-3 w-3" />
             </Button>
-            <AddTechnicalQuestionForm
-              isEdit={true}
-              row={question}
-              onAddOrEdit={() => handleEdit(question)} // required, passed from parent if needed
-            />
+            <AddTechnicalQuestionForm isEdit={true} row={question} />
             <Button variant="ghost" size="sm" onClick={onDelete}>
               <Trash2 className="h-3 w-3" />
             </Button>

@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { logger } from "../utils/logger";
 
 interface AuthState {
   token: string | null;
@@ -28,7 +29,7 @@ export const useAuthStore = create<AuthState>()(
             userId: decoded.sub,
           });
         } catch (e) {
-          console.error("Invalid token:", e);
+          logger.error("Invalid token:", e);
         }
       },
       clearAuth: () => set({ token: null, userId: null }),
@@ -48,6 +49,7 @@ export const useAuthStore = create<AuthState>()(
 
           return isValid;
         } catch (e) {
+          logger.error("Invalid token:", e);
           get().clearAuth();
           return false;
         }

@@ -2,10 +2,18 @@ import { useQuery } from "@tanstack/react-query";
 import type { DSAProblem } from "../../data/dsaProblemsData";
 import { fetchDsaByUser } from "../services/dsa.service";
 
-export const useFetchDsaProblemByUser = () => {
+interface FetchDsaProps {
+  search: string;
+  difficulty: string;
+}
+
+export const useFetchDsaProblemByUser = ({
+  search,
+  difficulty,
+}: FetchDsaProps) => {
   return useQuery<DSAProblem[], Error>({
-    queryKey: ["dsa"],
-    queryFn: () => fetchDsaByUser(),
+    queryKey: ["dsa", search ?? "", difficulty ?? "NONE"],
+    queryFn: () => fetchDsaByUser(search, difficulty),
     staleTime: 10 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

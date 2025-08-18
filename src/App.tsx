@@ -18,6 +18,7 @@ import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import TechnicalInterviewPage from "./pages/technical-interview/Index";
+import RedirectIfAuth from "./components/RedirectIfAuth";
 
 const queryClient = new QueryClient();
 
@@ -29,14 +30,20 @@ const App = () => {
           <BrowserRouter>
             <ToastContainer />
             <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/auth/login" element={<LoginPage />} />
-              <Route path="/auth/signup" element={<SignupPage />} />
-              <Route
-                path="/auth/forgot-password"
-                element={<ForgotPasswordPage />}
-              />
+              <Route element={<RedirectIfAuth />}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/auth/login" element={<LoginPage />} />
+                <Route path="/auth/signup" element={<SignupPage />} />
+                <Route
+                  path="/auth/forgot-password"
+                  element={<ForgotPasswordPage />}
+                />
+                <Route
+                  path="/auth/reset-password"
+                  element={<ResetPasswordPage />}
+                />
+              </Route>
+
               <Route path="/auth/verify-otp" element={<VerifyOTPPage />} />
               <Route
                 path="/auth/reset-password"

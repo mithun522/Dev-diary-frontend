@@ -49,6 +49,8 @@ import SolutionModal from "./SolutionModal";
 import { useFetchDsaProblemByUser } from "../../api/hooks/useFetchDsa";
 import DsaTable from "./DsaTable";
 import ErrorPage from "../ErrorPage";
+import { useDebounce } from "../../api/hooks/use-debounce";
+import { QueryClient } from "@tanstack/react-query";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,16 +60,20 @@ const DSAPage: React.FC = () => {
     null
   );
   const [isAddModelOpen, setIsAddModelOpen] = useState<boolean>(false);
-  const [dsaProblems, setDsaProblems] = useState<DSAProblem[]>([]);
   const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
   const [isSolutionModalOpen, setIsSolutionModalOpen] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 1000);
 
   const {
     data: fetchedProblems = [],
     isLoading: isLoadingFetch,
     isFetching: isFetchingFetch,
     error: errorFetch,
-  } = useFetchDsaProblemByUser();
+  } = useFetchDsaProblemByUser({
+    search: debouncedSearch,
+    difficulty: difficultyFilter,
+  });
+  const queryClient = new QueryClient();
 
   // Chart colors
   const COLORS = [
@@ -86,9 +92,7 @@ const DSAPage: React.FC = () => {
 
         if (res.status === 200) {
           toast.success(res.data);
-          setDsaProblems((prevProblems) =>
-            prevProblems.filter((problem) => problem.id !== selectedProblem?.id)
-          );
+          queryClient.invalidateQueries({ queryKey: ["dsa"] });
         }
       })
       .catch((error) => {
@@ -196,19 +200,19 @@ const DSAPage: React.FC = () => {
                       data={[
                         {
                           name: "Solved",
-                          value: dsaProblems.filter(
+                          value: fetchedProblems.filter(
                             (p: DSAProblem) => p.status === "SOLVED"
                           ).length,
                         },
                         {
                           name: "Attempted",
-                          value: dsaProblems.filter(
+                          value: fetchedProblems.filter(
                             (p: DSAProblem) => p.status === "ATTEMPTED"
                           ).length,
                         },
                         {
                           name: "Unsolved",
-                          value: dsaProblems.filter(
+                          value: fetchedProblems.filter(
                             (p: DSAProblem) => p.status === "UNSOLVED"
                           ).length,
                         },
@@ -235,7 +239,7 @@ const DSAPage: React.FC = () => {
                   <div>
                     <div className="font-bold text-xl">
                       {
-                        dsaProblems.filter(
+                        fetchedProblems.filter(
                           (p: DSAProblem) => p.status === "SOLVED"
                         ).length
                       }
@@ -245,7 +249,7 @@ const DSAPage: React.FC = () => {
                   <div>
                     <div className="font-bold text-xl">
                       {
-                        dsaProblems.filter(
+                        fetchedProblems.filter(
                           (p: DSAProblem) => p.status === "ATTEMPTED"
                         ).length
                       }
@@ -257,7 +261,7 @@ const DSAPage: React.FC = () => {
                   <div>
                     <div className="font-bold text-xl">
                       {
-                        dsaProblems.filter(
+                        fetchedProblems.filter(
                           (p: DSAProblem) => p.status === "UNSOLVED"
                         ).length
                       }
@@ -351,11 +355,7 @@ const DSAPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       {isAddModelOpen && (
-        <AddDsaModel
-          setDsaProblems={setDsaProblems}
-          open={isAddModelOpen}
-          setOpen={setIsAddModelOpen}
-        />
+        <AddDsaModel open={isAddModelOpen} setOpen={setIsAddModelOpen} />
       )}
       {isOpenConfirmationModal && (
         <AskForConfirmationModal

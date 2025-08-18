@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { useAuthStore } from "./AuthStore";
 import { USERS } from "../constants/Api";
 import AxiosInstance from "../utils/AxiosInstance";
+import { logger } from "../utils/logger";
 
 // Define your profile type
 interface UserProfile {
@@ -31,7 +32,7 @@ export const useUserStore = create<UserStore>()(
 
           set({ user: res.data });
         } catch (error) {
-          console.error("Failed to fetch user profile:", error);
+          logger.error("Failed to fetch user profile:", error);
         }
       },
 
