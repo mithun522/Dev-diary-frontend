@@ -1,11 +1,17 @@
 import { TECHNICAL_INTERVIEW } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
 
-export const getTechInterviewByLanguage = async (language: string) => {
+export const getTechInterviewByLanguage = async (
+  language: string,
+  pageNumber: number
+) => {
   const response = await AxiosInstance.get(
-    `${TECHNICAL_INTERVIEW}?language=${language}`
+    `${TECHNICAL_INTERVIEW}?language=${language}&page=${pageNumber}`
   );
-  return response.data;
+  return {
+    techInterview: response.data.techInterview, // ✅ unified naming
+    techInterviewTotalLength: response.data.techInterviewTotalLength,
+  };
 };
 
 export const searchTechInterview = async (

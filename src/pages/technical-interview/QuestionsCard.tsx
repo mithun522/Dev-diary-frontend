@@ -149,7 +149,7 @@ const QuestionsCard = ({ index, question, onEdit, onDelete }: Props) => {
               {renderAnswer(question.answer)}
             </div>
           </div>
-          <div className="flex flex-shrink-0">
+          <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => onEdit(question)}>
               <BookOpen className="h-3 w-3" />
             </Button>

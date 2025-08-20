@@ -34,6 +34,8 @@ import {
 import QuestionsShimmer from "./QuestionsShimmer";
 import ErrorPage from "../ErrorPage";
 import { TechInterviewStore } from "../../store/TechInterviewStore";
+import { formatDate } from "../../utils/formatDate";
+import Button from "../../components/ui/button";
 
 export interface TechnicalQuestion {
   id: number;
@@ -54,13 +56,17 @@ const TechnicalInterviewPage = () => {
   const [selectedQuestionId, setSelectedQuestionId] = useState<number>(0);
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-
   const {
-    data: fetchedQuestions = [],
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading: isLoadingFetch,
     isFetching: isFetchingFetch,
     error: errorFetch,
   } = useFetchTechInterview(selectedLanguage);
+
+  const questions = data?.pages.flatMap((page) => page.questions) ?? [];
 
   const {
     data: searchedQuestions = [],
@@ -70,14 +76,13 @@ const TechnicalInterviewPage = () => {
   } = useSearchTechInterview(debouncedSearchQuery, selectedLanguage);
 
   // select data based on searchQuery
-  const questions = searchQuery ? searchedQuestions : fetchedQuestions;
+  const isSearching = !!debouncedSearchQuery;
+
+  // Final list of questions
+  const displayedQuestions = isSearching ? searchedQuestions : questions;
   const isLoading = searchQuery ? isLoadingSearch : isLoadingFetch;
   const isFetching = searchQuery ? isFetchingSearch : isFetchingFetch;
   const error = searchQuery ? errorSearch : errorFetch;
-
-  if (error) {
-    return <ErrorPage message="Failed to load questions. Please try again." />;
-  }
 
   const handleDeleteOpen = (questionId: number) => {
     setSelectedQuestionId(questionId);
@@ -103,6 +108,10 @@ const TechnicalInterviewPage = () => {
       setIsOpenDelete(false);
     }
   };
+
+  if (error) {
+    return <ErrorPage message="Failed to load questions. Please try again." />;
+  }
 
   return (
     <div className="space-y-6 max-h-[80vh] overflow-auto ">
@@ -147,25 +156,34 @@ const TechnicalInterviewPage = () => {
         </Select>
       </div>
 
-      {isLoading || isFetching ? (
-        <QuestionsShimmer data-cy="questions-shimmer" />
-      ) : (
-        <div className="grid gap-4">
-          {questions.map((question: TechnicalQuestion, index) => (
-            <div key={question.id} data-cy="questions-card">
-              <QuestionsCard
-                index={index}
-                key={question.id}
-                question={question}
-                onEdit={() => setSelectedQuestion(question)}
-                onDelete={() => handleDeleteOpen(question.id)}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid gap-4">
+        {displayedQuestions.map((question: TechnicalQuestion, index) => (
+          <div key={question.id} data-cy="questions-card">
+            <QuestionsCard
+              index={index}
+              key={question.id}
+              question={question}
+              onEdit={() => setSelectedQuestion(question)}
+              onDelete={() => handleDeleteOpen(question.id)}
+            />
+          </div>
+        ))}
+        {isLoading ||
+          (isFetching && <QuestionsShimmer data-cy="questions-shimmer" />)}
+        {!isSearching && hasNextPage && (
+          <div className="flex justify-center mt-4">
+            <Button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="px-4 py-2 text-sm bg-primary text-white rounded-lg disabled:opacity-50"
+            >
+              {isFetchingNextPage ? "Loading..." : "Load More"}
+            </Button>
+          </div>
+        )}
+      </div>
 
-      {!isLoading && !isFetching && questions.length === 0 && (
+      {!isLoading && !isFetching && displayedQuestions.length === 0 && (
         <div className="text-center py-12">
           <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">No questions found</h3>
@@ -215,8 +233,12 @@ const TechnicalInterviewPage = () => {
             )}
 
             <div className="text-xs text-muted-foreground border-t pt-4">
-              Created: {selectedQuestion?.createdAt} | Updated:{" "}
-              {selectedQuestion?.updatedAt}
+              {selectedQuestion?.createdAt && (
+                <>Created: {formatDate(selectedQuestion.createdAt)} | </>
+              )}
+              {selectedQuestion?.updatedAt && (
+                <>Updated: {formatDate(selectedQuestion.updatedAt)}</>
+              )}
             </div>
           </div>
         </DialogContent>
