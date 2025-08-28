@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { X, Plus, Upload } from "lucide-react";
-import type { KnowledgeTag } from "../../data/knowledgeData";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
+import type { KnowledgeTag } from "../../../data/knowledgeData";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
 import {
   CardTitle,
   Card,
   CardContent,
   CardHeader,
-} from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import Button from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+} from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
+import Button from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
 import { toast } from "react-toastify";
-import LivePreview from "./LivePreview";
-import { availableTags } from "../../constants/AvailableTags";
-import { getTagColor } from "../../utils/colorVariations";
+import LivePreview from "../LivePreview";
+import { availableTags } from "../../../constants/AvailableTags";
+import { getTagColor } from "../../../utils/colorVariations";
 
 interface AddBlogFormProps {
   onSubmit: (blogData: {
@@ -26,7 +26,6 @@ interface AddBlogFormProps {
     coverImage: File;
     published: boolean;
     readTime: number;
-    userId: number;
   }) => void;
   onCancel: () => void;
 }
@@ -39,7 +38,6 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
   const [coverImage, setCoverImage] = useState<File>();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [published, setPublished] = useState(false);
-  const [userId, setUserId] = useState<number>(0);
   const [isLivePreview, setIsLivePreview] = useState<boolean>(false);
 
   const handleAddTag = (tag: KnowledgeTag) => {
@@ -65,11 +63,6 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
       return;
     }
 
-    if (!userId) {
-      toast.error("User not logged in");
-      return;
-    }
-
     if (title.trim() && summary.trim() && content.trim()) {
       const readTime = estimateReadTime(content);
       onSubmit({
@@ -80,7 +73,6 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
         coverImage: coverImage,
         published,
         readTime: readTime,
-        userId: userId,
       });
     }
   };
@@ -117,13 +109,14 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label isMandatory={true} htmlFor="title">
+              Title
+            </Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter blog title..."
-              required
             />
           </div>
 
@@ -135,30 +128,47 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
               onChange={(e) => setSummary(e.target.value)}
               placeholder="Write a brief summary of your blog post..."
               className="min-h-[100px]"
-              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="coverImage">Cover Image URL (Optional)</Label>
-            <div className="flex gap-2">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              {/* Styled Label as Input */}
+              <Label
+                htmlFor="coverImage"
+                className="flex-1 cursor-pointer rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-600 shadow-sm 
+               hover:border-gray-400 hover:bg-gray-100 transition-all duration-200 ease-in-out"
+              >
+                Cover Image (Optional)
+              </Label>
+
+              {/* Hidden File Input */}
               <Input
                 id="coverImage"
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
+                className="hidden"
               />
 
-              <Button type="button" variant="outlinePrimary" size="md">
-                <Upload className="h-4 w-4" />
+              {/* Upload Button */}
+              <Button
+                type="button"
+                variant="outlineLight"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 
+               bg-white shadow-sm hover:bg-gray-100 transition-all"
+                size="md"
+              >
+                <Upload className="h-5 w-5 text-gray-600" />
               </Button>
             </div>
+
             {previewUrl && (
               <div className="mt-2">
                 <img
                   src={previewUrl}
                   alt="Cover preview"
-                  className="w-full h-32 object-cover rounded-md border"
+                  className="w-64 h-64 object-cover rounded-md border"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                   }}
@@ -168,14 +178,15 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
+            <Label htmlFor="content" isMandatory={true}>
+              Content
+            </Label>
             <Textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your blog content in Markdown format..."
               className="min-h-[400px]"
-              required
             />
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>You can use Markdown syntax for formatting</span>
@@ -263,6 +274,8 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
             <Button
               type="submit"
               disabled={!title.trim() || !summary.trim() || !content.trim()}
+              id="submit-button"
+              name="action"
             >
               {published ? "Publish Blog" : "Save as Draft"}
             </Button>

@@ -36,6 +36,7 @@ import ErrorPage from "../ErrorPage";
 import { TechInterviewStore } from "../../store/TechInterviewStore";
 import { formatDate } from "../../utils/formatDate";
 import Button from "../../components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface TechnicalQuestion {
   id: number;
@@ -56,6 +57,7 @@ const TechnicalInterviewPage = () => {
   const [selectedQuestionId, setSelectedQuestionId] = useState<number>(0);
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const queryClient = useQueryClient();
   const {
     data,
     fetchNextPage,
@@ -96,6 +98,7 @@ const TechnicalInterviewPage = () => {
       );
       if (response.status === 200) {
         toast.success(QUESTION_DELETE_SUCCESS);
+        queryClient.invalidateQueries({ queryKey: ["tech-interview"] });
       }
     } catch (error) {
       const err = error as AxiosError;
@@ -173,9 +176,10 @@ const TechnicalInterviewPage = () => {
         {!isSearching && hasNextPage && (
           <div className="flex justify-center mt-4">
             <Button
+              variant="outlinePrimary"
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
-              className="px-4 py-2 text-sm bg-primary text-white rounded-lg disabled:opacity-50"
+              className="px-4 py-2 text-sm rounded-lg disabled:opacity-50"
             >
               {isFetchingNextPage ? "Loading..." : "Load More"}
             </Button>

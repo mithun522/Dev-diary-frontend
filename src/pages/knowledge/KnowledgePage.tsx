@@ -38,11 +38,12 @@ import {
   type KnowledgeNote,
   type KnowledgeTag,
 } from "../../data/knowledgeData";
-import AddBlogForm from "./AddBlogForm";
+import AddBlogForm from "./Blogs/AddBlogForm";
 import { BLOGS } from "../../constants/Api";
-import Blog from "./Blog";
+import Blog from "./Blogs/Blog";
 import AxiosInstance from "../../utils/AxiosInstance";
 import { formatDate } from "../../utils/formatDate";
+import { logger } from "../../utils/logger";
 
 const KnowledgePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,7 +108,7 @@ const KnowledgePage: React.FC = () => {
       formData.append("published", String(blogData.published));
       formData.append("readTime", String(blogData.readTime));
       blogData.tags.forEach((tag) => formData.append("tags[]", tag));
-      formData.append("coverImage", blogData.coverImage);
+      formData.append("image", blogData.coverImage);
 
       const response = await AxiosInstance.post(BLOGS, formData, {
         headers: {
@@ -115,10 +116,10 @@ const KnowledgePage: React.FC = () => {
         },
       });
 
-      console.log(response.data);
+      logger.info(response.data);
       setIsAddNewBlog(false);
     } catch (error) {
-      console.error("Error adding blog:", error);
+      logger.error("Error adding blog:", error);
     }
   };
 

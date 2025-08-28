@@ -230,7 +230,10 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="md"
-      className={cn("h-7 w-7", className)}
+      className={cn(
+        "flex justify-center items-center p-1 h-10 w-10",
+        className
+      )}
       onClick={(event: never) => {
         onClick?.(event);
         toggleSidebar();

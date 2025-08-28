@@ -150,7 +150,11 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
       <DialogTrigger asChild>
         <Button
           variant={isEdit ? "ghost" : "primary"}
-          className="flex whitespace-nowrap"
+          className={
+            isEdit
+              ? "flex whitespace-nowrap px-2 py-0"
+              : "flex whitespace-nowrap"
+          }
           data-cy="add-tech-question-button"
         >
           {isEdit ? (

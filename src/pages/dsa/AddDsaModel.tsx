@@ -1,5 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DifficultyLevels, type DSAProblem } from "../../data/dsaProblemsData";
 import { X } from "lucide-react";
 import Button from "../../components/ui/button";
@@ -23,14 +23,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Label } from "../../components/ui/label";
 import { useForm, Controller } from "react-hook-form";
 
-type AddDsaModelProps = {
+type DsaFormModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  problemData?: DSAProblem | null; // if provided → edit mode
 };
 
-const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
+const DsaFormModal: React.FC<DsaFormModalProps> = ({
+  open,
+  setOpen,
+  problemData,
+}) => {
   const queryClient = useQueryClient();
-  const [disabled, setDisabled] = useState<boolean>(false);
+  const [disabled, setDisabled] = useState(false);
 
   const {
     register,
@@ -39,7 +44,7 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
     formState: { errors },
     reset,
   } = useForm<DSAProblem>({
-    defaultValues: {
+    defaultValues: problemData || {
       problem: "",
       difficulty: DifficultyLevels.EASY,
       language: ProgrammingLanguages.JAVASCRIPT,
@@ -54,16 +59,34 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
     },
   });
 
+  // Reset values whenever modal opens in edit mode
+  useEffect(() => {
+    if (problemData) {
+      reset(problemData);
+    }
+  }, [problemData, reset]);
+
   const onSubmit = async (data: DSAProblem) => {
     setDisabled(true);
     try {
-      const response = await AxiosInstance.post(DSA, data);
-      if (response.status === 200) {
-        toast.success("DSA problem added successfully");
-        queryClient.invalidateQueries({ queryKey: ["dsa"] });
-        setOpen(false);
-        reset();
+      let response;
+      if (problemData) {
+        // EDIT
+        response = await AxiosInstance.put(`${DSA}/${problemData.id}`, data);
+        if (response.status === 200) {
+          toast.success("DSA problem updated successfully");
+        }
+      } else {
+        // ADD
+        response = await AxiosInstance.post(DSA, data);
+        if (response.status === 200) {
+          toast.success("DSA problem added successfully");
+        }
       }
+
+      queryClient.invalidateQueries({ queryKey: ["dsa"] });
+      setOpen(false);
+      reset();
     } catch (error) {
       logger.error("Error submitting problem:", error);
     } finally {
@@ -78,7 +101,7 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
         <Dialog.Content className="fixed left-1/2 top-1/2 w-[90vw] max-w-md max-h-[600px] overflow-auto -translate-x-1/2 -translate-y-1/2 rounded-xl p-6 shadow-xl bg-background dark:text-white border border-white z-[101]">
           <div className="flex items-center justify-between mb-4">
             <Dialog.Title className="text-lg font-semibold">
-              Add DSA Problem
+              {problemData ? "Edit DSA Problem" : "Add DSA Problem"}
             </Dialog.Title>
             <Dialog.Close asChild>
               <X className="text-primary-background" />
@@ -107,8 +130,12 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
             <Controller
               name="difficulty"
               control={control}
+              defaultValue={DifficultyLevels.EASY}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(val) => field.onChange(val)}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
@@ -202,4 +229,4 @@ const AddDsaModel: React.FC<AddDsaModelProps> = ({ open, setOpen }) => {
   );
 };
 
-export default AddDsaModel;
+export default DsaFormModal;

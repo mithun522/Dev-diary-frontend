@@ -36,6 +36,9 @@ interface DsaTableProps {
   setIsOpenConfirmationModal: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedProblem: React.Dispatch<React.SetStateAction<DSAProblem | null>>;
   setIsSolutionModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isFormModalOpen: boolean;
+  setIsFormModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setProblemData: React.Dispatch<React.SetStateAction<DSAProblem | null>>;
 }
 
 const DsaTable: React.FC<DsaTableProps> = ({
@@ -44,7 +47,14 @@ const DsaTable: React.FC<DsaTableProps> = ({
   setIsOpenConfirmationModal,
   setSelectedProblem,
   setIsSolutionModalOpen,
+  setIsFormModalOpen,
+  setProblemData,
 }) => {
+  const onEdit = (problem: DSAProblem) => {
+    setProblemData(problem);
+    setIsFormModalOpen(true);
+  };
+
   return (
     <Card>
       <CardContent className="p-0">
@@ -142,6 +152,12 @@ const DsaTable: React.FC<DsaTableProps> = ({
                           <DropdownMenuItem>Add Solution</DropdownMenuItem>
                           <DropdownMenuItem>Add Notes</DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => onEdit(problem)}
+                          >
+                            Edit
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => setIsOpenConfirmationModal(true)}

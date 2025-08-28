@@ -22,11 +22,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import {
-  weeklyProgress,
-  topicProgress,
-  type DSAProblem,
-} from "../../data/dsaProblemsData";
+import { weeklyProgress, type DSAProblem } from "../../data/dsaProblemsData";
 import {
   BarChart,
   Bar,
@@ -38,7 +34,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
-import AddDsaModel from "./AddDsaModel";
+import DsaFormModal from "./AddDsaModel";
 import AxiosInstance from "../../utils/AxiosInstance";
 import { DSA } from "../../constants/Api";
 import AskForConfirmationModal from "../../components/AskForConfirmationModal";
@@ -51,6 +47,12 @@ import DsaTable from "./DsaTable";
 import ErrorPage from "../ErrorPage";
 import { useDebounce } from "../../api/hooks/use-debounce";
 import { QueryClient } from "@tanstack/react-query";
+import { convertToPascalCaseWithUnderscore } from "../../utils/convertToPascalCase";
+
+type TopicProgress = {
+  topic: string;
+  count: number;
+};
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,6 +86,17 @@ const DSAPage: React.FC = () => {
     "#8884d8",
     "#82ca9d",
   ];
+
+  const topicProgress: TopicProgress[] = Object.entries(
+    fetchedProblems
+      // flatten all topic arrays into one
+      .flatMap((p: DSAProblem) => p.topics)
+      // count occurrences
+      .reduce<Record<string, number>>((acc, topic) => {
+        acc[topic] = (acc[topic] || 0) + 1;
+        return acc;
+      }, {})
+  ).map(([topic, count]) => ({ topic, count }));
 
   const deleteDsaProblem = async () => {
     await AxiosInstance.delete(`${DSA}/${selectedProblem?.id}`)
@@ -182,6 +195,9 @@ const DSAPage: React.FC = () => {
               setSelectedProblem={setSelectedProblem}
               setIsSolutionModalOpen={setIsSolutionModalOpen}
               errorFetch={errorFetch}
+              isFormModalOpen={isAddModelOpen}
+              setIsFormModalOpen={setIsAddModelOpen}
+              setProblemData={setSelectedProblem}
             />
           )}
         </TabsContent>
@@ -321,31 +337,36 @@ const DSAPage: React.FC = () => {
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie
-                      data={topicProgress.slice(0, 5)} // Show top 5 topics
+                      data={topicProgress}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="count"
-                      label={({ topic, percent }) =>
-                        `${topic} ${(percent * 100).toFixed(0)}%`
-                      }
+                      label={({ topic, percent, x, y, textAnchor }) => (
+                        <text
+                          x={x}
+                          y={y}
+                          textAnchor={textAnchor}
+                          dominantBaseline="central"
+                          fontSize={13}
+                          fill="#8884d8"
+                        >
+                          {`${convertToPascalCaseWithUnderscore(topic)} ${(
+                            percent * 100
+                          ).toFixed(0)}%`}
+                        </text>
+                      )}
                     >
-                      {topicProgress
-                        .slice(0, 5)
-                        .map(
-                          (
-                            _entry: { topic: string; count: number },
-                            index: number
-                          ) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          )
-                        )}
+                      {topicProgress.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
                     </Pie>
+
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
@@ -355,7 +376,11 @@ const DSAPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       {isAddModelOpen && (
-        <AddDsaModel open={isAddModelOpen} setOpen={setIsAddModelOpen} />
+        <DsaFormModal
+          open={isAddModelOpen}
+          setOpen={setIsAddModelOpen}
+          problemData={selectedProblem}
+        />
       )}
       {isOpenConfirmationModal && (
         <AskForConfirmationModal

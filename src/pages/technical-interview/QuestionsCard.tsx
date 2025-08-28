@@ -143,7 +143,7 @@ const QuestionsCard = ({ index, question, onEdit, onDelete }: Props) => {
               {index + 1 + "."} {question.question}
             </h4>
             <div
-              className="text-gray-700"
+              className="text-dark-foreground opacity-90 text-sm font-sans line-clamp-2"
               data-cy="tech-interview-rendered-answer"
             >
               {renderAnswer(question.answer)}
