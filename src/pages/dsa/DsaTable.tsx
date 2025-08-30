@@ -1,4 +1,3 @@
-import { EllipsisVertical } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
 import {
   Table,
@@ -17,16 +16,9 @@ import {
 import { convertToPascalCase } from "../../utils/convertToPascalCase";
 import { TopicColors, type Topic } from "../../constants/Topics";
 import { formatDate } from "../../utils/formatDate";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import Button from "../../components/ui/button";
 import type React from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import Button from "../../components/ui/button";
 
 interface DsaTableProps {
   isLoadingFetch: boolean;
@@ -135,37 +127,27 @@ const DsaTable: React.FC<DsaTableProps> = ({
                     <TableCell>
                       {problem.updatedAt ? formatDate(problem.updatedAt) : "-"}
                     </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          asChild
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button variant="ghost" size="sm">
-                            <EllipsisVertical />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>Mark as Solved</DropdownMenuItem>
-                          <DropdownMenuItem>Add Solution</DropdownMenuItem>
-                          <DropdownMenuItem>Add Notes</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => onEdit(problem)}
-                          >
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => setIsOpenConfirmationModal(true)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <TableCell className="flex">
+                      <Button className="bg-transparent">
+                        <Pencil
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(problem);
+                          }}
+                          className="cursor-pointer text-blue-600 dark:text-blue-400"
+                          size={16}
+                        />
+                      </Button>
+                      <Button className="bg-transparent">
+                        <Trash2
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsOpenConfirmationModal(true);
+                          }}
+                          className="text-destructive"
+                          size={18}
+                        />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );

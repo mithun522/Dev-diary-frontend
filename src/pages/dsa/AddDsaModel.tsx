@@ -139,7 +139,7 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[9999]">
                     {Object.values(DifficultyLevels).map((level) => (
                       <SelectItem key={level} value={level}>
                         {convertToPascalCase(level)}
@@ -159,7 +159,7 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[9999]">
                     {Object.values(ProgrammingLanguages).map((lang) => (
                       <SelectItem key={lang} value={lang}>
                         {convertToPascalCase(lang)}

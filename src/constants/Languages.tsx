@@ -1,4 +1,4 @@
-export const Languages: string[] = [
+export const Languages = [
   "HTML",
   "CSS",
   "JAVASCRIPT",

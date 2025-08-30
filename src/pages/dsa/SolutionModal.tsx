@@ -77,7 +77,7 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
       />
 
       {/* Modal Content */}
-      <Card className="relative z-50 max-w-3xl w-full mx-4 bg-background shadow-lg rounded-lg">
+      <Card className="relative z-50 max-w-3xl max-h-[90vh] overflow-auto w-full mx-4 bg-background shadow-lg rounded-lg">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
 
           <TabsContent value="notes" className="pt-4">
             {selectedProblem.notes ? (
-              <p>{selectedProblem.notes}</p>
+              <MarkdownPreview source={selectedProblem.notes} />
             ) : (
               <p>No notes added yet for this problem.</p>
             )}

@@ -41,26 +41,30 @@ const LoginPage = () => {
 
     try {
       setIsLoading(true);
-      const request = {
-        email,
-        password,
-      };
+      const request = { email, password };
       const response = await axios.post(LOGIN, request);
-      if (response.data.message.toLowerCase() === "login successful") {
+
+      if (response.data.message?.toLowerCase() === "login successful") {
         setAccessToken(response.data.token);
         navigate("/dsa");
         toast.success(LOGIN_SUCCESSFUL);
-      } else {
-        throw new Error(response.data.message);
       }
     } catch (error) {
       const err = error as AxiosError;
 
-      toast.error(
-        (err.response?.data as { message: string }).message || "Login failed"
-      );
+      if (err.response) {
+        const serverMessage = (err.response.data as { message?: string })
+          ?.message;
+        toast.error(serverMessage || "Something went wrong");
+      } else if (err.request) {
+        toast.error(
+          "Cannot connect to server. Please check if backend is running."
+        );
+      } else {
+        toast.error(err.message || "Unexpected error occurred");
+      }
     } finally {
-      setIsLoading(false); // ✅ Spinner now properly stops
+      setIsLoading(false); // ✅ Spinner stops
     }
   };
 

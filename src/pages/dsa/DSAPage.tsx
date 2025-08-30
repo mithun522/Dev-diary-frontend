@@ -26,9 +26,6 @@ import { weeklyProgress, type DSAProblem } from "../../data/dsaProblemsData";
 import {
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   ResponsiveContainer,
   XAxis,
   YAxis,
@@ -47,12 +44,8 @@ import DsaTable from "./DsaTable";
 import ErrorPage from "../ErrorPage";
 import { useDebounce } from "../../api/hooks/use-debounce";
 import { QueryClient } from "@tanstack/react-query";
-import { convertToPascalCaseWithUnderscore } from "../../utils/convertToPascalCase";
-
-type TopicProgress = {
-  topic: string;
-  count: number;
-};
+import OverallProgress from "./progress/OverallProgress";
+import TopicCoverage from "./progress/TopicCoverage";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,25 +71,6 @@ const DSAPage: React.FC = () => {
   const queryClient = new QueryClient();
 
   // Chart colors
-  const COLORS = [
-    "#0088FE",
-    "#00C49F",
-    "#FFBB28",
-    "#FF8042",
-    "#8884d8",
-    "#82ca9d",
-  ];
-
-  const topicProgress: TopicProgress[] = Object.entries(
-    fetchedProblems
-      // flatten all topic arrays into one
-      .flatMap((p: DSAProblem) => p.topics)
-      // count occurrences
-      .reduce<Record<string, number>>((acc, topic) => {
-        acc[topic] = (acc[topic] || 0) + 1;
-        return acc;
-      }, {})
-  ).map(([topic, count]) => ({ topic, count }));
 
   const deleteDsaProblem = async () => {
     await AxiosInstance.delete(`${DSA}/${selectedProblem?.id}`)
@@ -204,91 +178,7 @@ const DSAPage: React.FC = () => {
 
         <TabsContent value="progress" className="pt-4">
           <div className="grid md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Overall Progress</CardTitle>
-                <CardDescription>Your problem-solving status</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ResponsiveContainer width="100%" height={240}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        {
-                          name: "Solved",
-                          value: fetchedProblems.filter(
-                            (p: DSAProblem) => p.status === "SOLVED"
-                          ).length,
-                        },
-                        {
-                          name: "Attempted",
-                          value: fetchedProblems.filter(
-                            (p: DSAProblem) => p.status === "ATTEMPTED"
-                          ).length,
-                        },
-                        {
-                          name: "Unsolved",
-                          value: fetchedProblems.filter(
-                            (p: DSAProblem) => p.status === "UNSOLVED"
-                          ).length,
-                        },
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
-                    >
-                      <Cell fill="#4ade80" />
-                      <Cell fill="#fbbf24" />
-                      <Cell fill="#94a3b8" />
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-
-                <div className="grid grid-cols-3 gap-4 text-center mt-4">
-                  <div>
-                    <div className="font-bold text-xl">
-                      {
-                        fetchedProblems.filter(
-                          (p: DSAProblem) => p.status === "SOLVED"
-                        ).length
-                      }
-                    </div>
-                    <div className="text-sm text-muted-foreground">Solved</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-xl">
-                      {
-                        fetchedProblems.filter(
-                          (p: DSAProblem) => p.status === "ATTEMPTED"
-                        ).length
-                      }
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Attempted
-                    </div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-xl">
-                      {
-                        fetchedProblems.filter(
-                          (p: DSAProblem) => p.status === "UNSOLVED"
-                        ).length
-                      }
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Unsolved
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <OverallProgress fetchedProblems={fetchedProblems} />
 
             <Card>
               <CardHeader>
@@ -327,51 +217,7 @@ const DSAPage: React.FC = () => {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Topic Coverage</CardTitle>
-                <CardDescription>Problems solved by topic</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ResponsiveContainer width="100%" height={240}>
-                  <PieChart>
-                    <Pie
-                      data={topicProgress}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="count"
-                      label={({ topic, percent, x, y, textAnchor }) => (
-                        <text
-                          x={x}
-                          y={y}
-                          textAnchor={textAnchor}
-                          dominantBaseline="central"
-                          fontSize={13}
-                          fill="#8884d8"
-                        >
-                          {`${convertToPascalCaseWithUnderscore(topic)} ${(
-                            percent * 100
-                          ).toFixed(0)}%`}
-                        </text>
-                      )}
-                    >
-                      {topicProgress.map((_, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <TopicCoverage fetchedProblems={fetchedProblems} />
           </div>
         </TabsContent>
       </Tabs>
