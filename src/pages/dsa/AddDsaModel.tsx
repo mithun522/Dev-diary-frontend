@@ -36,6 +36,8 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const [disabled, setDisabled] = useState(false);
+  const [showBetter, setShowBetter] = useState(false);
+  const [showOptimised, setShowOptimised] = useState(false);
 
   const {
     register,
@@ -194,7 +196,7 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
             />
 
             <Label htmlFor="bruteForceSolution" isMandatory>
-              Solution
+              Brute force solution
             </Label>
             <div>
               <Textarea
@@ -204,7 +206,9 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                   required: "Solution is required",
                 })}
                 className={
-                  errors.bruteForceSolution ? "border border-red-600" : ""
+                  errors.bruteForceSolution
+                    ? "border border-red-600"
+                    : "ring-0 focus:ring-0 ring-color-transparent"
                 }
               />
               {errors.bruteForceSolution && (
@@ -212,7 +216,51 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                   {errors.bruteForceSolution.message}
                 </p>
               )}
+              {!showBetter && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => setShowBetter(true)}
+                >
+                  + Add Better Solution
+                </Button>
+              )}
+
+              {/* Better Solution - conditional */}
+              {showBetter && (
+                <div className="mt-4">
+                  <Label htmlFor="betterSolution">Better Solution</Label>
+                  <Textarea
+                    id="betterSolution"
+                    placeholder="Write better solution..."
+                    {...register("betterSolution")}
+                  />
+                </div>
+              )}
             </div>
+            {/* Button to reveal optimised field */}
+            {showBetter && !showOptimised && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowOptimised(true)}
+              >
+                + Add Optimised Solution
+              </Button>
+            )}
+
+            {/* Optimised Solution - conditional */}
+            {showOptimised && (
+              <div className="mt-4">
+                <Label htmlFor="optimisedSolution">Optimised Solution</Label>
+                <Textarea
+                  id="optimisedSolution"
+                  placeholder="Write optimised solution..."
+                  {...register("optimisedSolution")}
+                />
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Dialog.Close asChild>

@@ -19,6 +19,7 @@ import { TopicColors, type Topic } from "../../constants/Topics";
 import { getDifficultyColor } from "../../utils/colorVariations";
 import { MoveLeft, MoveRightIcon } from "lucide-react";
 import { useState } from "react";
+import noNotesImage from "../../assets/no-notes-added.webp";
 
 interface SolutionModalProps {
   selectedProblem: DSAProblem;
@@ -77,7 +78,7 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
       />
 
       {/* Modal Content */}
-      <Card className="relative z-50 max-w-3xl max-h-[90vh] overflow-auto w-full mx-4 bg-background shadow-lg rounded-lg">
+      <Card className="relative z-50 max-w-3xl max-h-[90vh] min-h-[90vh] overflow-auto w-full mx-4 bg-background shadow-lg rounded-lg">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -148,11 +149,18 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
             )}
           </TabsContent>
 
-          <TabsContent value="notes" className="pt-4">
+          <TabsContent value="notes" className="relative pt-4 flex-1">
             {selectedProblem.notes ? (
               <MarkdownPreview source={selectedProblem.notes} />
             ) : (
-              <p>No notes added yet for this problem.</p>
+              <div className="absolute top-48 inset-0 flex flex-col items-center justify-center gap-4 text-center text-gray-400">
+                <img
+                  src={noNotesImage}
+                  alt="No notes"
+                  className="w-96 h-96 object-contain"
+                />
+                <p>No notes added yet for this problem.</p>
+              </div>
             )}
           </TabsContent>
         </Tabs>

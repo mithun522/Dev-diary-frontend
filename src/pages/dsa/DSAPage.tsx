@@ -46,6 +46,7 @@ import { useDebounce } from "../../api/hooks/use-debounce";
 import { QueryClient } from "@tanstack/react-query";
 import OverallProgress from "./progress/OverallProgress";
 import TopicCoverage from "./progress/TopicCoverage";
+import noDataImage from "../../assets/no-data-available.jpg";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -160,7 +161,7 @@ const DSAPage: React.FC = () => {
               </Button>
             </div>
           </div>
-          {fetchedProblems && (
+          {fetchedProblems && fetchedProblems.length > 0 ? (
             <DsaTable
               isLoadingFetch={isLoadingFetch}
               isFetching={isFetchingFetch}
@@ -173,6 +174,13 @@ const DSAPage: React.FC = () => {
               setIsFormModalOpen={setIsAddModelOpen}
               setProblemData={setSelectedProblem}
             />
+          ) : (
+            <div className="flex flex-col gap-2 justify-center items-center">
+              <img
+                src={noDataImage}
+                className="flex object-contain h-[60vh] w-[60vw]"
+              />
+            </div>
           )}
         </TabsContent>
 
