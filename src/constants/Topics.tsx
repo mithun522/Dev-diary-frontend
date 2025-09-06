@@ -17,6 +17,7 @@ export const Topics = {
   BINARY_SEARCH: "BINARY_SEARCH",
   DFS: "DFS",
   BFS: "BFS",
+  HASHING: "HASHING",
   SWAPPING: "SWAPPING",
   MERGE_SORT: "MERGE_SORT",
   QUICK_SORT: "QUICK_SORT",
@@ -60,6 +61,8 @@ export const TopicColors: Record<Topic, string> = {
     "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
   [Topics.DFS]: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   [Topics.BFS]:
+    "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  [Topics.HASHING]:
     "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   [Topics.SWAPPING]:
     "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",

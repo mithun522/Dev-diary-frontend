@@ -8,6 +8,7 @@ export const BLOGS = `${SERVER_BASE_URL}/blogs`;
 export const GET_BLOGS_BY_USER = `${BLOGS}/user`;
 export const GET_PUBLISHED_BLOGS = `${BLOGS}/published`;
 export const GET_DRAFTED_BLOGS = `${BLOGS}/draft`;
+export const PUBLISH_BLOG = `${BLOGS}/publish`;
 
 export const AUTH = `${SERVER_BASE_URL}/auth`;
 export const REGISTER = `${AUTH}/register`;

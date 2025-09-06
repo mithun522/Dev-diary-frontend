@@ -1,23 +1,38 @@
+// useFetchBlogs.ts
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { fetchBlogsByUser } from "../services/blogs.service";
+import {
+  fetchBlogsByPublished,
+  fetchBlogsByUser,
+  fetchBlogsByDrafts,
+  fetchAllBlogs,
+} from "../services/blogs.service";
 
-export const useFetchBlogsByUser = () => {
+type BlogType = "all" | "published" | "myBlogs" | "drafts";
+
+export const useFetchBlogs = (type: BlogType, search: string) => {
   return useInfiniteQuery({
-    queryKey: ["blogs"],
+    queryKey: ["blogs", type, search || ""],
     queryFn: async ({ pageParam = 1 }) => {
-      const response = await fetchBlogsByUser(Number(pageParam));
-      return {
-        blogs: response.blogs,
-        total: response.totalLength,
-        page: pageParam,
-      };
+      switch (type) {
+        case "myBlogs":
+          return await fetchBlogsByUser(pageParam, search);
+
+        case "published":
+          return await fetchBlogsByPublished(pageParam, search);
+
+        case "drafts":
+          return await fetchBlogsByDrafts(pageParam, search);
+
+        case "all":
+        default:
+          return await fetchAllBlogs(pageParam, search);
+      }
     },
     getNextPageParam: (lastPage, allPages) => {
       const totalLoaded = allPages.flatMap((p) => p.blogs).length;
-      if (totalLoaded < lastPage.total) {
-        return allPages.length + 1; // fetch next page
-      }
-      return undefined; // no more pages
+      return totalLoaded < lastPage.totalLength
+        ? allPages.length + 1
+        : undefined;
     },
     initialPageParam: 1,
     staleTime: 10 * 60 * 1000,

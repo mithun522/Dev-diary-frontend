@@ -14,3 +14,7 @@ export const QUESTION_ADD_SUCCESS = "Question added successfully";
 export const QUESTION_UPDATED_SUCCESS = "Question updated successfully";
 export const QUESTION_DELETE_SUCCESS = "Question deleted successfully";
 export const QUESTION_DELETE_FAILED = "Failed to delete";
+
+// Blogs
+export const BLOG_PUBLISHED_SUCCESS = "Blog published successfully";
+export const BLOG_PUBLISHED_ERROR = "Failed to publish blog";

@@ -62,12 +62,17 @@ const TopicCoverage: React.FC<OverallProgressProps> = ({ fetchedProblems }) => {
                   y={y}
                   textAnchor={textAnchor}
                   dominantBaseline="central"
-                  fontSize={13}
+                  fontSize={10}
                   fill="#8884d8"
                 >
-                  {`${convertToPascalCaseWithUnderscore(topic)} ${(
-                    percent * 100
-                  ).toFixed(0)}%`}
+                  <title>{convertToPascalCaseWithUnderscore(topic)}</title>
+                  {`${
+                    topic.length > 12
+                      ? convertToPascalCaseWithUnderscore(topic).slice(0, 8) +
+                        "…"
+                      : convertToPascalCaseWithUnderscore(topic)
+                  }`}{" "}
+                  {`${(percent * 100).toFixed(0)}%`}
                 </text>
               )}
             >

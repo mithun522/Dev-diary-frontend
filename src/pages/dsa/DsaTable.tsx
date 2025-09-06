@@ -34,6 +34,9 @@ interface DsaTableProps {
   isFormModalOpen: boolean;
   setIsFormModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setProblemData: React.Dispatch<React.SetStateAction<DSAProblem | null>>;
+  fetchNextPage: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
 }
 
 const DsaTable: React.FC<DsaTableProps> = ({
@@ -44,6 +47,9 @@ const DsaTable: React.FC<DsaTableProps> = ({
   setIsSolutionModalOpen,
   setIsFormModalOpen,
   setProblemData,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
 }) => {
   const onEdit = (problem: DSAProblem) => {
     setProblemData(problem);
@@ -76,10 +82,10 @@ const DsaTable: React.FC<DsaTableProps> = ({
                 </TableRow>
               ))
             ) : fetchedProblems ? (
-              fetchedProblems.map((problem: DSAProblem) => {
+              fetchedProblems.map((problem: DSAProblem, index: number) => {
                 return (
                   <TableRow
-                    key={problem.id}
+                    key={`${problem.id}-${index}`}
                     onClick={() => {
                       setSelectedProblem(problem);
                       setIsSolutionModalOpen(true);
@@ -111,9 +117,9 @@ const DsaTable: React.FC<DsaTableProps> = ({
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {problem.topics &&
-                          problem.topics.map((topics: Topic, index: number) => (
+                          problem.topics.map((topics: Topic) => (
                             <Badge
-                              key={index}
+                              key={`${problem.id}-${topics}`}
                               variant="secondary"
                               className={`text-xs ${TopicColors[topics]}`}
                             >
@@ -165,6 +171,18 @@ const DsaTable: React.FC<DsaTableProps> = ({
             )}
           </TableBody>
         </Table>
+        {hasNextPage && (
+          <div className="flex justify-center mt-4 mb-4">
+            <Button
+              variant="outlinePrimary"
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="px-4 py-2 text-sm rounded-lg disabled:opacity-50"
+            >
+              {isFetchingNextPage ? "Loading..." : "Load More"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

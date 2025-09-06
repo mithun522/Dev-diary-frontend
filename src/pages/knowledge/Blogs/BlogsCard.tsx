@@ -15,12 +15,19 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
-import { BACKEND_URL } from "../../../constants/Api";
+import { BACKEND_URL, PUBLISH_BLOG } from "../../../constants/Api";
 import { getTagColor } from "../../../utils/colorVariations";
 import { Badge } from "../../../components/ui/badge";
 import type { KnowledgeBlog } from "../../../data/knowledgeData";
 import { formatDate } from "../../../utils/formatDate";
 import { Clock, EllipsisVertical, Maximize2, X } from "lucide-react";
+import AxiosInstance from "../../../utils/AxiosInstance";
+import { toast } from "react-toastify";
+import { logger } from "../../../utils/logger";
+import {
+  BLOG_PUBLISHED_ERROR,
+  BLOG_PUBLISHED_SUCCESS,
+} from "../../../constants/ToastMessage";
 
 interface BlogsCardProps {
   selectedBlog: KnowledgeBlog;
@@ -35,6 +42,23 @@ const BlogsCard: React.FC<BlogsCardProps> = ({
   isMaximized,
   setIsMaximized,
 }) => {
+  const handlePublish = async () => {
+    try {
+      const response = await AxiosInstance.put(
+        `${PUBLISH_BLOG}/${selectedBlog.id}`
+      );
+
+      if (response.status === 200) {
+        toast.success(BLOG_PUBLISHED_SUCCESS);
+      } else {
+        toast.error(BLOG_PUBLISHED_ERROR);
+      }
+    } catch (err) {
+      logger.error(err);
+      toast.error(BLOG_PUBLISHED_ERROR);
+    }
+  };
+
   return (
     <Card className="z-50">
       {selectedBlog?.image_url && (
@@ -71,7 +95,7 @@ const BlogsCard: React.FC<BlogsCardProps> = ({
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Edit Blog</DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handlePublish}>
                 {selectedBlog?.published ? "Unpublish" : "Publish"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />

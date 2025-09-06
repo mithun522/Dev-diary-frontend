@@ -21,18 +21,28 @@ import { logger } from "../../../utils/logger";
 import BlogsCard from "./BlogsCard";
 import { getTagColor } from "../../../utils/colorVariations";
 import { parseTags } from "../../../utils/parseTags";
-import { useFetchBlogsByUser } from "../../../api/hooks/useFetchBlogs";
+import { useFetchBlogs } from "../../../api/hooks/useFetchBlogs";
 import Button from "../../../components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import ErrorPage from "../../ErrorPage";
 import { BlogsShimmer } from "./BlogsShimmer";
+import { useDebounce } from "../../../api/hooks/use-debounce";
 
 type BlogsProps = {
   searchQuery: string;
 };
-const Blog: React.FC<BlogsProps> = () => {
+const FILTERS = [
+  { key: "all", label: "All" },
+  { key: "myBlogs", label: "My Blogs" },
+  { key: "published", label: "Published" },
+  { key: "drafts", label: "Drafts" },
+] as const;
+
+type BlogFilter = (typeof FILTERS)[number]["key"];
+const Blog: React.FC<BlogsProps> = ({ searchQuery }) => {
   const [selectedBlog, setSelectedBlog] = useState<KnowledgeBlog | null>(null);
   const [isMaximized, setIsMaximized] = useState<boolean>(false);
+  const [filter, setFilter] = useState<BlogFilter>();
   const queryClient = useQueryClient();
   const {
     data,
@@ -42,7 +52,7 @@ const Blog: React.FC<BlogsProps> = () => {
     isLoading,
     isError,
     isFetching,
-  } = useFetchBlogsByUser();
+  } = useFetchBlogs(filter ? filter : "published", useDebounce(searchQuery));
 
   const blogs = data?.pages.flatMap((page) => page.blogs) ?? [];
 
@@ -74,77 +84,82 @@ const Blog: React.FC<BlogsProps> = () => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="md:col-span-1 space-y-6">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-            All
-          </Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-            Published
-          </Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-            Drafts
-          </Badge>
+          {FILTERS.map(({ key, label }) => (
+            <Badge
+              key={key}
+              variant="outline"
+              className={`cursor-pointer hover:bg-muted ${
+                filter === key ? "bg-primary text-primary-foreground" : ""
+              }`}
+              onClick={() => setFilter(key)}
+            >
+              {label}
+            </Badge>
+          ))}
         </div>
 
         <div className="space-y-4">
-          {blogs.map((blog) => (
-            <Card
-              key={blog.id}
-              className={`cursor-pointer hover:ring-1 hover:ring-primary/20 transition-shadow ${
-                selectedBlog?.id === blog.id ? "ring-1 ring-primary" : ""
-              }`}
-              onClick={() => setSelectedBlog(blog)}
-            >
-              {blog.coverImage && (
-                <div className="relative h-32 overflow-hidden rounded-t-lg">
-                  <img
-                    src={blog.coverImage}
-                    alt={blog.title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <CardHeader className={`p-4 ${blog.coverImage ? "pb-0" : ""}`}>
-                <div className="flex justify-between gap-2">
-                  <CardTitle className="text-base line-clamp-1">
-                    {blog.title}
-                  </CardTitle>
-                  {!blog.published && <Badge variant="outline">Draft</Badge>}
-                </div>
-                <CardDescription className="line-clamp-2 mt-1">
-                  {blog.summary}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 pt-2">
-                <div className="flex flex-wrap gap-1">
-                  {blog.tags &&
-                    parseTags(blog.tags.toString())
-                      .slice(0, 2)
-                      .map((tag: KnowledgeTag, index: number) => (
-                        <Badge
-                          key={index}
-                          className={`text-xs ${getTagColor(tag)}`}
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
+          {Array.isArray(blogs) &&
+            blogs.map((blog) => (
+              <Card
+                key={blog.id}
+                className={`cursor-pointer hover:ring-1 hover:ring-primary/20 transition-shadow ${
+                  selectedBlog?.id === blog.id ? "ring-1 ring-primary" : ""
+                }`}
+                onClick={() => setSelectedBlog(blog)}
+              >
+                {blog.coverImage && (
+                  <div className="relative h-32 overflow-hidden rounded-t-lg">
+                    <img
+                      src={blog.coverImage}
+                      alt={blog.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <CardHeader className={`p-4 ${blog.coverImage ? "pb-0" : ""}`}>
+                  <div className="flex justify-between gap-2">
+                    <CardTitle className="text-base line-clamp-1">
+                      {blog.title}
+                    </CardTitle>
+                    {!blog.published && <Badge variant="outline">Draft</Badge>}
+                  </div>
+                  <CardDescription className="line-clamp-2 mt-1">
+                    {blog.summary}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
+                  <div className="flex flex-wrap gap-1">
+                    {blog.tags &&
+                      parseTags(blog.tags.toString())
+                        .slice(0, 2)
+                        .map((tag: KnowledgeTag, index: number) => (
+                          <Badge
+                            key={index}
+                            className={`text-xs ${getTagColor(tag)}`}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
 
-                  {blog.tags && parseTags(blog.tags.toString()).length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{parseTags(blog.tags.toString()).length - 2}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="p-4 pt-0">
-                <div className="flex justify-between items-center w-full text-xs text-muted-foreground">
-                  <span>{formatDate(blog.updatedAt)}</span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> {blog.readTime} min read
-                  </span>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
+                    {blog.tags &&
+                      parseTags(blog.tags.toString()).length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{parseTags(blog.tags.toString()).length - 2}
+                        </Badge>
+                      )}
+                  </div>
+                </CardContent>
+                <CardFooter className="p-4 pt-0">
+                  <div className="flex justify-between items-center w-full text-xs text-muted-foreground">
+                    <span>{formatDate(blog.updatedAt)}</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> {blog.readTime} min read
+                    </span>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
 
           {hasNextPage && (
             <div className="flex justify-center mt-4">

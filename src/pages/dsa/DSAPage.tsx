@@ -61,7 +61,10 @@ const DSAPage: React.FC = () => {
   const debouncedSearch = useDebounce(searchQuery, 1000);
 
   const {
-    data: fetchedProblems = [],
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading: isLoadingFetch,
     isFetching: isFetchingFetch,
     error: errorFetch,
@@ -70,6 +73,7 @@ const DSAPage: React.FC = () => {
     difficulty: difficultyFilter,
   });
   const queryClient = new QueryClient();
+  const dsa = data?.pages.flatMap((page) => page.dsa) ?? [];
 
   // Chart colors
 
@@ -161,11 +165,11 @@ const DSAPage: React.FC = () => {
               </Button>
             </div>
           </div>
-          {fetchedProblems && fetchedProblems.length > 0 ? (
+          {dsa && dsa.length > 0 ? (
             <DsaTable
               isLoadingFetch={isLoadingFetch}
               isFetching={isFetchingFetch}
-              fetchedProblems={fetchedProblems}
+              fetchedProblems={dsa}
               setIsOpenConfirmationModal={setIsOpenConfirmationModal}
               setSelectedProblem={setSelectedProblem}
               setIsSolutionModalOpen={setIsSolutionModalOpen}
@@ -173,6 +177,9 @@ const DSAPage: React.FC = () => {
               isFormModalOpen={isAddModelOpen}
               setIsFormModalOpen={setIsAddModelOpen}
               setProblemData={setSelectedProblem}
+              fetchNextPage={fetchNextPage}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
             />
           ) : (
             <div className="flex flex-col gap-2 justify-center items-center">
@@ -186,7 +193,7 @@ const DSAPage: React.FC = () => {
 
         <TabsContent value="progress" className="pt-4">
           <div className="grid md:grid-cols-3 gap-6">
-            <OverallProgress fetchedProblems={fetchedProblems} />
+            <OverallProgress fetchedProblems={dsa} />
 
             <Card>
               <CardHeader>
@@ -225,7 +232,7 @@ const DSAPage: React.FC = () => {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-            <TopicCoverage fetchedProblems={fetchedProblems} />
+            <TopicCoverage fetchedProblems={dsa} />
           </div>
         </TabsContent>
       </Tabs>

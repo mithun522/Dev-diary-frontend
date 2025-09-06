@@ -49,6 +49,7 @@ const KnowledgePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNote, setSelectedNote] = useState<KnowledgeNote | null>(null);
   const [isAddNewBlog, setIsAddNewBlog] = useState<boolean>(false);
+  const [tabsValue, setTabsValue] = useState("notes");
 
   // Filter notes based on search
   const filteredNotes = knowledgeNotes.filter(
@@ -123,6 +124,12 @@ const KnowledgePage: React.FC = () => {
     }
   };
 
+  const searchKnowledge = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, name } = e.target;
+    setSearchQuery(value);
+    setTabsValue(name);
+  };
+
   if (isAddNewBlog) {
     return (
       <AddBlogForm
@@ -148,7 +155,8 @@ const KnowledgePage: React.FC = () => {
             placeholder="Search notes, blogs, and tags..."
             className="pl-10"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            name={tabsValue}
+            onChange={searchKnowledge}
           />
         </div>
 
@@ -168,7 +176,7 @@ const KnowledgePage: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="notes">
+      <Tabs value={tabsValue} onValueChange={setTabsValue}>
         <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="blogs">Blogs</TabsTrigger>

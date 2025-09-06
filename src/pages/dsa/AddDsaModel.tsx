@@ -63,23 +63,39 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
 
   // Reset values whenever modal opens in edit mode
   useEffect(() => {
-    if (problemData) {
+    if (!open) {
+      reset({
+        problem: "",
+        difficulty: DifficultyLevels.EASY,
+        language: ProgrammingLanguages.JAVASCRIPT,
+        topics: [],
+        link: "",
+        status: "SOLVED",
+        updatedAt: "",
+        notes: "",
+        bruteForceSolution: "",
+        betterSolution: "",
+        optimisedSolution: "",
+      });
+      setShowBetter(false);
+      setShowOptimised(false);
+    } else if (problemData) {
       reset(problemData);
+      setShowBetter(!!problemData.betterSolution);
+      setShowOptimised(!!problemData.optimisedSolution);
     }
-  }, [problemData, reset]);
+  }, [open, problemData, reset]);
 
   const onSubmit = async (data: DSAProblem) => {
     setDisabled(true);
     try {
       let response;
       if (problemData) {
-        // EDIT
         response = await AxiosInstance.put(`${DSA}/${problemData.id}`, data);
         if (response.status === 200) {
           toast.success("DSA problem updated successfully");
         }
       } else {
-        // ADD
         response = await AxiosInstance.post(DSA, data);
         if (response.status === 200) {
           toast.success("DSA problem added successfully");
