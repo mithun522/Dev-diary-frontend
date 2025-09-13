@@ -13,7 +13,7 @@ export const fetchDsaByUser = async (
   pageParam: number
 ): Promise<fetchDsaProps> => {
   const response = await AxiosInstance.get(
-    `${DSA_BY_USER}?searchString=${search}&difficulty=${difficulty}&page=${pageParam}`
+    `${DSA_BY_USER}?searchString=${search}&difficulty=${difficulty}&pageNumber=${pageParam}`
   );
   return response.data;
 };

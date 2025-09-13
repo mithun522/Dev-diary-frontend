@@ -43,7 +43,7 @@ import { useFetchDsaProblemByUser } from "../../api/hooks/useFetchDsa";
 import DsaTable from "./DsaTable";
 import ErrorPage from "../ErrorPage";
 import { useDebounce } from "../../api/hooks/use-debounce";
-import { QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import OverallProgress from "./progress/OverallProgress";
 import TopicCoverage from "./progress/TopicCoverage";
 import noDataImage from "../../assets/no-data-available.jpg";
@@ -72,7 +72,7 @@ const DSAPage: React.FC = () => {
     search: debouncedSearch,
     difficulty: difficultyFilter,
   });
-  const queryClient = new QueryClient();
+  const queryClient = useQueryClient();
   const dsa = data?.pages.flatMap((page) => page.dsa) ?? [];
 
   // Chart colors
@@ -83,7 +83,8 @@ const DSAPage: React.FC = () => {
         setSelectedProblem(null);
 
         if (res.status === 200) {
-          toast.success(res.data);
+          toast.success("DSA problem deleted successfully");
+          setSearchQuery("");
           queryClient.invalidateQueries({ queryKey: ["dsa"] });
         }
       })

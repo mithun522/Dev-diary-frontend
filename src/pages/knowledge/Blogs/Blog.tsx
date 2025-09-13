@@ -42,7 +42,7 @@ type BlogFilter = (typeof FILTERS)[number]["key"];
 const Blog: React.FC<BlogsProps> = ({ searchQuery }) => {
   const [selectedBlog, setSelectedBlog] = useState<KnowledgeBlog | null>(null);
   const [isMaximized, setIsMaximized] = useState<boolean>(false);
-  const [filter, setFilter] = useState<BlogFilter>();
+  const [filter, setFilter] = useState<BlogFilter>("published");
   const queryClient = useQueryClient();
   const {
     data,

@@ -56,6 +56,15 @@ const DsaTable: React.FC<DsaTableProps> = ({
     setIsFormModalOpen(true);
   };
 
+  const onDelete = (
+    e: React.MouseEvent<SVGSVGElement, MouseEvent>,
+    problem: DSAProblem
+  ) => {
+    e.stopPropagation();
+    setSelectedProblem(problem);
+    setIsOpenConfirmationModal(true);
+  };
+
   return (
     <Card>
       <CardContent className="p-0">
@@ -150,10 +159,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
                       </Button>
                       <Button className="bg-transparent">
                         <Trash2
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsOpenConfirmationModal(true);
-                          }}
+                          onClick={(e) => onDelete(e, problem)}
                           className="text-destructive"
                           size={18}
                         />
