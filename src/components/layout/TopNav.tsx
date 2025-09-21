@@ -1,4 +1,4 @@
-import { Bell, User } from "lucide-react";
+import { Bell } from "lucide-react";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import Button from "../../components/ui/button";
 import { SidebarTrigger } from "../../components/ui/sidebar";
@@ -10,10 +10,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
-import { useUserStore } from "../../store/UserStore";
+import { Link } from "react-router-dom";
+import { useFetchUserProfile } from "../../api/hooks/useFetchProfile";
+import { Skeleton } from "../ui/skeleton";
+import ErrorPage from "../../pages/ErrorPage";
 
 const TopNav = () => {
-  const user = useUserStore((state) => state.user);
+  const { data, isLoading, isError, error } = useFetchUserProfile();
+
+  if (isLoading) {
+    return (
+      <header className="border-b flex items-center justify-between p-4">
+        <div className="flex items-center jusify-center gap-10">
+          <SidebarTrigger />
+          <Skeleton className="h-6 w-32 hidden md:block mt-2" />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-8 w-24 hidden md:inline-block rounded-md" />
+        </div>
+      </header>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorPage message={error?.message || "Failed to load user profile."} />
+    );
+  }
 
   return (
     <header className="border-b flex items-center justify-between p-4">
@@ -24,7 +49,7 @@ const TopNav = () => {
         </h1>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <Button variant="ghost" size="md" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-red-500"></span>
@@ -34,30 +59,27 @@ const TopNav = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
-              {user ? (
+              {data && data.avatarUrl ? (
                 <div className="flex items-center gap-2">
                   <span className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
-                    {user.name &&
-                      user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
+                    {data.avatarUrl}
                   </span>
-                  <span className="hidden md:inline">{user.name}</span>
                 </div>
               ) : (
-                <>
-                  <User className="h-5 w-5" />
-                  <span className="hidden md:inline">Profile</span>
-                </>
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                    {data?.firstName && data.firstName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
               )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/profile">Profile</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
             {/* <DropdownMenuItem onClick={logout} className="text-destructive">

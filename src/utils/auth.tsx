@@ -30,3 +30,15 @@ export const isTokenExpired = (token: string): boolean => {
     return true;
   }
 };
+
+export const loggedInUserId = () => {
+  const token = getAccessToken();
+  if (!token) return null;
+  try {
+    const decoded: DecodedToken = jwtDecode(token);
+    return decoded.id;
+  } catch (error: any) {
+    logger.error(error);
+    return null;
+  }
+};

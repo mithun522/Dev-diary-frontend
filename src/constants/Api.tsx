@@ -14,6 +14,7 @@ export const AUTH = `${SERVER_BASE_URL}/auth`;
 export const REGISTER = `${AUTH}/register`;
 export const LOGIN = `${SERVER_BASE_URL}/auth/login`;
 export const USERS = `${SERVER_BASE_URL}/users`;
+export const SINGLE_USER = `${SERVER_BASE_URL}/user`;
 export const SEND_OTP = `${AUTH}/otp`;
 export const VERIFY_OTP = `${AUTH}/verifyotp`;
 

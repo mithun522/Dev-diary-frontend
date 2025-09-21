@@ -28,7 +28,6 @@ export const useFetchTechInterview = (language: string) => {
       return undefined; // no more pages
     },
     initialPageParam: 1,
-    enabled: language !== "all",
     staleTime: 10 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -43,7 +42,6 @@ export const useFetchTechInterviewLength = (language: string) => {
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: language !== "all",
   } as UseQueryOptions<number, Error>);
 };
 
@@ -59,6 +57,6 @@ export const useSearchTechInterview = (
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: language !== "all" && searchQuery.trim().length > 0, // ✅ avoids empty search calls
+    enabled: searchQuery.trim().length > 0, // ✅ avoids empty search calls
   } as UseQueryOptions<TechnicalQuestion[], Error>);
 };
