@@ -1,5 +1,9 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { fetchDsaByUser, type fetchDsaProps } from "../services/dsa.service";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  fetchDsaByUser,
+  fetchDsaProgress,
+  type fetchDsaProps,
+} from "../services/dsa.service";
 
 interface FetchDsaProps {
   search: string;
@@ -29,6 +33,19 @@ export const useFetchDsaProblemByUser = ({
     },
     initialPageParam: 1,
     staleTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};
+
+export const useFetchDsaProgress = () => {
+  return useQuery({
+    queryKey: ["dsa"],
+    queryFn: async () => {
+      const response = await fetchDsaProgress();
+      console.log(response.data);
+      return response.data;
+    },
+    staleTime: 10 * 60 * 60,
     gcTime: 10 * 60 * 1000,
   });
 };

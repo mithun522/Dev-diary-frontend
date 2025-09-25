@@ -20,5 +20,6 @@ export const VERIFY_OTP = `${AUTH}/verifyotp`;
 
 export const DSA = `${SERVER_BASE_URL}/dsa`;
 export const DSA_BY_USER = `${DSA}/user`;
+export const DSA_BY_PROGRESS = `${DSA}/progress/user`;
 
 export const TECHNICAL_INTERVIEW = `${SERVER_BASE_URL}/techinterview`;

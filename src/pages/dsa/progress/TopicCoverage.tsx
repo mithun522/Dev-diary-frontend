@@ -6,19 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
-import { convertToPascalCaseWithUnderscore } from "../../../utils/convertToPascalCase";
-import type { DSAProblem } from "../../../data/dsaProblemsData";
+import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
+import { useFetchDsaProgress } from "../../../api/hooks/useFetchDsa";
+import { Skeleton } from "../../../components/ui/skeleton";
+import ErrorPage from "../../ErrorPage";
 
-interface OverallProgressProps {
-  fetchedProblems: DSAProblem[];
-}
-
-type TopicProgress = {
-  topic: string;
-  count: number;
-};
-
-const TopicCoverage: React.FC<OverallProgressProps> = ({ fetchedProblems }) => {
+const TopicCoverage: React.FC = () => {
   const COLORS = [
     "#0088FE",
     "#00C49F",
@@ -28,16 +21,32 @@ const TopicCoverage: React.FC<OverallProgressProps> = ({ fetchedProblems }) => {
     "#82ca9d",
   ];
 
-  const topicProgress: TopicProgress[] = Object.entries(
-    fetchedProblems
-      // flatten all topic arrays into one
-      .flatMap((p: DSAProblem) => p.topics)
-      // count occurrences
-      .reduce<Record<string, number>>((acc, topic) => {
-        acc[topic] = (acc[topic] || 0) + 1;
-        return acc;
-      }, {})
-  ).map(([topic, count]) => ({ topic, count }));
+  const { data, isLoading, isError } = useFetchDsaProgress();
+
+  if (isError)
+    return <ErrorPage message="Failed to load Topic Coverage page" />;
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Skeleton className="h-6 w-40" />
+          </CardTitle>
+          <CardDescription>
+            <Skeleton className="h-4 w-60 mt-1" />
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0 flex justify-center items-center">
+          <Skeleton className="h-60 w-60 rounded-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const topicProgress = Object.entries(data[0]?.problemsByTopic ?? {}).map(
+    ([topic, count]) => ({ topic, count })
+  );
 
   return (
     <Card>
@@ -65,12 +74,11 @@ const TopicCoverage: React.FC<OverallProgressProps> = ({ fetchedProblems }) => {
                   fontSize={10}
                   fill="#8884d8"
                 >
-                  <title>{convertToPascalCaseWithUnderscore(topic)}</title>
+                  <title>{pascalizeUnderscore(topic)}</title>
                   {`${
                     topic.length > 12
-                      ? convertToPascalCaseWithUnderscore(topic).slice(0, 8) +
-                        "…"
-                      : convertToPascalCaseWithUnderscore(topic)
+                      ? pascalizeUnderscore(topic).slice(0, 8) + "…"
+                      : pascalizeUnderscore(topic)
                   }`}{" "}
                   {`${(percent * 100).toFixed(0)}%`}
                 </text>

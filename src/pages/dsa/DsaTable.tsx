@@ -15,7 +15,7 @@ import {
 } from "../../utils/colorVariations";
 import {
   convertToPascalCase,
-  convertToPascalCaseWithUnderscore,
+  pascalizeUnderscore,
 } from "../../utils/convertToPascalCase";
 import { TopicColors, type Topic } from "../../constants/Topics";
 import { formatDate } from "../../utils/formatDate";
@@ -132,8 +132,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
                               variant="secondary"
                               className={`text-xs ${TopicColors[topics]}`}
                             >
-                              {topics &&
-                                convertToPascalCaseWithUnderscore(topics)}
+                              {topics && pascalizeUnderscore(topics)}
                             </Badge>
                           ))}
                       </div>

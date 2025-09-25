@@ -6,16 +6,41 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
-import type { DSAProblem } from "../../../data/dsaProblemsData";
-import { convertToPascalCaseWithUnderscore } from "../../../utils/convertToPascalCase";
+import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
+import { useFetchDsaProgress } from "../../../api/hooks/useFetchDsa";
+import { Skeleton } from "../../../components/ui/skeleton";
+import ErrorPage from "../../ErrorPage";
 
-interface OverallProgressProps {
-  fetchedProblems: DSAProblem[];
-}
+const OverallProgress: React.FC = () => {
+  const { data, isLoading, isError } = useFetchDsaProgress();
 
-const OverallProgress: React.FC<OverallProgressProps> = ({
-  fetchedProblems,
-}) => {
+  if (isError) return <ErrorPage message="Failed to load user profile" />;
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-56 mt-2" />
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex justify-center">
+            <Skeleton className="h-40 w-40 rounded-full" />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 text-center mt-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i}>
+                <Skeleton className="h-6 w-12 mx-auto mb-2" />
+                <Skeleton className="h-4 w-16 mx-auto" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -29,21 +54,15 @@ const OverallProgress: React.FC<OverallProgressProps> = ({
               data={[
                 {
                   name: "Easy",
-                  value: fetchedProblems.filter(
-                    (p: DSAProblem) => p.difficulty === "EASY"
-                  ).length,
+                  value: data[0].problemsByDifficulty.easy,
                 },
                 {
                   name: "MEDIUM",
-                  value: fetchedProblems.filter(
-                    (p: DSAProblem) => p.difficulty === "MEDIUM"
-                  ).length,
+                  value: data[0].problemsByDifficulty.medium,
                 },
                 {
                   name: "HARD",
-                  value: fetchedProblems.filter(
-                    (p: DSAProblem) => p.difficulty === "HARD"
-                  ).length,
+                  value: data[0].problemsByDifficulty.hard,
                 },
               ]}
               cx="50%"
@@ -67,9 +86,9 @@ const OverallProgress: React.FC<OverallProgressProps> = ({
                       : "#4ade80"
                   }
                 >
-                  {`${convertToPascalCaseWithUnderscore(name)} ${(
-                    percent * 100
-                  ).toFixed(0)}%`}
+                  {`${pascalizeUnderscore(name)} ${(percent * 100).toFixed(
+                    0
+                  )}%`}
                 </text>
               )}
             >
@@ -84,31 +103,19 @@ const OverallProgress: React.FC<OverallProgressProps> = ({
         <div className="grid grid-cols-3 gap-4 text-center mt-4">
           <div>
             <div className="font-bold text-xl">
-              {
-                fetchedProblems.filter(
-                  (p: DSAProblem) => p.difficulty === "EASY"
-                ).length
-              }
+              {data[0].problemsByDifficulty.easy}
             </div>
             <div className="text-sm text-muted-foreground">Easy</div>
           </div>
           <div>
             <div className="font-bold text-xl">
-              {
-                fetchedProblems.filter(
-                  (p: DSAProblem) => p.difficulty === "MEDIUM"
-                ).length
-              }
+              {data[0].problemsByDifficulty.medium}
             </div>
             <div className="text-sm text-muted-foreground">Medium</div>
           </div>
           <div>
             <div className="font-bold text-xl">
-              {
-                fetchedProblems.filter(
-                  (p: DSAProblem) => p.difficulty === "HARD"
-                ).length
-              }
+              {data[0].problemsByDifficulty.hard}
             </div>
             <div className="text-sm text-muted-foreground">Hard</div>
           </div>
