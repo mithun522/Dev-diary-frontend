@@ -63,7 +63,13 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
 
   // Reset values whenever modal opens in edit mode
   useEffect(() => {
-    if (!open) {
+    if (problemData) {
+      // Edit mode - populate with problemData
+      reset(problemData);
+      setShowBetter(!!problemData.betterSolution);
+      setShowOptimised(!!problemData.optimisedSolution);
+    } else {
+      // Add mode - reset to empty form
       reset({
         problem: "",
         difficulty: DifficultyLevels.EASY,
@@ -79,10 +85,6 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
       });
       setShowBetter(false);
       setShowOptimised(false);
-    } else if (problemData) {
-      reset(problemData);
-      setShowBetter(!!problemData.betterSolution);
-      setShowOptimised(!!problemData.optimisedSolution);
     }
   }, [open, problemData, reset]);
 

@@ -161,7 +161,13 @@ const DSAPage: React.FC = () => {
                 </SelectContent>
               </Select>
 
-              <Button variant="primary" onClick={() => setIsAddModelOpen(true)}>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setIsAddModelOpen(true);
+                  setSelectedProblem(null);
+                }}
+              >
                 Add DSAProblem
               </Button>
             </div>

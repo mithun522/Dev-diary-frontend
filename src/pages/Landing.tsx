@@ -44,7 +44,7 @@ const LandingPage = () => {
             <path d="M3 17 3 7"></path>
             <path d="M3 7 7.5 7"></path>
           </svg>
-          <span className="text-xl font-bold">CodePrep Compass</span>
+          <span className="text-xl font-bold">Dev Diary</span>
         </div>
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex items-center gap-6">
@@ -84,7 +84,7 @@ const LandingPage = () => {
         <div className="max-w-5xl mx-auto text-center space-y-6">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight">
             Master Your Tech Interview Journey with{" "}
-            <span className="text-primary">CodePrep Compass</span>
+            <span className="text-primary">Dev Diary</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
             The all-in-one platform for developers preparing for top-tier tech
@@ -211,8 +211,7 @@ const LandingPage = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">Success Stories</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              See how CodePrep Compass has helped developers land their dream
-              jobs.
+              See how Dev Diary has helped developers land their dream jobs.
             </p>
           </div>
 
@@ -232,8 +231,8 @@ const LandingPage = () => {
               </div>
               <p className="mb-4">
                 "I was struggling with system design interviews until I started
-                using CodePrep Compass. After just 6 weeks, I landed a senior
-                role at Amazon."
+                using Dev Diary. After just 6 weeks, I landed a senior role at
+                Amazon."
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -452,7 +451,7 @@ const LandingPage = () => {
           </h2>
           <p className="text-xl mb-8 opacity-90">
             Join thousands of developers who have landed their dream jobs with
-            CodePrep Compass.
+            Dev Diary.
           </p>
           <Button size="lg" variant="success" className="min-w-[200px]">
             <Link to="/auth/signup">Start Your Journey</Link>
@@ -487,7 +486,7 @@ const LandingPage = () => {
                   <path d="M3 17 3 7"></path>
                   <path d="M3 7 7.5 7"></path>
                 </svg>
-                <span className="font-bold">CodePrep Compass</span>
+                <span className="font-bold">Dev Diary</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Your all-in-one platform for tech interview preparation.
@@ -607,8 +606,7 @@ const LandingPage = () => {
           </div>
           <div className="pt-8 border-t border-muted-foreground/20 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} CodePrep Compass. All rights
-              reserved.
+              © {new Date().getFullYear()} Dev Diary. All rights reserved.
             </p>
             <div className="flex gap-6">
               <a

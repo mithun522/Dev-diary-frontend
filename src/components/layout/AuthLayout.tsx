@@ -9,9 +9,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     <div className="min-h-screen grid md:grid-cols-2">
       <div className="hidden md:flex flex-col bg-gray-100 dark:bg-gray-800 p-10">
         <div className="flex items-center gap-2 mb-12">
-          <span className="text-2xl font-bold text-primary">
-            CodePrep Compass
-          </span>
+          <span className="text-2xl font-bold text-primary">Dev Diary</span>
           <div className="ml-auto">
             <ThemeToggle />
           </div>
@@ -56,14 +54,14 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
         </div>
 
         <div className="text-sm text-muted-foreground text-center mt-12">
-          © {new Date().getFullYear()} CodePrep Compass. All rights reserved.
+          © {new Date().getFullYear()} Dev Diary. All rights reserved.
         </div>
       </div>
 
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="md:hidden flex justify-between items-center mb-8">
-            <span className="text-xl font-bold">CodePrep Compass</span>
+            <span className="text-xl font-bold">Dev Diary</span>
             <ThemeToggle />
           </div>
           {children}
