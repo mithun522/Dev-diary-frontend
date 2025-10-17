@@ -143,7 +143,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {problem.updatedAt ? formatDate(problem.updatedAt) : "-"}
+                      {problem.createdAt ? formatDate(problem.createdAt) : "-"}
                     </TableCell>
                     <TableCell className="flex">
                       <Button className="bg-transparent">

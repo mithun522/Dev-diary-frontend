@@ -1,12 +1,5 @@
 import { useState } from "react";
 import { Input } from "../../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
 import { Search, BookOpen } from "lucide-react";
 import {
   Dialog,
@@ -15,7 +8,6 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import AddTechnicalQuestionForm from "./AddTechInterview";
-import { Languages } from "../../constants/Languages";
 import { TECHNICAL_INTERVIEW } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
 import { toast } from "react-toastify";
@@ -37,6 +29,7 @@ import { TechInterviewStore } from "../../store/TechInterviewStore";
 import { formatDate } from "../../utils/formatDate";
 import Button from "../../components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
+import Languages from "./Languages";
 
 export interface TechnicalQuestion {
   id: number;
@@ -49,7 +42,6 @@ export interface TechnicalQuestion {
 }
 
 const TechnicalInterviewPage = () => {
-  // const [questions, setQuestions] = useState<TechnicalQuestion[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { selectedLanguage, setSelectedLanguage } = TechInterviewStore();
   const [selectedQuestion, setSelectedQuestion] =
@@ -143,20 +135,10 @@ const TechnicalInterviewPage = () => {
             className="pl-9"
           />
         </div>
-
-        <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-          <SelectTrigger className="w-full md:w-48">
-            <SelectValue placeholder="Language" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Languages</SelectItem>
-            {Languages.map((lang) => (
-              <SelectItem key={lang} value={lang}>
-                {lang}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Languages
+          selectedLanguage={selectedLanguage}
+          setSelectedLanguage={setSelectedLanguage}
+        />
       </div>
 
       <div className="grid gap-4">

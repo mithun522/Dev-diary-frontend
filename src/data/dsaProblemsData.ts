@@ -17,6 +17,7 @@ export type DSAProblem = {
   topics: Topic[];
   link: string;
   status: ProblemStatus;
+  createdAt?: string;
   updatedAt?: string; // ISO date string
   notes?: string;
   bruteForceSolution?: string; // Markdown solution

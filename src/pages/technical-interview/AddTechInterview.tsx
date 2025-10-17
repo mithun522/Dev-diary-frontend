@@ -20,7 +20,6 @@ import {
 import { Edit, Plus } from "lucide-react";
 import Button from "../../components/ui/button";
 import NumberedTextarea from "./NumberedTextArea";
-import { Languages } from "../../constants/Languages";
 import type { TechnicalQuestion } from "./Index";
 import type { AxiosError } from "axios";
 import { toast } from "react-toastify";
@@ -33,6 +32,9 @@ import {
 } from "../../constants/ToastMessage";
 import { useQueryClient } from "@tanstack/react-query";
 import { TechInterviewStore } from "../../store/TechInterviewStore";
+import { useFetchLanguage } from "../../api/hooks/useFetchLanguage";
+import ErrorPage from "../ErrorPage";
+import { Skeleton } from "../../components/ui/skeleton";
 
 interface AddTechnicalQuestionFormProps {
   row?: TechnicalQuestion;
@@ -45,6 +47,11 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const { selectedLanguage } = TechInterviewStore();
+  const {
+    data: Languages = [],
+    isLoading: isLoadingLanguages,
+    error: languagesError,
+  } = useFetchLanguage();
   const [formData, setFormData] = useState({
     id: row?.id || null,
     question: row?.question || "",
@@ -145,6 +152,12 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
     }
   };
 
+  if (isLoadingLanguages) {
+    return <Skeleton className="h-8 w-8 rounded-full" />;
+  }
+
+  if (languagesError) return <ErrorPage message="Failed to fetch languages" />;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -222,10 +235,10 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
                   {Languages.map((lang) => (
                     <SelectItem
                       data-cy="select-tech-question-language"
-                      key={lang}
-                      value={lang}
+                      key={lang.id}
+                      value={lang.language}
                     >
-                      {lang}
+                      {lang.language}
                     </SelectItem>
                   ))}
                 </SelectContent>
