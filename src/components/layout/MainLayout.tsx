@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import TopNav from "./TopNav";
 import {
@@ -22,15 +22,17 @@ import {
   PieChart,
   Users2,
 } from "lucide-react";
-import { removeAccessToken } from "../../utils/auth";
+import Button from "../ui/button";
+import LogoutModal from "../LgoutModal";
 
 interface MainLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode; // Made optional since we're using Outlet
 }
 
 const MainLayout: React.FC<MainLayoutProps> = () => {
   const location = useLocation();
   const { state } = useSidebar();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Close mobile sidebar when navigating to a new route
   useEffect(() => {
@@ -128,8 +130,9 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Knowledge Base">
+              <SidebarMenuButton asChild tooltip="Technical Interview">
                 <Link
                   to="/technical-interview"
                   className={`flex items-center gap-2 ${
@@ -164,21 +167,23 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
 
         <SidebarFooter className="mt-auto p-4 border-t">
           <SidebarMenuButton asChild>
-            <Link
-              to="/auth/login"
-              onClick={removeAccessToken}
-              className="flex items-center gap-2"
+            <Button
+              variant="ghost"
+              onClick={() => setShowLogoutModal(true)}
+              className="flex items-center gap-2 w-full justify-start"
             >
               <LogOut />
               {state !== "collapsed" && <span>Logout</span>}
-            </Link>
+            </Button>
           </SidebarMenuButton>
         </SidebarFooter>
       </Sidebar>
 
+      <LogoutModal open={showLogoutModal} onOpenChange={setShowLogoutModal} />
+
       <SidebarInset className="flex flex-col">
         <TopNav />
-        <div className="p-4">
+        <div className="p-4 flex-1">
           <Outlet />
         </div>
       </SidebarInset>
