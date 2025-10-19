@@ -23,7 +23,7 @@ import {
   Users2,
 } from "lucide-react";
 import Button from "../ui/button";
-import LogoutModal from "../LgoutModal";
+import LogoutModal from "../LogoutModal";
 
 interface MainLayoutProps {
   children?: React.ReactNode; // Made optional since we're using Outlet
