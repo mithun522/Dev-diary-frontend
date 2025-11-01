@@ -19,7 +19,7 @@ export interface UserProfile {
     location?: string;
     companyName?: string;
     experience?: string;
-    skills?: string[];
+    skills?: string;
   };
   socialLinks: {
     linkedIn?: string;

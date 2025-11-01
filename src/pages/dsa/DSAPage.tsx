@@ -114,9 +114,10 @@ const DSAPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="problems">
-        <TabsList className="grid grid-cols-2 md:w-[400px]">
+        <TabsList className="grid grid-cols-3 md:w-[400px]">
           <TabsTrigger value="problems">Problems</TabsTrigger>
           <TabsTrigger value="progress">Progress</TabsTrigger>
+          <TabsTrigger value="todo">Todo</TabsTrigger>
         </TabsList>
 
         <TabsContent value="problems" className="space-y-6 pt-4">
@@ -168,7 +169,7 @@ const DSAPage: React.FC = () => {
                   setSelectedProblem(null);
                 }}
               >
-                Add DSAProblem
+                Add DSA Problem
               </Button>
             </div>
           </div>
@@ -200,7 +201,7 @@ const DSAPage: React.FC = () => {
 
         <TabsContent value="progress" className="pt-4">
           <div className="grid md:grid-cols-3 gap-6">
-            <OverallProgress fetchedProblems={dsa} />
+            <OverallProgress />
 
             <Card>
               <CardHeader>
@@ -239,9 +240,12 @@ const DSAPage: React.FC = () => {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-            <TopicCoverage fetchedProblems={dsa} />
+            <TopicCoverage />
           </div>
         </TabsContent>
+        {/* <TabsContent value="todo" className="pt-4">
+          <Todo />
+        </TabsContent> */}
       </Tabs>
       {isAddModelOpen && (
         <DsaFormModal

@@ -19,5 +19,6 @@ module.exports = defineConfig({
       }
       return config;
     },
+    supportFile: "cypress/support/e2e.ts",
   },
 });

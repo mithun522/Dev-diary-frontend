@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Textarea } from "../../components/ui/textarea";
 import Button from "../../components/ui/button";
 import { Play, Copy, RotateCcw } from "lucide-react";
@@ -13,31 +13,89 @@ interface CodeEditorProps {
 const CodeEditor = ({ initialCode, onChange, language }: CodeEditorProps) => {
   const [code, setCode] = useState(initialCode);
   const [output, setOutput] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
   const { toast } = useToast();
 
-  const handleCodeChange = (value: string) => {
-    setCode(value);
-    onChange(value);
-  };
+  // Use useCallback to prevent unnecessary re-renders
+  const handleCodeChange = useCallback(
+    (value: string) => {
+      setCode(value);
+      onChange(value);
+    },
+    [onChange]
+  );
 
-  const runCode = () => {
+  const runCode = async () => {
+    setIsRunning(true);
+    setOutput("Running...");
+
     try {
-      // Simple JavaScript execution for demo purposes
-      // In a real app, you'd use a sandboxed execution environment
-      const result = eval(code);
-      setOutput(String(result));
+      // Using a free alternative to Judge0 that doesn't require API key
+      const submissionResponse = await fetch(
+        "https://emkc.org/api/v2/piston/execute",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            language: language,
+            version: getLanguageVersion(language),
+            files: [
+              {
+                content: code,
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!submissionResponse.ok) {
+        throw new Error(`HTTP error! status: ${submissionResponse.status}`);
+      }
+
+      const result = await submissionResponse.json();
+
+      if (result.compile && result.compile.stderr) {
+        setOutput(`Compilation Error:\n${result.compile.stderr}`);
+      } else if (result.run.stderr) {
+        setOutput(`Runtime Error:\n${result.run.stderr}`);
+      } else {
+        setOutput(
+          result.run.stdout || "Code executed successfully (no output)"
+        );
+      }
+
       toast({
         title: "Code executed",
         description: "Check the output below",
       });
-    } catch (error) {
-      setOutput(`Error: ${error}`);
+    } catch (error: any) {
+      setOutput(
+        `Error: ${
+          error instanceof Error ? error.message : error.message
+        }\n\nNote: Using Piston API - some features may be limited`
+      );
       toast({
         title: "Execution error",
-        description: "Check your code for syntax errors",
+        description: "Failed to execute code",
         variant: "destructive",
       });
+    } finally {
+      setIsRunning(false);
     }
+  };
+
+  // Helper function to get language versions
+  const getLanguageVersion = (lang: string): string => {
+    const versions: { [key: string]: string } = {
+      javascript: "18.15.0",
+      python: "3.10.0",
+      java: "15.0.2",
+      cpp: "10.2.0",
+      c: "10.2.0",
+    };
+    return versions[lang] || "latest";
   };
 
   const copyCode = () => {
@@ -59,15 +117,31 @@ const CodeEditor = ({ initialCode, onChange, language }: CodeEditorProps) => {
       <div className="flex items-center justify-between">
         <h4 className="font-medium">Code Editor ({language})</h4>
         <div className="flex gap-2">
-          <Button size="sm" variant="outlinePrimary" onClick={copyCode}>
+          <Button
+            size="sm"
+            variant="outlinePrimary"
+            onClick={copyCode}
+            type="button"
+          >
             <Copy className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="outlinePrimary" onClick={resetCode}>
+          <Button
+            size="sm"
+            variant="outlinePrimary"
+            onClick={resetCode}
+            type="button"
+          >
             <RotateCcw className="h-4 w-4" />
           </Button>
-          <Button size="sm" onClick={runCode}>
-            <Play className="h-4 w-4 mr-2" />
-            Run
+          <Button
+            size="sm"
+            onClick={runCode}
+            disabled={isRunning}
+            type="button"
+            className="flex py-2 item-center justify-center"
+          >
+            <Play className="h-4 w-4 mr-2 mt-0.5" />
+            {isRunning ? "Running..." : "Run"}
           </Button>
         </div>
       </div>
@@ -77,7 +151,7 @@ const CodeEditor = ({ initialCode, onChange, language }: CodeEditorProps) => {
           value={code}
           onChange={(e) => handleCodeChange(e.target.value)}
           className="font-mono text-sm min-h-[300px] border-0 resize-none"
-          placeholder="Write your code here..."
+          placeholder={`Write your ${language} code here...`}
         />
       </div>
 

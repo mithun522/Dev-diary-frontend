@@ -15,7 +15,7 @@ import InterviewPage from "./pages/interview/InterviewPage";
 import SystemDesignPage from "./pages/system-design/SystemDesign";
 import KnowledgePage from "./pages/knowledge/KnowledgePage";
 import AnalyticsPage from "./pages/analytics/AnalyticsPage";
-import MyProfilePage from "./pages/MyProfilePage";
+import MyProfilePage from "./pages/my-profile/MyProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import TechnicalInterviewPage from "./pages/technical-interview/Index";
 import RedirectIfAuth from "./components/RedirectIfAuth";

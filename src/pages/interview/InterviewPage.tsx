@@ -693,12 +693,12 @@ const InterviewPage = () => {
                   </div>
                 </CardContent>
 
-                <CardFooter className="pt-4 border-t">
+                <CardFooter className="flex items-center justify-center pt-4 border-t">
                   <Button
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className="flex max-w-3xl justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => handleStartInterview(interview)}
                   >
-                    <Play className="h-4 w-4 mr-2" />
+                    <Play className="h-4 w-4 mr-2 mt-1" />
                     Start Interview
                   </Button>
                 </CardFooter>

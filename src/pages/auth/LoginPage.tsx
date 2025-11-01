@@ -21,10 +21,12 @@ import {
   ENTER_EMAIL_AND_PASSWORD,
   LOGIN_SUCCESSFUL,
 } from "../../constants/ToastMessage";
+import { Eye, EyeClosed } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginFromWelcome, setLoginFromWelcome] = useState(false);
@@ -112,15 +114,28 @@ const LoginPage = () => {
                   Forgot Password?
                 </Link>
               </div>
-              <Input
-                data-cy="login-password"
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  data-cy="login-password"
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+                {showPassword ? (
+                  <Eye
+                    className="absolute right-2 top-2"
+                    onClick={() => setShowPassword(!showPassword)}
+                  />
+                ) : (
+                  <EyeClosed
+                    className="absolute right-2 top-2"
+                    onClick={() => setShowPassword(!showPassword)}
+                  />
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-2 pt-2">

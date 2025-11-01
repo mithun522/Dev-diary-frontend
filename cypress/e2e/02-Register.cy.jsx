@@ -28,8 +28,24 @@ import {
 } from "../constants/Selectors";
 
 describe("Register Page", () => {
+  beforeEach(() => {
+    cy.visit("/auth/signup", {
+      onBeforeLoad(win) {
+        if (!win.KeyboardEvent) {
+          class FakeKeyboardEvent extends Event {
+            static DOM_KEY_LOCATION_STANDARD = 0;
+            static DOM_KEY_LOCATION_LEFT = 1;
+            static DOM_KEY_LOCATION_RIGHT = 2;
+            static DOM_KEY_LOCATION_NUMPAD = 3;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          win.KeyboardEvent = FakeKeyboardEvent;
+        }
+      },
+    });
+  });
+
   it("Navigates to Register Page", () => {
-    cy.visit("/auth/signup");
     cy.get(REGISTER_TITLE).should("be.visible");
     cy.url().should("include", "/auth/signup");
   });
@@ -37,28 +53,39 @@ describe("Register Page", () => {
   it("Should successfully register a new user", () => {
     const uniqueEmail = `test${Date.now()}@example.com`;
 
-    cy.visit("/auth/signup");
+    cy.intercept("POST", "**/api/v1/auth/register").as("registerUser"); // BEFORE visit
+
     cy.get(REGISTER_FIRST_NAME).type(FIRST_NAME);
     cy.get(REGISTER_LAST_NAME).type(LAST_NAME);
     cy.get(REGISTER_EMAIL).type(uniqueEmail);
     cy.get(REGISTER_PASSWORD).type(CORRECT_PASSWORD);
     cy.get(REGISTER_CONFIRM_PASSWORD).type(CORRECT_PASSWORD);
-    cy.intercept("POST", "/api/auth/register").as("registerUser");
     cy.get(REGISTER_BUTTON).click();
 
-    // Wait for backend confirmation
-    cy.wait("@registerUser").its("response.statusCode").should("eq", 200);
+    cy.wait("@registerUser", { timeout: 15000 }) // extend timeout just in case
+      .its("response.statusCode")
+      .should("eq", 200);
 
-    // Toast should now appear
     cy.get(TOAST_SUCCESS)
       .should("be.visible")
       .and("contain", REGISTER_SUCCESSFUL);
 
-    // URL should change
     cy.url({ timeout: 10000 }).should("include", "/auth/login");
   });
 
   it("Should fail to register a user with duplicate email", () => {
+    cy.get(REGISTER_FIRST_NAME).type(FIRST_NAME);
+    cy.get(REGISTER_LAST_NAME).type(LAST_NAME);
+    cy.get(REGISTER_EMAIL).type(CORRECT_EMAIL);
+    cy.get(REGISTER_PASSWORD).type(CORRECT_PASSWORD);
+    cy.get(REGISTER_CONFIRM_PASSWORD).type(CORRECT_PASSWORD);
+    cy.get(REGISTER_BUTTON).click();
+    cy.get(TOAST_SUCCESS)
+      .should("be.visible")
+      .and("contain", REGISTER_SUCCESSFUL);
+
+    cy.wait(2000);
+
     cy.visit("/auth/signup");
     cy.get(REGISTER_FIRST_NAME).type(FIRST_NAME);
     cy.get(REGISTER_LAST_NAME).type(LAST_NAME);
@@ -70,7 +97,6 @@ describe("Register Page", () => {
   });
 
   it("Should throw an error if firstname is empty", () => {
-    cy.visit("/auth/signup");
     cy.get(REGISTER_BUTTON).click();
     cy.get(REGISTER_FIRST_NAME)
       .parent()
