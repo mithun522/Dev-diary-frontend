@@ -18,7 +18,11 @@ export const SINGLE_USER = `${SERVER_BASE_URL}/user`;
 export const SEND_OTP = `${AUTH}/otp`;
 export const VERIFY_OTP = `${AUTH}/verifyotp`;
 
-export const DSA = `${SERVER_BASE_URL}/dsa`;
+// export const DSA_SERVER =
+//   "https://inly0hydl6.execute-api.ap-south-1.amazonaws.com/api/v1";
+
+const DSA_SERVER = SERVER_BASE_URL;
+export const DSA = `${DSA_SERVER}/dsa`;
 export const DSA_BY_USER = `${DSA}/user`;
 export const DSA_BY_PROGRESS = `${DSA}/progress/user`;
 

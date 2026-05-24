@@ -65,7 +65,12 @@ const SignupPage = () => {
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    await setForm((prev) => ({
+    setErrors((prev) => ({
+      ...prev,
+      [name]: false,
+    }));
+
+    setForm((prev) => ({
       ...prev,
       [name]: value,
     }));

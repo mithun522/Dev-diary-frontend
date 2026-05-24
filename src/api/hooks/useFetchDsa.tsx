@@ -42,7 +42,6 @@ export const useFetchDsaProgress = () => {
     queryKey: ["dsa"],
     queryFn: async () => {
       const response = await fetchDsaProgress();
-      console.log(response.data);
       return response.data;
     },
     staleTime: 10 * 60 * 60,

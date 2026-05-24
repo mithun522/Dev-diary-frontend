@@ -25,6 +25,7 @@
     "clsx": "^2.1.1",
     "cypress": "^14.5.4",
     "cypress-real-events": "^1.14.0",
+    "html-react-parser": "^5.2.10",
     "input-otp": "^1.4.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.510.0",

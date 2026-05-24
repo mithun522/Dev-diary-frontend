@@ -94,7 +94,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
               fetchedProblems.map((problem: DSAProblem, index: number) => {
                 return (
                   <TableRow
-                    key={`${problem.id}-${index}`}
+                    key={`${problem?.id}-${index}`}
                     onClick={() => {
                       setSelectedProblem(problem);
                       setIsSolutionModalOpen(true);
@@ -103,13 +103,13 @@ const DsaTable: React.FC<DsaTableProps> = ({
                   >
                     <TableCell className="font-medium">
                       <a
-                        href={problem.link}
+                        href={problem?.link}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {problem.problem}
+                        {problem?.problem}
                       </a>
                     </TableCell>
                     <TableCell>
@@ -119,14 +119,14 @@ const DsaTable: React.FC<DsaTableProps> = ({
                           problem?.difficulty
                         )} text-white`}
                       >
-                        {problem.difficulty &&
+                        {problem?.difficulty &&
                           convertToPascalCase(problem?.difficulty)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {problem.topics &&
-                          problem.topics.map((topics: Topic) => (
+                        {problem?.topics &&
+                          problem?.topics.map((topics: Topic) => (
                             <Badge
                               key={`${problem.id}-${topics}`}
                               variant="secondary"
@@ -138,12 +138,14 @@ const DsaTable: React.FC<DsaTableProps> = ({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusVariant(problem.status)}>
-                        {problem.status}
+                      <Badge className={getStatusVariant(problem?.status)}>
+                        {problem?.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {problem.createdAt ? formatDate(problem.createdAt) : "-"}
+                      {problem?.createdAt
+                        ? formatDate(problem?.createdAt)
+                        : "-"}
                     </TableCell>
                     <TableCell className="flex">
                       <Button className="bg-transparent">

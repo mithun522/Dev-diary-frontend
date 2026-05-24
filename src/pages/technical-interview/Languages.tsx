@@ -24,6 +24,7 @@ import {
 } from "../../components/ui/dialog";
 import { logger } from "../../utils/logger";
 import { toast } from "react-toastify";
+import { convertToPascalCase } from "../../utils/convertToPascalCase";
 
 interface LanguagesProps {
   selectedLanguage: string;
@@ -73,10 +74,9 @@ const Languages: React.FC<LanguagesProps> = ({
           {languages &&
             languages.map((lang: LanguageType) => (
               <SelectItem key={lang.id} value={lang.language}>
-                {lang.language}
+                {convertToPascalCase(lang.language)}
               </SelectItem>
             ))}
-
           {/* Add Language as Dialog Trigger */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -84,7 +84,7 @@ const Languages: React.FC<LanguagesProps> = ({
                 className="flex items-center gap-2 cursor-pointer"
                 onSelect={(e) => e.preventDefault()}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center text-center gap-2">
                   <Plus className="h-4 w-4" />
                   Add Language
                 </div>

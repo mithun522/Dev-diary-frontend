@@ -1,5 +1,4 @@
 import type { KnowledgeTag } from "../data/knowledgeData";
-import type { DifficultyLevel } from "../pages/dsa/AddDsaModel";
 
 export const getTagColor = (tag: KnowledgeTag): string => {
   const colors: Record<KnowledgeTag, string> = {
@@ -25,8 +24,8 @@ export const getTagColor = (tag: KnowledgeTag): string => {
   return colors[tag];
 };
 
-export const getDifficultyColor = (difficulty: DifficultyLevel) => {
-  switch (difficulty.toLowerCase()) {
+export const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty?.toLowerCase()) {
     case "easy":
       return "bg-green-500";
     case "medium":

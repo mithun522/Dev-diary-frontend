@@ -47,6 +47,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import OverallProgress from "./progress/OverallProgress";
 import TopicCoverage from "./progress/TopicCoverage";
 import noDataImage from "../../assets/no-data-available.jpg";
+import Todo from "./todo/Todo";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +74,7 @@ const DSAPage: React.FC = () => {
     difficulty: difficultyFilter,
   });
   const queryClient = useQueryClient();
-  const dsa = data?.pages.flatMap((page) => page.dsa) ?? [];
+  const dsa = data?.pages?.flatMap((page) => page.dsa) ?? [];
 
   // Chart colors
 
@@ -243,9 +244,9 @@ const DSAPage: React.FC = () => {
             <TopicCoverage />
           </div>
         </TabsContent>
-        {/* <TabsContent value="todo" className="pt-4">
+        <TabsContent value="todo" className="pt-4">
           <Todo />
-        </TabsContent> */}
+        </TabsContent>
       </Tabs>
       {isAddModelOpen && (
         <DsaFormModal
