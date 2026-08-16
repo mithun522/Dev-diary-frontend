@@ -17,6 +17,7 @@ import AuthLayout from "../../components/layout/AuthLayout";
 import axios, { AxiosError } from "axios";
 import { LOGIN } from "../../constants/Api";
 import { setAccessToken } from "../../utils/auth";
+import { useAuthStore } from "../../store/AuthStore";
 import {
   ENTER_EMAIL_AND_PASSWORD,
   LOGIN_SUCCESSFUL,
@@ -46,8 +47,12 @@ const LoginPage = () => {
       const request = { email, password };
       const response = await axios.post(LOGIN, request);
 
-      if (response.data.message?.toLowerCase() === "login successful") {
+      // Check for the token itself rather than matching the success message text — the backend
+      // fixed a typo in that message ("login successfull" -> "Login successful"), so a text match
+      // would silently break here again the next time the copy changes.
+      if (response.data.token) {
         setAccessToken(response.data.token);
+        useAuthStore.getState().setAuth(response.data.token);
         navigate("/dsa");
         toast.success(LOGIN_SUCCESSFUL);
       }
@@ -60,13 +65,13 @@ const LoginPage = () => {
         toast.error(serverMessage || "Something went wrong");
       } else if (err.request) {
         toast.error(
-          "Cannot connect to server. Please check if backend is running."
+          "Cannot connect to server. Please check if backend is running.",
         );
       } else {
         toast.error(err.message || "Unexpected error occurred");
       }
     } finally {
-      setIsLoading(false); // ✅ Spinner stops
+      setIsLoading(false); // Spinner stops
     }
   };
 

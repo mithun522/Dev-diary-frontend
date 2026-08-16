@@ -100,6 +100,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
                       setIsSolutionModalOpen(true);
                     }}
                     className="cursor-pointer"
+                    data-cy="dsa-row"
                   >
                     <TableCell className="font-medium">
                       <a
@@ -108,6 +109,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
                         rel="noopener noreferrer"
                         className="text-primary hover:underline"
                         onClick={(e) => e.stopPropagation()}
+                        data-cy="dsa-row-title"
                       >
                         {problem?.problem}
                       </a>
@@ -148,7 +150,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
                         : "-"}
                     </TableCell>
                     <TableCell className="flex">
-                      <Button className="bg-transparent">
+                      <Button className="bg-transparent" data-cy="dsa-row-edit">
                         <Pencil
                           onClick={(e) => {
                             e.stopPropagation();
@@ -158,7 +160,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
                           size={16}
                         />
                       </Button>
-                      <Button className="bg-transparent">
+                      <Button className="bg-transparent" data-cy="dsa-row-delete">
                         <Trash2
                           onClick={(e) => onDelete(e, problem)}
                           className="text-destructive"

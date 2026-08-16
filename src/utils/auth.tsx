@@ -35,8 +35,9 @@ export const loggedInUserId = () => {
   const token = getAccessToken();
   if (!token) return null;
   try {
+    // Our backend's JWTs carry the user id as `sub` (standard JWT claim), not `id`.
     const decoded: DecodedToken = jwtDecode(token);
-    return decoded.id;
+    return decoded.sub;
   } catch (error: any) {
     logger.error(error);
     return null;

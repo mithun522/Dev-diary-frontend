@@ -32,7 +32,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Languages from "./Languages";
 
 export interface TechnicalQuestion {
-  id: number;
+  id: string;
   question: string;
   answer: string;
   notes: string;
@@ -46,7 +46,7 @@ const TechnicalInterviewPage = () => {
   const { selectedLanguage, setSelectedLanguage } = TechInterviewStore();
   const [selectedQuestion, setSelectedQuestion] =
     useState<TechnicalQuestion | null>(null);
-  const [selectedQuestionId, setSelectedQuestionId] = useState<number>(0);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string>("");
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const queryClient = useQueryClient();
@@ -78,7 +78,7 @@ const TechnicalInterviewPage = () => {
   const isFetching = searchQuery ? isFetchingSearch : isFetchingFetch;
   const error = searchQuery ? errorSearch : errorFetch;
 
-  const handleDeleteOpen = (questionId: number) => {
+  const handleDeleteOpen = (questionId: string) => {
     setSelectedQuestionId(questionId);
     setIsOpenDelete(true);
   };
@@ -88,9 +88,9 @@ const TechnicalInterviewPage = () => {
       const response = await AxiosInstance.delete(
         `${TECHNICAL_INTERVIEW}/${selectedQuestionId}`
       );
-      if (response.status === 200) {
+      if (response.status === 204) {
         toast.success(QUESTION_DELETE_SUCCESS);
-        queryClient.invalidateQueries({ queryKey: ["tech-interview"] });
+        queryClient.invalidateQueries({ queryKey: ["techInterview"] });
       }
     } catch (error) {
       const err = error as AxiosError;

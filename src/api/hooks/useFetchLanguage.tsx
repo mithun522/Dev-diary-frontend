@@ -7,7 +7,7 @@ import {
 import { addLanguage, fetchLanguage } from "../services/language.service";
 
 export type LanguageType = {
-  id: number;
+  id: string;
   language: string;
 };
 
@@ -26,9 +26,10 @@ export const useAddLanguage = () => {
   return useMutation({
     mutationFn: addLanguage,
     onSuccess: () => {
-      // Invalidate and refetch the languages query
+      // Invalidate and refetch the languages query — query key is "language" (singular), not
+      // "languages", matching useFetchLanguage's queryKey above.
       queryClient.invalidateQueries({
-        queryKey: ["languages"],
+        queryKey: ["language"],
       });
     },
   });

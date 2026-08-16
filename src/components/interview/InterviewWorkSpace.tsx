@@ -101,6 +101,7 @@ const InterviewWorkspace = ({
                 <div
                   key={index}
                   className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50"
+                  data-cy="interview-mcq-option"
                 >
                   <RadioGroupItem
                     value={index.toString()}
@@ -229,7 +230,7 @@ const InterviewWorkspace = ({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-cy="interview-workspace">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
@@ -254,6 +255,7 @@ const InterviewWorkspace = ({
               <Button
                 onClick={onSubmit}
                 className="bg-green-600 hover:bg-green-700"
+                data-cy="interview-submit-button"
               >
                 <Send className="h-4 w-4 mr-2" />
                 Submit
@@ -318,6 +320,7 @@ const InterviewWorkspace = ({
               variant="outlinePrimary"
               onClick={() => onNavigate(session.currentQuestionIndex - 1)}
               disabled={session.currentQuestionIndex === 0}
+              data-cy="interview-previous-button"
             >
               <ChevronLeft className="h-4 w-4 mr-2" />
               Previous
@@ -339,6 +342,7 @@ const InterviewWorkspace = ({
                       ? "bg-green-100 border-green-300"
                       : ""
                   }`}
+                  data-cy="interview-question-jump"
                 >
                   {index + 1}
                 </Button>
@@ -351,6 +355,7 @@ const InterviewWorkspace = ({
               disabled={
                 session.currentQuestionIndex === session.questions.length - 1
               }
+              data-cy="interview-next-button"
             >
               Next
               <ChevronRight className="h-4 w-4 ml-2" />

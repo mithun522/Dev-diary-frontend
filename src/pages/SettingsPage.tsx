@@ -1,5 +1,4 @@
 import { useState } from "react";
-import MainLayout from "../components/layout/MainLayout";
 import Button from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -100,20 +99,29 @@ const SettingsPage = () => {
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-2">
-          <Settings className="h-8 w-8" />
-          <h1 className="text-3xl font-bold">Settings</h1>
-        </div>
+    <div className="max-w-4xl mx-auto space-y-6" data-cy="settings-page">
+      <div className="flex items-center gap-2">
+        <Settings className="h-8 w-8" />
+        <h1 className="text-3xl font-bold">Settings</h1>
+      </div>
 
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            <TabsTrigger value="study">Study</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="general" data-cy="settings-tab-general">
+              General
+            </TabsTrigger>
+            <TabsTrigger value="notifications" data-cy="settings-tab-notifications">
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="privacy" data-cy="settings-tab-privacy">
+              Privacy
+            </TabsTrigger>
+            <TabsTrigger value="study" data-cy="settings-tab-study">
+              Study
+            </TabsTrigger>
+            <TabsTrigger value="account" data-cy="settings-tab-account">
+              Account
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-6">
@@ -131,10 +139,10 @@ const SettingsPage = () => {
                 <div className="space-y-2">
                   <Label>Theme</Label>
                   <Select value={theme} onValueChange={setTheme}>
-                    <SelectTrigger>
+                    <SelectTrigger data-cy="settings-theme-trigger">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent data-cy="settings-theme-content">
                       <SelectItem value="light">
                         <div className="flex items-center gap-2">
                           <Sun className="h-4 w-4" />
@@ -228,6 +236,7 @@ const SettingsPage = () => {
                     onCheckedChange={(value) =>
                       handleSettingChange("emailNotifications", value)
                     }
+                    data-cy="settings-email-notifications-switch"
                   />
                 </div>
                 <Separator />
@@ -524,7 +533,7 @@ const SettingsPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={exportData} variant="outline">
+                <Button onClick={exportData} variant="outline" data-cy="settings-export-data">
                   Export My Data
                 </Button>
               </CardContent>
@@ -543,9 +552,11 @@ const SettingsPage = () => {
               <CardContent>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive">Delete Account</Button>
+                    <Button variant="destructive" data-cy="settings-delete-account-trigger">
+                      Delete Account
+                    </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent data-cy="settings-delete-account-dialog">
                     <AlertDialogHeader>
                       <AlertDialogTitle>
                         Are you absolutely sure?
@@ -557,10 +568,13 @@ const SettingsPage = () => {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel data-cy="settings-delete-account-cancel">
+                        Cancel
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={deleteAccount}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        data-cy="settings-delete-account-confirm"
                       >
                         Yes, delete my account
                       </AlertDialogAction>
@@ -571,8 +585,7 @@ const SettingsPage = () => {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </MainLayout>
+    </div>
   );
 };
 

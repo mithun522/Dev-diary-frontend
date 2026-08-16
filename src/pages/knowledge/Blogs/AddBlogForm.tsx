@@ -102,9 +102,9 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
   }
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="max-w-4xl mx-auto" data-cy="blog-form">
       <CardHeader>
-        <CardTitle>Add New Blog</CardTitle>
+        <CardTitle data-cy="blog-form-title-heading">Add New Blog</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -117,6 +117,7 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter blog title..."
+              data-cy="blog-form-input-title"
             />
           </div>
 
@@ -128,6 +129,7 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
               onChange={(e) => setSummary(e.target.value)}
               placeholder="Write a brief summary of your blog post..."
               className="min-h-[100px]"
+              data-cy="blog-form-summary"
             />
           </div>
 
@@ -149,6 +151,7 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
                 accept="image/*"
                 onChange={handleImageChange}
                 className="hidden"
+                data-cy="blog-form-cover-image"
               />
 
               {/* Upload Button */}
@@ -187,6 +190,7 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your blog content in Markdown format..."
               className="min-h-[400px]"
+              data-cy="blog-form-content"
             />
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>You can use Markdown syntax for formatting</span>
@@ -211,6 +215,8 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
                       : handleAddTag(tag)
                   }
                   className="text-xs"
+                  data-cy="blog-form-tag"
+                  data-value={tag}
                 >
                   {selectedTags.includes(tag) ? (
                     <>
@@ -253,6 +259,7 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
               checked={published}
               onChange={(e) => setPublished(e.target.checked)}
               className="rounded"
+              data-cy="blog-form-published"
             />
             <Label htmlFor="published">Publish immediately</Label>
             <span className="text-sm text-muted-foreground">
@@ -261,13 +268,19 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
           </div>
 
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outlinePrimary" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outlinePrimary"
+              onClick={onCancel}
+              data-cy="blog-form-cancel"
+            >
               Cancel
             </Button>
             <Button
               type="button"
               variant="outlinePrimary"
               onClick={() => setIsLivePreview(true)}
+              data-cy="blog-form-preview"
             >
               Preview
             </Button>
@@ -276,6 +289,7 @@ const AddBlogForm = ({ onSubmit, onCancel }: AddBlogFormProps) => {
               disabled={!title.trim() || !summary.trim() || !content.trim()}
               id="submit-button"
               name="action"
+              data-cy="blog-form-submit"
             >
               {published ? "Publish Blog" : "Save as Draft"}
             </Button>

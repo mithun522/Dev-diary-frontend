@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../../components/ui/button";
 import {
   Dialog,
@@ -25,6 +25,17 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
 }) => {
   const [skill, setSkill] = useState<string>("");
   const [skillList, setSkillList] = useState<string[]>(existingSkills);
+
+  // This modal is mounted once for the page's lifetime (controlled only via `open`), so the
+  // useState initializer above only ever runs on first mount. Without this, reopening after a
+  // save shows stale skills instead of the latest saved list.
+  useEffect(() => {
+    if (open) {
+      setSkill("");
+      setSkillList(existingSkills);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const addSkill = () => {
     if (skill.trim() && !skillList.includes(skill.trim())) {
@@ -70,7 +81,7 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md" onClose={onClose}>
+      <DialogContent className="max-w-md" onClose={onClose} data-cy="skill-modal">
         <div className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
             <Tags className="w-6 h-6 text-blue-600" />
@@ -96,6 +107,7 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
                 value={skill}
                 onChange={(e) => setSkill(e.target.value)}
                 onKeyPress={handleKeyPress}
+                data-cy="skill-modal-input"
               />
               <Button
                 variant="primary"
@@ -103,6 +115,7 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
                 onClick={addSkill}
                 disabled={!skill.trim()}
                 className="px-3"
+                data-cy="skill-modal-add-button"
               >
                 <Plus className="w-4 h-4" />
               </Button>
@@ -157,11 +170,13 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
                       key={index}
                       variant="secondary"
                       className="flex items-center gap-1 py-1.5 px-3 group"
+                      data-cy="skill-modal-item"
                     >
                       {item}
                       <button
                         onClick={() => removeSkill(item)}
                         className="ml-1 opacity-70 hover:opacity-100 transition-opacity"
+                        data-cy="skill-modal-item-remove"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -180,13 +195,19 @@ const AddSkillModal: React.FC<AddSkillModalProps> = ({
 
         {/* Actions */}
         <div className="flex gap-3 pt-4 border-t">
-          <Button variant="outlinePrimary" onClick={onClose} className="flex-1">
+          <Button
+            variant="outlinePrimary"
+            onClick={onClose}
+            className="flex-1"
+            data-cy="skill-modal-cancel"
+          >
             Cancel
           </Button>
           <Button
             variant="primary"
             onClick={handleSubmit}
             className="flex-1 bg-blue-600 hover:bg-blue-700"
+            data-cy="skill-modal-save"
           >
             Save Skills
           </Button>

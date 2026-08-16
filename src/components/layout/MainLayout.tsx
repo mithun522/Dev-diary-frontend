@@ -71,6 +71,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               <SidebarMenuButton asChild tooltip="DSA Tracker">
                 <Link
                   to="/dsa"
+                  data-cy="sidebar-nav-dsa"
                   className={`flex items-center gap-2 ${
                     location.pathname.startsWith("/dsa")
                       ? "bg-accent text-accent-foreground"
@@ -87,6 +88,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               <SidebarMenuButton asChild tooltip="Interview Prep">
                 <Link
                   to="/interview"
+                  data-cy="sidebar-nav-interview"
                   className={`flex items-center gap-2 ${
                     location.pathname.startsWith("/interview")
                       ? "bg-accent text-accent-foreground"
@@ -103,6 +105,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               <SidebarMenuButton asChild tooltip="System Design">
                 <Link
                   to="/system-design"
+                  data-cy="sidebar-nav-system-design"
                   className={`flex items-center gap-2 ${
                     location.pathname.startsWith("/system-design")
                       ? "bg-accent text-accent-foreground"
@@ -119,6 +122,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               <SidebarMenuButton asChild tooltip="Knowledge Base">
                 <Link
                   to="/knowledge"
+                  data-cy="sidebar-nav-knowledge"
                   className={`flex items-center gap-2 ${
                     location.pathname.startsWith("/knowledge")
                       ? "bg-accent text-accent-foreground"
@@ -135,6 +139,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               <SidebarMenuButton asChild tooltip="Technical Interview">
                 <Link
                   to="/technical-interview"
+                  data-cy="sidebar-nav-technical-interview"
                   className={`flex items-center gap-2 ${
                     location.pathname.startsWith("/technical-interview")
                       ? "bg-accent text-accent-foreground"
@@ -151,6 +156,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               <SidebarMenuButton asChild tooltip="Analytics">
                 <Link
                   to="/analytics"
+                  data-cy="sidebar-nav-analytics"
                   className={`flex items-center gap-2 ${
                     location.pathname.startsWith("/analytics")
                       ? "bg-accent text-accent-foreground"
@@ -171,6 +177,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               variant="ghost"
               onClick={() => setShowLogoutModal(true)}
               className="flex items-center gap-2 w-full justify-start"
+              data-cy="sidebar-logout-trigger"
             >
               <LogOut />
               {state !== "collapsed" && <span>Logout</span>}

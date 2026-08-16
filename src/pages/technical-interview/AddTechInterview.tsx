@@ -104,11 +104,20 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
       language: "",
     });
 
+    // Backend schemas reject unknown properties (additionalProperties: false) — only send the
+    // fields the create/update contract actually declares, not id/createdAt/updatedAt.
+    const payload = {
+      question: formData.question,
+      answer: formData.answer,
+      notes: formData.notes,
+      language: formData.language,
+    };
+
     try {
       if (formData.id) {
         const response = await AxiosInstance.put(
           `${TECHNICAL_INTERVIEW}/${formData.id}`,
-          formData
+          payload
         );
 
         if (response.status === 200) {
@@ -120,9 +129,9 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
       } else {
         const response = await AxiosInstance.post(
           TECHNICAL_INTERVIEW,
-          formData
+          payload
         );
-        if (response.status === 200) {
+        if (response.status === 201) {
           await queryClient.invalidateQueries({
             queryKey: ["techInterview", selectedLanguage],
           });

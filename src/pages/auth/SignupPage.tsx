@@ -169,10 +169,13 @@ const SignupPage = () => {
       setIsLoading(true);
       const response = await axios.post(REGISTER, requestBody);
 
-      if (response.status === 200) {
+      // registerUser returns 201 Created, not 200. Our backend has no signup-verification OTP
+      // step (the /auth/otp and /auth/verifyotp endpoints are password-reset only) — a new
+      // account is immediately usable, so go straight to login instead of a verify-otp screen.
+      if (response.status === 201) {
         toast.success(REGISTER_SUCCESSFUL);
         setTimeout(() => {
-          navigate("/auth/login");
+          navigate(`/auth/login?email=${encodeURIComponent(email)}`);
         }, 1000);
       } else {
         toast.error(REGISTRATION_FAILED);
@@ -181,7 +184,7 @@ const SignupPage = () => {
       const err = error as AxiosError;
       toast.error(
         (err.response?.data as { message: string })?.message ||
-          REGISTRATION_FAILED
+          REGISTRATION_FAILED,
       );
     } finally {
       setIsLoading(false);

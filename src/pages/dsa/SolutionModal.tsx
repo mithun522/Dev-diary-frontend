@@ -78,10 +78,13 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
       />
 
       {/* Modal Content */}
-      <Card className="relative z-50 max-w-3xl max-h-[90vh] min-h-[90vh] overflow-auto w-full mx-4 bg-background shadow-lg rounded-lg">
+      <Card
+        className="relative z-50 max-w-3xl max-h-[90vh] min-h-[90vh] overflow-auto w-full mx-4 bg-background shadow-lg rounded-lg"
+        data-cy="dsa-solution-modal"
+      >
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" data-cy="dsa-solution-title">
               {selectedProblem.problem}
               <Badge
                 variant="outline"
@@ -99,6 +102,7 @@ const SolutionModal: React.FC<SolutionModalProps> = ({
                 setOpen(false);
                 setSelectedProblem(null);
               }}
+              data-cy="dsa-solution-close"
             >
               ×
             </Button>

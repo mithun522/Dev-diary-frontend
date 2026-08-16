@@ -50,14 +50,16 @@ const ForgotPasswordPage = () => {
     <AuthLayout>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Forgot Password</CardTitle>
+          <CardTitle className="text-2xl" data-cy="forgot-password-title">
+            Forgot Password
+          </CardTitle>
           <CardDescription>
             Enter your email to receive a password reset code
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isSubmitted ? (
-            <div className="space-y-4">
+            <div className="space-y-4" data-cy="forgot-password-success">
               <div className="bg-green-500/15 text-green-600 p-4 rounded-md text-sm">
                 <p>
                   We've sent a 6-digit code to <strong>{email}</strong>
@@ -68,14 +70,22 @@ const ForgotPasswordPage = () => {
               </div>
               <div className="flex justify-end">
                 <Button>
-                  <Link to={`/auth/verify-otp?email=${email}`}>Enter OTP</Link>
+                  <Link
+                    to={`/auth/verify-otp?email=${encodeURIComponent(email)}`}
+                    data-cy="forgot-password-enter-otp"
+                  >
+                    Enter OTP
+                  </Link>
                 </Button>
               </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
+                <div
+                  className="bg-destructive/15 text-destructive text-sm p-3 rounded-md"
+                  data-cy="forgot-password-error"
+                >
                   {error}
                 </div>
               )}
@@ -88,10 +98,15 @@ const ForgotPasswordPage = () => {
                   placeholder="johndoe@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  data-cy="forgot-password-email"
                 />
               </div>
 
-              <Button type="submit" className="w-full">
+              <Button
+                type="submit"
+                className="w-full"
+                data-cy="forgot-password-submit"
+              >
                 Send OTP
               </Button>
             </form>
@@ -100,7 +115,11 @@ const ForgotPasswordPage = () => {
         <CardFooter className="flex justify-center border-t pt-6">
           <p className="text-sm text-muted-foreground">
             Remember your password?{" "}
-            <Link to="/auth/login" className="text-primary hover:underline">
+            <Link
+              to="/auth/login"
+              className="text-primary hover:underline"
+              data-cy="forgot-password-back-to-login"
+            >
               Back to login
             </Link>
           </p>

@@ -12,6 +12,14 @@ module.exports = defineConfig({
     // Add delays between actions
     numTestsKeptInMemory: 1,
 
+    // These specs hit a real live backend rather than mocks, so occasional network/session
+    // flakiness (not app bugs) is expected. Only retry in `cypress run`, never in the
+    // interactive runner where a retry would hide a real failure while debugging.
+    retries: {
+      runMode: 2,
+      openMode: 0,
+    },
+
     setupNodeEvents(on, config) {
       // Add delay for run mode
       if (config.isTextTerminal) {

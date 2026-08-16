@@ -73,7 +73,7 @@ const SystemDesignPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-cy="system-design-page">
       <div>
         <h1 className="text-3xl font-bold">System Design Studio</h1>
         <p className="text-muted-foreground">
@@ -83,9 +83,15 @@ const SystemDesignPage = () => {
 
       <Tabs defaultValue="cases">
         <TabsList className="grid grid-cols-3 w-full md:w-[400px]">
-          <TabsTrigger value="cases">Case Studies</TabsTrigger>
-          <TabsTrigger value="patterns">Patterns</TabsTrigger>
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
+          <TabsTrigger value="cases" data-cy="system-design-tab-cases">
+            Case Studies
+          </TabsTrigger>
+          <TabsTrigger value="patterns" data-cy="system-design-tab-patterns">
+            Patterns
+          </TabsTrigger>
+          <TabsTrigger value="metrics" data-cy="system-design-tab-metrics">
+            Metrics
+          </TabsTrigger>
         </TabsList>
 
         {/* Case Studies Tab */}
@@ -99,6 +105,7 @@ const SystemDesignPage = () => {
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  data-cy="system-design-search"
                 />
               </div>
 
@@ -110,6 +117,7 @@ const SystemDesignPage = () => {
                       selectedCase?.id === caseItem.id ? "border-primary" : ""
                     }`}
                     onClick={() => setSelectedCase(caseItem)}
+                    data-cy="system-design-case-card"
                   >
                     <CardHeader className="p-4 pb-2">
                       <div className="flex justify-between items-start">
@@ -123,6 +131,7 @@ const SystemDesignPage = () => {
                             e.stopPropagation();
                             toggleSave(caseItem.id);
                           }}
+                          data-cy="system-design-case-save-toggle"
                         >
                           {savedCases.includes(caseItem.id) ? (
                             <BookmarkCheck className="h-4 w-4 text-primary" />
@@ -157,7 +166,10 @@ const SystemDesignPage = () => {
                 ))}
 
                 {filteredCases.length === 0 && (
-                  <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg">
+                  <div
+                    className="flex flex-col items-center justify-center p-8 text-center border rounded-lg"
+                    data-cy="system-design-cases-empty"
+                  >
                     <FileText className="h-8 w-8 text-muted-foreground mb-2" />
                     <p className="text-muted-foreground">
                       No cases match your search.
@@ -169,7 +181,7 @@ const SystemDesignPage = () => {
 
             <div className="md:col-span-2">
               {selectedCase ? (
-                <Card>
+                <Card data-cy="system-design-case-detail">
                   <CardHeader>
                     <CardTitle>{selectedCase.title}</CardTitle>
                     <CardDescription>{selectedCase.summary}</CardDescription>
@@ -301,6 +313,7 @@ const SystemDesignPage = () => {
                       variant="outlinePrimary"
                       size="sm"
                       onClick={() => toggleSave(selectedCase.id)}
+                      data-cy="system-design-case-detail-save-toggle"
                     >
                       {savedCases.includes(selectedCase.id) ? (
                         <>
@@ -336,7 +349,11 @@ const SystemDesignPage = () => {
         <TabsContent value="patterns" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {scalabilityPatterns.map((pattern) => (
-              <Card key={pattern.id} className="flex flex-col h-full">
+              <Card
+                key={pattern.id}
+                className="flex flex-col h-full"
+                data-cy="system-design-pattern-card"
+              >
                 <CardHeader>
                   <CardTitle>{pattern.name}</CardTitle>
                   <CardDescription>{pattern.description}</CardDescription>

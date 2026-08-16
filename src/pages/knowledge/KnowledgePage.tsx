@@ -33,34 +33,44 @@ import {
   Pin,
   Search,
 } from "lucide-react";
-import {
-  knowledgeNotes,
-  type KnowledgeNote,
-  type KnowledgeTag,
-} from "../../data/knowledgeData";
+import { type KnowledgeNote, type KnowledgeTag } from "../../data/knowledgeData";
 import AddBlogForm from "./Blogs/AddBlogForm";
-import { BLOGS } from "../../constants/Api";
 import Blog from "./Blogs/Blog";
-import AxiosInstance from "../../utils/AxiosInstance";
+import AddNoteForm from "./Notes/AddNoteForm";
+import { createBlog } from "../../api/services/blogs.service";
 import { formatDate } from "../../utils/formatDate";
 import { logger } from "../../utils/logger";
+import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useDeleteNote,
+  useFetchNotes,
+  useUpdateNote,
+} from "../../api/hooks/useFetchNotes";
+import { useDebounce } from "../../api/hooks/use-debounce";
+import AskForConfirmationModal from "../../components/AskForConfirmationModal";
 
 const KnowledgePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNote, setSelectedNote] = useState<KnowledgeNote | null>(null);
   const [isAddNewBlog, setIsAddNewBlog] = useState<boolean>(false);
+  const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [isDeleteNoteOpen, setIsDeleteNoteOpen] = useState(false);
   const [tabsValue, setTabsValue] = useState("notes");
+  const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // Filter notes based on search
-  const filteredNotes = knowledgeNotes.filter(
-    (note) =>
-      searchQuery === "" ||
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      ) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const {
+    data: notesData,
+    isLoading: isLoadingNotes,
+    fetchNextPage: fetchNextNotesPage,
+    hasNextPage: hasNextNotesPage,
+    isFetchingNextPage: isFetchingNextNotesPage,
+  } = useFetchNotes(debouncedSearch);
+  const updateNote = useUpdateNote();
+  const deleteNote = useDeleteNote();
+
+  const filteredNotes = notesData?.pages.flatMap((page) => page.notes) ?? [];
 
   // Get tag color
   const getTagColor = (tag: KnowledgeTag): string => {
@@ -91,36 +101,36 @@ const KnowledgePage: React.FC = () => {
     return colors[tag];
   };
 
+  const queryClient = useQueryClient();
+
   const handleSubmitBlog = async (blogData: {
     title: string;
     summary: string;
     content: string;
     tags: KnowledgeTag[];
-    coverImage: File; // Changed to match the form's expectation
+    coverImage: File;
     published: boolean;
     readTime: number;
   }) => {
     try {
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append("title", blogData.title);
-      formData.append("summary", blogData.summary);
-      formData.append("content", blogData.content);
-      formData.append("published", String(blogData.published));
-      formData.append("readTime", String(blogData.readTime));
-      blogData.tags.forEach((tag) => formData.append("tags[]", tag));
-      formData.append("image", blogData.coverImage);
-
-      const response = await AxiosInstance.post(BLOGS, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      // readTime is estimated server-side (see knowledge-service's blogsRepo.js) — no need to
+      // send blogData.readTime, our create schema doesn't accept it anyway.
+      await createBlog({
+        title: blogData.title,
+        summary: blogData.summary,
+        content: blogData.content,
+        tags: blogData.tags,
+        published: blogData.published,
+        coverImage: blogData.coverImage,
       });
-
-      logger.info(response.data);
+      toast.success(
+        blogData.published ? "Blog published successfully" : "Draft saved"
+      );
+      queryClient.invalidateQueries({ queryKey: ["blogs"] });
       setIsAddNewBlog(false);
     } catch (error) {
       logger.error("Error adding blog:", error);
+      toast.error("Failed to save blog");
     }
   };
 
@@ -140,7 +150,7 @@ const KnowledgePage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-cy="knowledge-page">
       <div>
         <h1 className="text-3xl font-bold">Knowledge Base</h1>
         <p className="text-muted-foreground">
@@ -157,11 +167,20 @@ const KnowledgePage: React.FC = () => {
             value={searchQuery}
             name={tabsValue}
             onChange={searchKnowledge}
+            data-cy="knowledge-search"
           />
         </div>
 
         <div className="flex gap-2">
-          <Button className="flex justify-center items-center">
+          <Button
+            className="flex justify-center items-center"
+            onClick={() => {
+              setSelectedNote(null);
+              setIsEditingNote(false);
+              setIsAddNoteOpen(true);
+            }}
+            data-cy="knowledge-new-note-button"
+          >
             <Edit className="h-4 w-4 mr-2" />
             New Note
           </Button>
@@ -169,6 +188,7 @@ const KnowledgePage: React.FC = () => {
             className="flex justify-center items-center"
             variant="outlinePrimary"
             onClick={() => setIsAddNewBlog(true)}
+            data-cy="knowledge-new-blog-button"
           >
             <Newspaper className="h-4 w-4 mr-2" />
             New Blog
@@ -178,8 +198,12 @@ const KnowledgePage: React.FC = () => {
 
       <Tabs value={tabsValue} onValueChange={setTabsValue}>
         <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="blogs">Blogs</TabsTrigger>
+          <TabsTrigger value="notes" data-cy="knowledge-tab-notes">
+            Notes
+          </TabsTrigger>
+          <TabsTrigger value="blogs" data-cy="knowledge-tab-blogs">
+            Blogs
+          </TabsTrigger>
         </TabsList>
 
         {/* Notes Tab */}
@@ -215,6 +239,7 @@ const KnowledgePage: React.FC = () => {
                       selectedNote?.id === note.id ? "ring-1 ring-primary" : ""
                     }`}
                     onClick={() => setSelectedNote(note)}
+                    data-cy="note-card"
                   >
                     <CardHeader className="p-4 pb-0">
                       <div className="flex justify-between gap-2">
@@ -263,11 +288,33 @@ const KnowledgePage: React.FC = () => {
                   </Card>
                 ))}
 
-                {filteredNotes.length === 0 && (
-                  <div className="text-center py-8 bg-muted/50 rounded-lg">
+                {!isLoadingNotes && filteredNotes.length === 0 && (
+                  <div
+                    className="text-center py-8 bg-muted/50 rounded-lg"
+                    data-cy="notes-empty"
+                  >
                     <p className="text-muted-foreground">
                       No notes found matching your search.
                     </p>
+                  </div>
+                )}
+
+                {isLoadingNotes && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    Loading notes...
+                  </div>
+                )}
+
+                {hasNextNotesPage && (
+                  <div className="flex justify-center">
+                    <Button
+                      variant="outlinePrimary"
+                      onClick={() => fetchNextNotesPage()}
+                      disabled={isFetchingNextNotesPage}
+                      className="px-4 py-2 text-sm rounded-lg disabled:opacity-50"
+                    >
+                      {isFetchingNextNotesPage ? "Loading..." : "Load More"}
+                    </Button>
                   </div>
                 )}
               </div>
@@ -275,30 +322,76 @@ const KnowledgePage: React.FC = () => {
 
             <div className="md:col-span-2">
               {selectedNote ? (
-                <Card>
+                <Card data-cy="note-detail">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-center">
                       <CardTitle>{selectedNote.title}</CardTitle>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="md">
+                          <Button
+                            variant="ghost"
+                            size="md"
+                            data-cy="note-actions-trigger"
+                          >
                             ⋮
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>Edit Note</DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setIsEditingNote(true);
+                              setIsAddNoteOpen(true);
+                            }}
+                            data-cy="note-edit-action"
+                          >
+                            Edit Note
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={async () => {
+                              const updated = await updateNote.mutateAsync({
+                                id: selectedNote.id,
+                                input: {
+                                  title: selectedNote.title,
+                                  content: selectedNote.content,
+                                  tags: selectedNote.tags,
+                                  isPinned: !selectedNote.isPinned,
+                                  isFavorite: selectedNote.isFavorite,
+                                },
+                              });
+                              setSelectedNote(updated);
+                            }}
+                            data-cy="note-pin-action"
+                          >
                             {selectedNote.isPinned ? "Unpin Note" : "Pin Note"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={async () => {
+                              const updated = await updateNote.mutateAsync({
+                                id: selectedNote.id,
+                                input: {
+                                  title: selectedNote.title,
+                                  content: selectedNote.content,
+                                  tags: selectedNote.tags,
+                                  isPinned: selectedNote.isPinned,
+                                  isFavorite: !selectedNote.isFavorite,
+                                },
+                              });
+                              setSelectedNote(updated);
+                            }}
+                            data-cy="note-favorite-action"
+                          >
                             {selectedNote.isFavorite
                               ? "Remove from Favorites"
                               : "Add to Favorites"}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => setIsDeleteNoteOpen(true)}
+                            data-cy="note-delete-action"
+                          >
                             Delete Note
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -351,6 +444,30 @@ const KnowledgePage: React.FC = () => {
           <Blog searchQuery={searchQuery} />
         </TabsContent>
       </Tabs>
+
+      {isAddNoteOpen && (
+        <AddNoteForm
+          open={isAddNoteOpen}
+          setOpen={setIsAddNoteOpen}
+          noteData={isEditingNote ? selectedNote : null}
+          onSaved={() => setIsEditingNote(false)}
+        />
+      )}
+
+      {isDeleteNoteOpen && selectedNote && (
+        <AskForConfirmationModal
+          title="Delete Note"
+          message="Are you sure you want to delete this note?"
+          showDelete
+          onCancel={() => setIsDeleteNoteOpen(false)}
+          onDelete={async () => {
+            await deleteNote.mutateAsync(selectedNote.id);
+            setSelectedNote(null);
+            setIsDeleteNoteOpen(false);
+            toast.success("Note deleted successfully");
+          }}
+        />
+      )}
     </div>
   );
 };

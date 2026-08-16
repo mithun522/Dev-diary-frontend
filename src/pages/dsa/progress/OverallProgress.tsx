@@ -42,7 +42,7 @@ const OverallProgress: React.FC = () => {
   }
 
   return (
-    <Card>
+    <Card data-cy="dsa-overall-progress">
       <CardHeader>
         <CardTitle>Overall Progress</CardTitle>
         <CardDescription>Your problem-solving status</CardDescription>
@@ -54,15 +54,15 @@ const OverallProgress: React.FC = () => {
               data={[
                 {
                   name: "Easy",
-                  value: data[0].problemsByDifficulty.easy,
+                  value: data.problemsByDifficulty.easy,
                 },
                 {
                   name: "MEDIUM",
-                  value: data[0].problemsByDifficulty.medium,
+                  value: data.problemsByDifficulty.medium,
                 },
                 {
                   name: "HARD",
-                  value: data[0].problemsByDifficulty.hard,
+                  value: data.problemsByDifficulty.hard,
                 },
               ]}
               cx="50%"
@@ -103,19 +103,19 @@ const OverallProgress: React.FC = () => {
         <div className="grid grid-cols-3 gap-4 text-center mt-4">
           <div>
             <div className="font-bold text-xl">
-              {data[0].problemsByDifficulty.easy}
+              {data.problemsByDifficulty.easy}
             </div>
             <div className="text-sm text-muted-foreground">Easy</div>
           </div>
           <div>
             <div className="font-bold text-xl">
-              {data[0].problemsByDifficulty.medium}
+              {data.problemsByDifficulty.medium}
             </div>
             <div className="text-sm text-muted-foreground">Medium</div>
           </div>
           <div>
             <div className="font-bold text-xl">
-              {data[0].problemsByDifficulty.hard}
+              {data.problemsByDifficulty.hard}
             </div>
             <div className="text-sm text-muted-foreground">Hard</div>
           </div>

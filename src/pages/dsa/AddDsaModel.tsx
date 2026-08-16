@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import AxiosInstance from "../../utils/AxiosInstance";
+import type { AxiosError } from "axios";
 import { DSA } from "../../constants/Api";
 import { convertToPascalCase } from "../../utils/convertToPascalCase";
 import { MultiSelect } from "../../components/ui/multiselect";
@@ -90,16 +91,30 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
 
   const onSubmit = async (data: DSAProblem) => {
     setDisabled(true);
+    // Backend schemas reject unknown properties (additionalProperties: false) — id/createdAt/
+    // updatedAt come along for the ride via reset(problemData) in edit mode, so strip them here.
+    const payload = {
+      problem: data.problem,
+      difficulty: data.difficulty,
+      language: data.language,
+      topics: data.topics,
+      link: data.link,
+      status: data.status,
+      notes: data.notes,
+      bruteForceSolution: data.bruteForceSolution,
+      betterSolution: data.betterSolution,
+      optimisedSolution: data.optimisedSolution,
+    };
     try {
       let response;
       if (problemData) {
-        response = await AxiosInstance.put(`${DSA}/${problemData.id}`, data);
+        response = await AxiosInstance.put(`${DSA}/${problemData.id}`, payload);
         if (response.status === 200) {
           toast.success("DSA problem updated successfully");
         }
       } else {
-        response = await AxiosInstance.post(DSA, data);
-        if (response.status === 200) {
+        response = await AxiosInstance.post(DSA, payload);
+        if (response.status === 201) {
           toast.success("DSA problem added successfully");
         }
       }
@@ -108,6 +123,11 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
       setOpen(false);
       reset();
     } catch (error) {
+      const err = error as AxiosError;
+      toast.error(
+        (err.response?.data as { message?: string })?.message ||
+          "Failed to save DSA problem"
+      );
       logger.error("Error submitting problem:", error);
     } finally {
       setDisabled(false);
@@ -118,13 +138,16 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[100]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[90vw] max-w-md max-h-[600px] overflow-auto -translate-x-1/2 -translate-y-1/2 rounded-xl p-6 shadow-xl bg-background dark:text-white border border-white z-[101]">
+        <Dialog.Content
+          className="fixed left-1/2 top-1/2 w-[90vw] max-w-md max-h-[600px] overflow-auto -translate-x-1/2 -translate-y-1/2 rounded-xl p-6 shadow-xl bg-background dark:text-white border border-white z-[101]"
+          data-cy="dsa-form-modal"
+        >
           <div className="flex items-center justify-between mb-4">
-            <Dialog.Title className="text-lg font-semibold">
+            <Dialog.Title className="text-lg font-semibold" data-cy="dsa-form-title">
               {problemData ? "Edit DSA Problem" : "Add DSA Problem"}
             </Dialog.Title>
             <Dialog.Close asChild>
-              <X className="text-primary-background" />
+              <X className="text-primary-background" data-cy="dsa-form-close" />
             </Dialog.Close>
           </div>
 
@@ -140,9 +163,12 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                   required: "Problem title is required",
                 })}
                 className={errors.problem ? "border border-red-600" : ""}
+                data-cy="dsa-form-problem"
               />
               {errors.problem && (
-                <p className="text-red-500 text-sm">{errors.problem.message}</p>
+                <p className="text-red-500 text-sm" data-cy="dsa-form-problem-error">
+                  {errors.problem.message}
+                </p>
               )}
             </div>
 
@@ -156,10 +182,13 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                   value={field.value}
                   onValueChange={(val) => field.onChange(val)}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full" data-cy="dsa-form-difficulty-trigger">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
-                  <SelectContent className="z-[9999]">
+                  <SelectContent
+                    className="z-[9999]"
+                    data-cy="dsa-form-difficulty-content"
+                  >
                     {Object.values(DifficultyLevels).map((level) => (
                       <SelectItem key={level} value={level}>
                         {convertToPascalCase(level)}
@@ -176,10 +205,13 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
               control={control}
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full" data-cy="dsa-form-language-trigger">
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
-                  <SelectContent className="z-[9999]">
+                  <SelectContent
+                    className="z-[9999]"
+                    data-cy="dsa-form-language-content"
+                  >
                     {Object.values(ProgrammingLanguages).map((lang) => (
                       <SelectItem key={lang} value={lang}>
                         {convertToPascalCase(lang)}
@@ -204,13 +236,19 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
             />
 
             <Label htmlFor="link">Problem Link</Label>
-            <Input id="link" placeholder="https://..." {...register("link")} />
+            <Input
+              id="link"
+              placeholder="https://..."
+              {...register("link")}
+              data-cy="dsa-form-link"
+            />
 
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
               placeholder="Notes..."
               {...register("notes")}
+              data-cy="dsa-form-notes"
             />
 
             <Label htmlFor="bruteForceSolution" isMandatory>
@@ -228,18 +266,21 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                     ? "border border-red-600"
                     : "ring-0 focus:ring-0 ring-color-transparent"
                 }
+                data-cy="dsa-form-brute-force"
               />
               {errors.bruteForceSolution && (
-                <p className="text-red-500 text-sm">
+                <p className="text-red-500 text-sm" data-cy="dsa-form-brute-force-error">
                   {errors.bruteForceSolution.message}
                 </p>
               )}
               {!showBetter && (
                 <Button
+                  type="button"
                   variant="secondary"
                   size="sm"
                   className="mt-2"
                   onClick={() => setShowBetter(true)}
+                  data-cy="dsa-form-add-better"
                 >
                   + Add Better Solution
                 </Button>
@@ -253,6 +294,7 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                     id="betterSolution"
                     placeholder="Write better solution..."
                     {...register("betterSolution")}
+                    data-cy="dsa-form-better"
                   />
                 </div>
               )}
@@ -260,9 +302,11 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
             {/* Button to reveal optimised field */}
             {showBetter && !showOptimised && (
               <Button
+                type="button"
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowOptimised(true)}
+                data-cy="dsa-form-add-optimised"
               >
                 + Add Optimised Solution
               </Button>
@@ -276,15 +320,23 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                   id="optimisedSolution"
                   placeholder="Write optimised solution..."
                   {...register("optimisedSolution")}
+                  data-cy="dsa-form-optimised"
                 />
               </div>
             )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Dialog.Close asChild>
-                <Button variant="danger">Cancel</Button>
+                <Button type="button" variant="danger" data-cy="dsa-form-cancel">
+                  Cancel
+                </Button>
               </Dialog.Close>
-              <Button variant="primary" type="submit" disabled={disabled}>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={disabled}
+                data-cy="dsa-form-save"
+              >
                 Save
               </Button>
             </div>

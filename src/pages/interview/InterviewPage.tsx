@@ -348,7 +348,7 @@ const InterviewPage = () => {
 
   if (viewState === "history") {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" data-cy="interview-history-page">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Interview History</h1>
@@ -359,6 +359,7 @@ const InterviewPage = () => {
           <Button
             onClick={() => setViewState("lobby")}
             variant="outlinePrimary"
+            data-cy="interview-history-back-button"
           >
             Back to Interviews
           </Button>
@@ -392,7 +393,7 @@ const InterviewPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-cy="interview-page">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">Mock Interview Platform</h1>
@@ -405,6 +406,7 @@ const InterviewPage = () => {
           onClick={() => setViewState("history")}
           variant="outlinePrimary"
           className="flex items-center gap-2"
+          data-cy="interview-view-history-button"
         >
           <History className="h-4 w-4" />
           View History
@@ -413,9 +415,15 @@ const InterviewPage = () => {
 
       <Tabs defaultValue="mock">
         <TabsList className="grid grid-cols-3 w-full md:w-[400px]">
-          <TabsTrigger value="mock">Mock Interviews</TabsTrigger>
-          <TabsTrigger value="company">Company Questions</TabsTrigger>
-          <TabsTrigger value="behavioral">Behavioral</TabsTrigger>
+          <TabsTrigger value="mock" data-cy="interview-tab-mock">
+            Mock Interviews
+          </TabsTrigger>
+          <TabsTrigger value="company" data-cy="interview-tab-company">
+            Company Questions
+          </TabsTrigger>
+          <TabsTrigger value="behavioral" data-cy="interview-tab-behavioral">
+            Behavioral
+          </TabsTrigger>
         </TabsList>
 
         {/* Company-specific questions tab */}
@@ -595,11 +603,12 @@ const InterviewPage = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
+                data-cy="interview-search"
               />
             </div>
 
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-48" data-cy="interview-category-filter-trigger">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -614,10 +623,10 @@ const InterviewPage = () => {
               value={difficultyFilter}
               onValueChange={setDifficultyFilter}
             >
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-48" data-cy="interview-difficulty-filter-trigger">
                 <SelectValue placeholder="Difficulty" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent data-cy="interview-difficulty-filter-content">
                 <SelectItem value="all">All Difficulties</SelectItem>
                 <SelectItem value="easy">Easy</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
@@ -631,6 +640,7 @@ const InterviewPage = () => {
               <Card
                 key={interview.id}
                 className="flex flex-col hover:shadow-lg transition-shadow duration-200"
+                data-cy="mock-interview-card"
               >
                 <CardHeader>
                   <CardTitle className="flex justify-between items-start">
@@ -697,6 +707,7 @@ const InterviewPage = () => {
                   <Button
                     className="flex max-w-3xl justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => handleStartInterview(interview)}
+                    data-cy="mock-interview-start-button"
                   >
                     <Play className="h-4 w-4 mr-2 mt-1" />
                     Start Interview

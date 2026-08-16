@@ -51,8 +51,8 @@ import Todo from "./todo/Todo";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [selectedProblem, setSelectedProblem] = useState<DSAProblem | null>(
     null
   );
@@ -83,7 +83,7 @@ const DSAPage: React.FC = () => {
       .then((res) => {
         setSelectedProblem(null);
 
-        if (res.status === 200) {
+        if (res.status === 204) {
           toast.success("DSA problem deleted successfully");
           setSearchQuery("");
           queryClient.invalidateQueries({ queryKey: ["dsa"] });
@@ -106,7 +106,7 @@ const DSAPage: React.FC = () => {
   if (errorFetch) return <ErrorPage message="Failed to fetch DSA problems" />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-cy="dsa-page">
       <div>
         <h1 className="text-3xl font-bold">DSA Tracker</h1>
         <p className="text-muted-foreground">
@@ -116,9 +116,15 @@ const DSAPage: React.FC = () => {
 
       <Tabs defaultValue="problems">
         <TabsList className="grid grid-cols-3 md:w-[400px]">
-          <TabsTrigger value="problems">Problems</TabsTrigger>
-          <TabsTrigger value="progress">Progress</TabsTrigger>
-          <TabsTrigger value="todo">Todo</TabsTrigger>
+          <TabsTrigger value="problems" data-cy="dsa-tab-problems">
+            Problems
+          </TabsTrigger>
+          <TabsTrigger value="progress" data-cy="dsa-tab-progress">
+            Progress
+          </TabsTrigger>
+          <TabsTrigger value="todo" data-cy="dsa-tab-todo">
+            Todo
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="problems" className="space-y-6 pt-4">
@@ -129,6 +135,7 @@ const DSAPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="max-w-md"
+                data-cy="dsa-search"
               />
             </div>
             <div className="flex flex-wrap gap-2 md:gap-4">
@@ -136,10 +143,13 @@ const DSAPage: React.FC = () => {
                 value={difficultyFilter}
                 onValueChange={setDifficultyFilter}
               >
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger
+                  className="w-[120px]"
+                  data-cy="dsa-difficulty-filter-trigger"
+                >
                   <SelectValue placeholder="Difficulty" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent data-cy="dsa-difficulty-filter-content">
                   <SelectGroup>
                     <SelectItem value="all">All</SelectItem>
                     <SelectItem value="easy">Easy</SelectItem>
@@ -150,10 +160,13 @@ const DSAPage: React.FC = () => {
               </Select>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger
+                  className="w-[120px]"
+                  data-cy="dsa-status-filter-trigger"
+                >
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent data-cy="dsa-status-filter-content">
                   <SelectGroup>
                     <SelectItem value="all">All</SelectItem>
                     <SelectItem value="solved">Solved</SelectItem>
@@ -169,6 +182,7 @@ const DSAPage: React.FC = () => {
                   setIsAddModelOpen(true);
                   setSelectedProblem(null);
                 }}
+                data-cy="dsa-add-problem-button"
               >
                 Add DSA Problem
               </Button>
@@ -191,7 +205,10 @@ const DSAPage: React.FC = () => {
               isFetchingNextPage={isFetchingNextPage}
             />
           ) : (
-            <div className="flex flex-col gap-2 justify-center items-center">
+            <div
+              className="flex flex-col gap-2 justify-center items-center"
+              data-cy="dsa-no-data"
+            >
               <img
                 src={noDataImage}
                 className="flex object-contain h-[60vh] w-[60vw]"

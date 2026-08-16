@@ -15,15 +15,15 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
-import { BACKEND_URL, PUBLISH_BLOG } from "../../../constants/Api";
 import { getTagColor } from "../../../utils/colorVariations";
 import { Badge } from "../../../components/ui/badge";
 import type { KnowledgeBlog } from "../../../data/knowledgeData";
 import { formatDate } from "../../../utils/formatDate";
 import { Clock, EllipsisVertical, Maximize2, X } from "lucide-react";
-import AxiosInstance from "../../../utils/AxiosInstance";
+import { publishBlog } from "../../../api/services/blogs.service";
 import { toast } from "react-toastify";
 import { logger } from "../../../utils/logger";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BLOG_PUBLISHED_ERROR,
   BLOG_PUBLISHED_SUCCESS,
@@ -31,7 +31,7 @@ import {
 
 interface BlogsCardProps {
   selectedBlog: KnowledgeBlog;
-  handleDeleteBlog: (id: number) => void;
+  handleDeleteBlog: (id: string) => void;
   isMaximized: boolean;
   setIsMaximized: (maximized: boolean) => void;
 }
@@ -42,17 +42,13 @@ const BlogsCard: React.FC<BlogsCardProps> = ({
   isMaximized,
   setIsMaximized,
 }) => {
+  const queryClient = useQueryClient();
+
   const handlePublish = async () => {
     try {
-      const response = await AxiosInstance.put(
-        `${PUBLISH_BLOG}/${selectedBlog.id}`
-      );
-
-      if (response.status === 200) {
-        toast.success(BLOG_PUBLISHED_SUCCESS);
-      } else {
-        toast.error(BLOG_PUBLISHED_ERROR);
-      }
+      await publishBlog(selectedBlog.id, !selectedBlog.published);
+      queryClient.invalidateQueries({ queryKey: ["blogs"] });
+      toast.success(BLOG_PUBLISHED_SUCCESS);
     } catch (err) {
       logger.error(err);
       toast.error(BLOG_PUBLISHED_ERROR);
@@ -60,7 +56,7 @@ const BlogsCard: React.FC<BlogsCardProps> = ({
   };
 
   return (
-    <Card className="z-50">
+    <Card className="z-50" data-cy="blog-detail">
       {selectedBlog?.image_url && (
         <div className="relative rounded-t-lg bg-black">
           <div className="flex absolute top-2 right-2">
@@ -75,7 +71,7 @@ const BlogsCard: React.FC<BlogsCardProps> = ({
             )}
           </div>
           <img
-            src={BACKEND_URL + selectedBlog?.image_url}
+            src={selectedBlog?.image_url}
             alt={selectedBlog?.title}
             className="w-full h-full object-contain"
           />
@@ -87,7 +83,7 @@ const BlogsCard: React.FC<BlogsCardProps> = ({
           <CardTitle>{selectedBlog?.title}</CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="md">
+              <Button variant="ghost" size="md" data-cy="blog-actions-trigger">
                 <EllipsisVertical />
               </Button>
             </DropdownMenuTrigger>
@@ -95,13 +91,14 @@ const BlogsCard: React.FC<BlogsCardProps> = ({
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Edit Blog</DropdownMenuItem>
-              <DropdownMenuItem onClick={handlePublish}>
+              <DropdownMenuItem onClick={handlePublish} data-cy="blog-publish-action">
                 {selectedBlog?.published ? "Unpublish" : "Publish"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"
-                onClick={() => handleDeleteBlog(Number(selectedBlog?.id))}
+                onClick={() => handleDeleteBlog(selectedBlog?.id)}
+                data-cy="blog-delete-action"
               >
                 Delete Blog
               </DropdownMenuItem>
@@ -112,8 +109,8 @@ const BlogsCard: React.FC<BlogsCardProps> = ({
           <MarkdownPreview source={selectedBlog?.summary} />
         </CardDescription>
         <div className="flex flex-wrap gap-1 mt-2">
-          {Array.isArray(selectedBlog) &&
-            selectedBlog?.tags.map((tag, index) => (
+          {Array.isArray(selectedBlog?.tags) &&
+            selectedBlog.tags.map((tag, index) => (
               <Badge key={index} className={getTagColor(tag)}>
                 {tag}
               </Badge>

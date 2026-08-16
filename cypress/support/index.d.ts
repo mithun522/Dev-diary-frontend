@@ -8,5 +8,6 @@ declare namespace Cypress {
      */
     login(): Chainable<void>;
     Register(): Chainable<void>;
+    ensureTestUser(): Chainable<void>;
   }
 }

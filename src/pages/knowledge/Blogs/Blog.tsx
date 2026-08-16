@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -13,8 +13,7 @@ import {
   type KnowledgeBlog,
   type KnowledgeTag,
 } from "../../../data/knowledgeData";
-import AxiosInstance from "../../../utils/AxiosInstance";
-import { BLOGS } from "../../../constants/Api";
+import { deleteBlog } from "../../../api/services/blogs.service";
 import { toast } from "react-toastify";
 import { formatDate } from "../../../utils/formatDate";
 import { logger } from "../../../utils/logger";
@@ -56,15 +55,28 @@ const Blog: React.FC<BlogsProps> = ({ searchQuery }) => {
 
   const blogs = data?.pages.flatMap((page) => page.blogs) ?? [];
 
-  const handleDeleteBlog = async (id: number) => {
+  // Keep the selected blog's displayed fields (e.g. published state) in sync after a
+  // publish/unpublish mutation invalidates and refetches the list - otherwise BlogsCard
+  // keeps rendering the stale snapshot captured at selection time. If the blog no longer
+  // matches the active filter/search (e.g. it was unpublished while viewing "Published"),
+  // deselect it rather than keep showing a now-stale, filtered-out card.
+  useEffect(() => {
+    if (!selectedBlog || isLoading || isFetching) return;
+    const refreshed = blogs.find((blog) => blog.id === selectedBlog.id);
+    if (refreshed !== selectedBlog) {
+      setSelectedBlog(refreshed ?? null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blogs, isLoading, isFetching]);
+
+  const handleDeleteBlog = async (id: string) => {
     try {
-      const response = await AxiosInstance.delete(`${BLOGS}?id=${id}`);
-      if (response.status === 200) {
-        queryClient.invalidateQueries({ queryKey: ["blogs"] });
-        toast.success(response?.data);
-      }
+      await deleteBlog(id);
+      queryClient.invalidateQueries({ queryKey: ["blogs"] });
+      toast.success("Blog deleted successfully");
     } catch (e) {
       logger.error(e);
+      toast.error("Failed to delete blog");
     }
   };
 
@@ -92,6 +104,8 @@ const Blog: React.FC<BlogsProps> = ({ searchQuery }) => {
                 filter === key ? "bg-primary text-primary-foreground" : ""
               }`}
               onClick={() => setFilter(key)}
+              data-cy="blog-filter"
+              data-value={key}
             >
               {label}
             </Badge>
@@ -107,6 +121,7 @@ const Blog: React.FC<BlogsProps> = ({ searchQuery }) => {
                   selectedBlog?.id === blog.id ? "ring-1 ring-primary" : ""
                 }`}
                 onClick={() => setSelectedBlog(blog)}
+                data-cy="blog-card"
               >
                 {blog.coverImage && (
                   <div className="relative h-32 overflow-hidden rounded-t-lg">
@@ -175,7 +190,10 @@ const Blog: React.FC<BlogsProps> = ({ searchQuery }) => {
           )}
 
           {blogs.length === 0 && (
-            <div className="text-center py-8 bg-muted/50 rounded-lg">
+            <div
+              className="text-center py-8 bg-muted/50 rounded-lg"
+              data-cy="blogs-empty"
+            >
               <p className="text-muted-foreground">
                 No blogs found matching your search.
               </p>

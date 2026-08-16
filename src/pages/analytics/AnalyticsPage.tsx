@@ -149,7 +149,7 @@ const AnalyticsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-cy="analytics-page">
       <div>
         <h1 className="text-3xl font-bold">Analytics</h1>
         <p className="text-muted-foreground">
@@ -227,10 +227,10 @@ const AnalyticsPage = () => {
             <div className="flex items-center justify-between">
               <CardTitle>Activity Overview</CardTitle>
               <Select value={timeframe} onValueChange={setTimeframe}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger className="w-[120px]" data-cy="analytics-timeframe-trigger">
                   <SelectValue placeholder="Timeframe" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent data-cy="analytics-timeframe-content">
                   <SelectItem value="week">Last Week</SelectItem>
                   <SelectItem value="month">Last Month</SelectItem>
                   <SelectItem value="quarter">Last 3 Months</SelectItem>
@@ -329,10 +329,10 @@ const AnalyticsPage = () => {
                   setSelectedCategory(value as SkillCategory)
                 }
               >
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-[140px]" data-cy="analytics-category-trigger">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent data-cy="analytics-category-content">
                   <SelectItem value="all">All Categories</SelectItem>
                   <SelectItem value="algorithms">Algorithms</SelectItem>
                   <SelectItem value="data-structures">
@@ -365,6 +365,7 @@ const AnalyticsPage = () => {
                   <div
                     key={skill.name}
                     className={`p-3 rounded-md ${bgColor} relative`}
+                    data-cy="analytics-skill-item"
                   >
                     <div className="flex justify-between items-center">
                       <span className={`text-sm font-medium ${textColor}`}>
@@ -502,9 +503,15 @@ const AnalyticsPage = () => {
 
       <Tabs defaultValue="weekly">
         <TabsList>
-          <TabsTrigger value="weekly">Weekly Stats</TabsTrigger>
-          <TabsTrigger value="monthly">Monthly Stats</TabsTrigger>
-          <TabsTrigger value="topics">Topic Breakdown</TabsTrigger>
+          <TabsTrigger value="weekly" data-cy="analytics-tab-weekly">
+            Weekly Stats
+          </TabsTrigger>
+          <TabsTrigger value="monthly" data-cy="analytics-tab-monthly">
+            Monthly Stats
+          </TabsTrigger>
+          <TabsTrigger value="topics" data-cy="analytics-tab-topics">
+            Topic Breakdown
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="weekly" className="pt-4">

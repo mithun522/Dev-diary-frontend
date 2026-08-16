@@ -17,7 +17,7 @@ import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import { logger } from "../../utils/logger";
 import axios from "axios";
-import { VERIFY_OTP } from "../../constants/Api";
+import { SEND_OTP, VERIFY_OTP } from "../../constants/Api";
 
 const VerifyOTPPage = () => {
   const [otp, setOtp] = useState("");
@@ -32,7 +32,7 @@ const VerifyOTPPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (otp.length !== 4) {
+    if (otp.length !== 6) {
       toast.error("Please enter a valid 6-digit OTP");
       return;
     }
@@ -47,7 +47,12 @@ const VerifyOTPPage = () => {
 
       if (response.status === 200) {
         toast.success("OTP verified successfully");
-        navigate("/auth/reset-password", { state: { email } });
+        // resetPassword needs the same {email, otp} pair again (verifying doesn't consume it,
+        // only resetting the password does) — pass both via query params, which is what
+        // ResetPasswordPage reads from (router state doesn't survive a direct page load there).
+        navigate(
+          `/auth/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`
+        );
       }
     } catch (error) {
       const err = error as AxiosError;
@@ -63,8 +68,7 @@ const VerifyOTPPage = () => {
 
   const handleResendOTP = async () => {
     try {
-      // TODO: Replace with resend OTP API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await axios.post(SEND_OTP, { email });
       toast.success("A new OTP has been sent to your email");
     } catch (error) {
       logger.error(error);
@@ -76,7 +80,9 @@ const VerifyOTPPage = () => {
     <AuthLayout>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Verify OTP</CardTitle>
+          <CardTitle className="text-2xl" data-cy="verify-otp-title">
+            Verify OTP
+          </CardTitle>
           <CardDescription>
             Enter the 6-digit code sent to your email address.
           </CardDescription>
@@ -91,6 +97,7 @@ const VerifyOTPPage = () => {
                 value={email}
                 readOnly
                 className="bg-muted/50"
+                data-cy="verify-otp-email"
               />
             </div>
             <div className="space-y-2">
@@ -99,8 +106,9 @@ const VerifyOTPPage = () => {
                 className="flex justify-left items-center gap-2"
                 value={otp}
                 onValueChange={(e) => setOtp(e)}
+                data-cy="verify-otp-input"
               >
-                {Array.from({ length: 4 }).map((_, index) => (
+                {Array.from({ length: 6 }).map((_, index) => (
                   <OneTimePasswordField.Input
                     key={index}
                     className="w-12 h-12 rounded-md border border-input text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all"
@@ -110,7 +118,12 @@ const VerifyOTPPage = () => {
               </OneTimePasswordField.Root>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+              data-cy="verify-otp-submit"
+            >
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -128,6 +141,7 @@ const VerifyOTPPage = () => {
                 onClick={handleResendOTP}
                 className="text-sm"
                 disabled={isLoading}
+                data-cy="verify-otp-resend"
               >
                 Didn't receive the code? Resend
               </Button>
@@ -137,7 +151,11 @@ const VerifyOTPPage = () => {
         <CardFooter className="flex justify-center border-t pt-6">
           <p className="text-sm text-muted-foreground">
             Remember your password?{" "}
-            <a href="/auth/login" className="text-primary hover:underline">
+            <a
+              href="/auth/login"
+              className="text-primary hover:underline"
+              data-cy="verify-otp-back-to-login"
+            >
               Back to Login
             </a>
           </p>

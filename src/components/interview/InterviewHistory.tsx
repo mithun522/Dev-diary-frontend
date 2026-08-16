@@ -85,7 +85,7 @@ const InterviewHistory = ({
 
   if (attempts.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12" data-cy="interview-history-empty">
         <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-medium mb-2">No Interview History</h3>
         <p className="text-muted-foreground">
@@ -146,6 +146,7 @@ const InterviewHistory = ({
                 <div
                   key={attempt.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  data-cy="interview-history-item"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">

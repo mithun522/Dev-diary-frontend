@@ -44,7 +44,7 @@ const InterviewStartModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent onClose={onClose} className="max-w-2xl">
+      <DialogContent onClose={onClose} className="max-w-2xl" data-cy="interview-start-modal">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             {interview.title}
@@ -130,10 +130,10 @@ const InterviewStartModal = ({
 
           {/* Action Buttons */}
           <div className="flex gap-3 justify-end">
-            <Button variant="outlinePrimary" onClick={onClose}>
+            <Button variant="outlinePrimary" onClick={onClose} data-cy="interview-start-cancel">
               Cancel
             </Button>
-            <Button onClick={onStart} className="px-8">
+            <Button onClick={onStart} className="px-8" data-cy="interview-start-confirm">
               Start Interview
             </Button>
           </div>

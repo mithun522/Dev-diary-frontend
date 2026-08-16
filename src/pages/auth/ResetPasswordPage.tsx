@@ -12,21 +12,26 @@ import {
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Progress } from "../../components/ui/progress";
+import axios, { type AxiosError } from "axios";
+import { toast } from "react-toastify";
+import { RESET_PASSWORD } from "../../constants/Api";
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "";
+  const otp = searchParams.get("otp") || "";
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!email) {
+    if (!email || !otp) {
       navigate("/auth/forgot-password");
     }
-  }, [email, navigate]);
+  }, [email, otp, navigate]);
 
   // Calculate password strength
   const calculatePasswordStrength = (password: string): number => {
@@ -72,7 +77,7 @@ const ResetPasswordPage = () => {
     return "bg-green-500";
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!password || !confirmPassword) {
@@ -89,7 +94,22 @@ const ResetPasswordPage = () => {
       setError("Please use a stronger password");
       return;
     }
-    navigate("/auth/login?reset=success");
+
+    setError(null);
+    try {
+      setIsLoading(true);
+      await axios.post(RESET_PASSWORD, { email, otp, newPassword: password });
+      toast.success("Password reset successfully");
+      navigate("/auth/login?reset=success");
+    } catch (err) {
+      const axiosError = err as AxiosError;
+      setError(
+        (axiosError.response?.data as { message?: string })?.message ||
+          "Failed to reset password. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const strengthInfo = getPasswordStrengthText();
@@ -98,7 +118,9 @@ const ResetPasswordPage = () => {
     <AuthLayout>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
+          <CardTitle className="text-2xl" data-cy="reset-password-title">
+            Reset Password
+          </CardTitle>
           <CardDescription>
             Create a new password for your account
           </CardDescription>
@@ -106,7 +128,10 @@ const ResetPasswordPage = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
+              <div
+                className="bg-destructive/15 text-destructive text-sm p-3 rounded-md"
+                data-cy="reset-password-error"
+              >
                 {error}
               </div>
             )}
@@ -124,9 +149,10 @@ const ResetPasswordPage = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={handlePasswordChange}
+                data-cy="reset-password-password"
               />
               {password && (
-                <div className="mt-2">
+                <div className="mt-2" data-cy="reset-password-strength">
                   <div className="flex justify-between text-xs mb-1">
                     <span>Password strength</span>
                     <span className={strengthInfo.color}>
@@ -150,11 +176,17 @@ const ResetPasswordPage = () => {
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                data-cy="reset-password-confirm-password"
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Reset Password
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+              data-cy="reset-password-submit"
+            >
+              {isLoading ? "Resetting..." : "Reset Password"}
             </Button>
           </form>
         </CardContent>

@@ -28,6 +28,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ open, onOpenChange }) => {
       <DialogContent
         className="max-w-md rounded-2xl"
         onClose={() => onOpenChange(false)}
+        data-cy="logout-modal"
       >
         <div className="flex flex-col items-center text-center p-2">
           {/* Icon Container with Gradient Background */}
@@ -53,6 +54,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ open, onOpenChange }) => {
               variant="outlinePrimary"
               onClick={() => onOpenChange(false)}
               className="flex-1 py-2.5 border-gray-300 hover:bg-gray-50 transition-colors"
+              data-cy="logout-cancel-button"
             >
               Cancel
             </Button>
@@ -60,6 +62,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ open, onOpenChange }) => {
               variant="danger"
               onClick={handleLogout}
               className="flex-1 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-sm hover:shadow-md transition-all"
+              data-cy="logout-confirm-button"
             >
               Yes, Logout
             </Button>

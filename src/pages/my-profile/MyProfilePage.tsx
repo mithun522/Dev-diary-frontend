@@ -80,10 +80,19 @@ const MyProfilePage = () => {
   const onSubmit = async (values: UserProfile) => {
     const userId = loggedInUserId();
     if (!userId) return;
+    // Backend's updateUserProfile schema rejects unknown properties (additionalProperties:
+    // false) and doesn't accept id/email/createdAt through this endpoint at all.
+    const payload = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      bio: values.bio,
+      professionalDetails: values.professionalDetails,
+      socialLinks: values.socialLinks,
+    };
     try {
       const response = await AxiosInstance.put(
         `${SINGLE_USER}/${userId}`,
-        values
+        payload
       );
       if (response.status === 200) {
         toast.success("Profile updated successfully");
@@ -125,7 +134,11 @@ const MyProfilePage = () => {
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="mx-auto space-y-6">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="mx-auto space-y-6"
+        data-cy="profile-page"
+      >
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">My Profile</h1>
           {!isEditing ? (
@@ -133,13 +146,18 @@ const MyProfilePage = () => {
               type="button"
               onClick={() => setIsEditing(true)}
               className="gap-2 flex items-center text-primary-foreground"
+              data-cy="profile-edit-button"
             >
               <Edit2 className="h-4 w-4" />
               Edit Profile
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button type="submit" className="flex items-center gap-2">
+              <Button
+                type="submit"
+                className="flex items-center gap-2"
+                data-cy="profile-save-button"
+              >
                 <Save className="h-4 w-4" />
                 Save
               </Button>
@@ -148,6 +166,7 @@ const MyProfilePage = () => {
                 variant="outlinePrimary"
                 onClick={handleCancel}
                 className="flex items-center gap-2"
+                data-cy="profile-cancel-button"
               >
                 <X className="h-4 w-4" />
                 Cancel
@@ -206,6 +225,7 @@ const MyProfilePage = () => {
                         required: "First name is required",
                       })}
                       error={errors.firstName?.message}
+                      data-cy="profile-first-name"
                     />
                   </div>
 
@@ -235,6 +255,7 @@ const MyProfilePage = () => {
                       id="location"
                       disabled={!isEditing}
                       {...register("professionalDetails.location")}
+                      data-cy="profile-location"
                     />
                   </div>
 
@@ -257,6 +278,7 @@ const MyProfilePage = () => {
                     rows={3}
                     disabled={!isEditing}
                     {...register("bio")}
+                    data-cy="profile-bio"
                   />
                 </div>
               </CardContent>
@@ -288,7 +310,7 @@ const MyProfilePage = () => {
 
                 <div className="space-y-2">
                   <Label>Skills</Label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2" data-cy="profile-skills-list">
                     {data?.professionalDetails?.skills &&
                       data?.professionalDetails?.skills
                         .split(",")
@@ -305,6 +327,7 @@ const MyProfilePage = () => {
                       size="sm"
                       className="mt-2"
                       onClick={() => setShowAddSkillModal(true)}
+                      data-cy="profile-manage-skills-button"
                     >
                       Manage Skills
                     </Button>

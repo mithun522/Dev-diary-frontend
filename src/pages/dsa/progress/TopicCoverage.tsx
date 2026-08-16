@@ -44,12 +44,12 @@ const TopicCoverage: React.FC = () => {
     );
   }
 
-  const topicProgress = Object.entries(data[0]?.problemsByTopic ?? {}).map(
+  const topicProgress = Object.entries(data?.problemsByTopic ?? {}).map(
     ([topic, count]) => ({ topic, count })
   );
 
   return (
-    <Card>
+    <Card data-cy="dsa-topic-coverage">
       <CardHeader>
         <CardTitle>Topic Coverage</CardTitle>
         <CardDescription>Problems solved by topic</CardDescription>

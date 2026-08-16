@@ -34,7 +34,8 @@ const ComingSoon = () => {
 
   return (
     <>
-  <div className="max-w-7xl w-full mx-auto">
+  <div className="max-w-7xl w-full mx-auto" data-cy="coming-soon">
+
     {/* Main Content */}
     <div className="bg-white border border-gray-300 p-8 md:p-12 lg:p-16">
       {/* Logo/Brand */}

@@ -93,7 +93,7 @@ const InterviewSubmission = ({
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen bg-background py-8" data-cy="interview-submission">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
@@ -109,6 +109,7 @@ const InterviewSubmission = ({
                 className={`text-4xl font-bold ${getScoreColor(
                   scorePercentage
                 )}`}
+                data-cy="interview-score"
               >
                 {scorePercentage}%
               </div>
@@ -280,11 +281,12 @@ const InterviewSubmission = ({
             onClick={onRetakeInterview}
             variant="outlinePrimary"
             size="lg"
+            data-cy="interview-retake-button"
           >
             <RotateCcw className="h-4 w-4 mr-2" />
             Retake Interview
           </Button>
-          <Button onClick={onBackToHome} size="lg">
+          <Button onClick={onBackToHome} size="lg" data-cy="interview-back-home-button">
             <Home className="h-4 w-4 mr-2" />
             Back to Home
           </Button>
