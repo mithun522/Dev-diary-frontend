@@ -111,11 +111,67 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
         response = await AxiosInstance.put(`${DSA}/${problemData.id}`, payload);
         if (response.status === 200) {
           toast.success("DSA problem updated successfully");
+
+          const updatedProblem = response.data as DSAProblem;
+          queryClient.setQueriesData(
+            { queryKey: ["dsa"], exact: false },
+            (oldData: unknown) => {
+              const infiniteData = oldData as
+                | {
+                    pages: { dsa: DSAProblem[]; totalLength: number }[];
+                    pageParams: unknown[];
+                  }
+                | undefined;
+
+              if (!infiniteData?.pages) return oldData;
+
+              return {
+                ...infiniteData,
+                pages: infiniteData.pages.map((page) => ({
+                  ...page,
+                  dsa: page.dsa.map((problem) =>
+                    problem.id === problemData.id
+                      ? { ...problem, ...updatedProblem }
+                      : problem
+                  ),
+                })),
+              };
+            }
+          );
         }
       } else {
         response = await AxiosInstance.post(DSA, payload);
         if (response.status === 201) {
           toast.success("DSA problem added successfully");
+
+          const newProblem = response.data as DSAProblem;
+          queryClient.setQueriesData(
+            { queryKey: ["dsa"], exact: false },
+            (oldData: unknown) => {
+              const infiniteData = oldData as
+                | {
+                    pages: { dsa: DSAProblem[]; totalLength: number }[];
+                    pageParams: unknown[];
+                  }
+                | undefined;
+
+              if (!infiniteData?.pages?.length) return oldData;
+
+              const [firstPage, ...restPages] = infiniteData.pages;
+
+              return {
+                ...infiniteData,
+                pages: [
+                  {
+                    ...firstPage,
+                    dsa: [newProblem, ...firstPage.dsa],
+                    totalLength: firstPage.totalLength + 1,
+                  },
+                  ...restPages,
+                ],
+              };
+            }
+          );
         }
       }
 
@@ -335,9 +391,20 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
                 variant="primary"
                 type="submit"
                 disabled={disabled}
+                className="flex items-center justify-center gap-2 min-w-[70px]"
                 data-cy="dsa-form-save"
               >
-                Save
+                {disabled ? (
+                  <>
+                    <span
+                      className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
+                      data-cy="dsa-form-save-spinner"
+                    />
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
               </Button>
             </div>
           </form>

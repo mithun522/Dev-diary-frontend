@@ -59,6 +59,7 @@ const DSAPage: React.FC = () => {
   const [isAddModelOpen, setIsAddModelOpen] = useState<boolean>(false);
   const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
   const [isSolutionModalOpen, setIsSolutionModalOpen] = useState(false);
+  const [isDeletingProblem, setIsDeletingProblem] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 1000);
 
   const {
@@ -79,13 +80,40 @@ const DSAPage: React.FC = () => {
   // Chart colors
 
   const deleteDsaProblem = async () => {
-    await AxiosInstance.delete(`${DSA}/${selectedProblem?.id}`)
+    setIsDeletingProblem(true);
+    const deletedProblemId = selectedProblem?.id;
+
+    await AxiosInstance.delete(`${DSA}/${deletedProblemId}`)
       .then((res) => {
         setSelectedProblem(null);
 
         if (res.status === 204) {
           toast.success("DSA problem deleted successfully");
-          setSearchQuery("");
+
+          queryClient.setQueriesData(
+            { queryKey: ["dsa"], exact: false },
+            (oldData: unknown) => {
+              const infiniteData = oldData as
+                | {
+                    pages: { dsa: DSAProblem[]; totalLength: number }[];
+                    pageParams: unknown[];
+                  }
+                | undefined;
+
+              if (!infiniteData?.pages) return oldData;
+
+              return {
+                ...infiniteData,
+                pages: infiniteData.pages.map((page) => ({
+                  ...page,
+                  dsa: page.dsa.filter(
+                    (problem) => problem.id !== deletedProblemId
+                  ),
+                  totalLength: Math.max(page.totalLength - 1, 0),
+                })),
+              };
+            }
+          );
           queryClient.invalidateQueries({ queryKey: ["dsa"] });
         }
       })
@@ -100,6 +128,7 @@ const DSAPage: React.FC = () => {
       })
       .finally(() => {
         setIsOpenConfirmationModal(false);
+        setIsDeletingProblem(false);
       });
   };
 
@@ -277,6 +306,7 @@ const DSAPage: React.FC = () => {
           showDelete
           onCancel={() => setIsOpenConfirmationModal(false)}
           onDelete={deleteDsaProblem}
+          isDeleting={isDeletingProblem}
         />
       )}
       {isSolutionModalOpen && selectedProblem && (
