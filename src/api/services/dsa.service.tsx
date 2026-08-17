@@ -12,9 +12,16 @@ export const fetchDsaByUser = async (
   difficulty: string,
   pageParam: number
 ): Promise<fetchDsaProps> => {
-  const response = await AxiosInstance.get(
-    `${DSA_BY_USER}?searchString=${search}&difficulty=${difficulty}&pageNumber=${pageParam}`
-  );
+  const params = new URLSearchParams();
+
+  if (search) params.append("searchString", search);
+  if (difficulty) params.append("difficulty", difficulty);
+  if (pageParam) params.append("pageNumber", String(pageParam));
+
+  const queryString = params.toString();
+  const url = queryString ? `${DSA_BY_USER}?${queryString}` : DSA_BY_USER;
+
+  const response = await AxiosInstance.get(url);
   return response.data;
 };
 

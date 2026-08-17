@@ -8,6 +8,7 @@ type AskForConfirmationModalProps = {
   onAccept?: () => void;
   onDelete?: () => void;
   onCancel: () => void;
+  isDeleting?: boolean;
 };
 
 const AskForConfirmationModal: React.FC<AskForConfirmationModalProps> = ({
@@ -18,6 +19,7 @@ const AskForConfirmationModal: React.FC<AskForConfirmationModalProps> = ({
   onAccept,
   onDelete,
   onCancel,
+  isDeleting = false,
 }) => {
   return (
     <div
@@ -29,8 +31,9 @@ const AskForConfirmationModal: React.FC<AskForConfirmationModalProps> = ({
         <p className="text-gray-600 mb-4">{message}</p>
         <div className="flex justify-end gap-3">
           <button
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={onCancel}
+            disabled={isDeleting}
             data-cy="confirmation-modal-cancel"
           >
             Cancel
@@ -46,11 +49,22 @@ const AskForConfirmationModal: React.FC<AskForConfirmationModalProps> = ({
           )}
           {showDelete && (
             <button
-              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[80px]"
               onClick={onDelete}
+              disabled={isDeleting}
               data-cy="confirmation-modal-delete"
             >
-              Delete
+              {isDeleting ? (
+                <>
+                  <span
+                    className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
+                    data-cy="confirmation-modal-delete-spinner"
+                  />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </button>
           )}
         </div>
