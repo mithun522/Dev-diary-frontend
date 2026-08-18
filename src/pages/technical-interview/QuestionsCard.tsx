@@ -19,116 +19,111 @@ interface AnswerPart {
 
 const QuestionsCard = ({ index, question, onEdit, onDelete }: Props) => {
   const renderAnswer = (answer: string) => {
-    // Check if the answer contains numbered points
-    const hasNumberedPoints = /\d+\.\s/.test(answer);
+    if (!answer) return null;
 
-    if (hasNumberedPoints) {
-      // Split the answer into parts: before first point and the numbered points
-      const firstPointMatch = answer.match(/\d+\.\s/);
-      if (!firstPointMatch) {
-        return <pre className="text-sm ml-5 font-sans">{answer}</pre>;
-      }
+    const hasNumberedPoints = /^\s*\d+\.\s/m.test(answer);
 
-      const firstPointIndex = answer.indexOf(firstPointMatch[0]);
-      const beforePoints = answer.substring(0, firstPointIndex).trim();
-      const pointsSection = answer.substring(firstPointIndex);
-
-      // Split into lines to process each line individually
-      const lines = pointsSection.split("\n");
-      const processedLines: AnswerPart[] = [];
-
-      lines.forEach((line) => {
-        if (line.trim() === "") {
-          processedLines.push({ type: "empty", content: "" });
-          return;
-        }
-
-        // Check for numbered points (1. 2. 3. etc.)
-        const numberedMatch = line.match(/^(\d+)\.\s(.*)$/);
-        if (numberedMatch) {
-          processedLines.push({
-            type: "numbered",
-            number: numberedMatch[1],
-            content: numberedMatch[2],
-          });
-          return;
-        }
-
-        // Check for sub-points (a. b. c. etc.) - they usually have indentation
-        const subPointMatch = line.match(/^\s*([a-z])\.\s(.*)$/);
-        if (subPointMatch) {
-          processedLines.push({
-            type: "subpoint",
-            letter: subPointMatch[1],
-            content: subPointMatch[2],
-          });
-          return;
-        }
-
-        // Regular content line
-        processedLines.push({
-          type: "content",
-          content: line,
-        });
-      });
-
-      // Determine margins based on beforePoints existence
-      const numberedPointMargin = beforePoints ? "ml-10" : "ml-5";
-      const subPointMargin = "ml-15";
-
+    // --- Plain prose: split into paragraphs on blank lines ---
+    if (!hasNumberedPoints) {
+      const paragraphs = answer.split(/\n\s*\n/).filter((p) => p.trim() !== "");
       return (
-        <div>
-          {beforePoints && (
-            <p className="text-sm ml-5 font-sans mb-2">{beforePoints}</p>
-          )}
-          <div>
-            {processedLines.map((line, index) => {
-              if (line.type === "empty") {
-                return <div key={index} className="h-2"></div>;
-              }
-
-              if (line.type === "numbered") {
-                return (
-                  <div
-                    key={index}
-                    className={`flex ${numberedPointMargin} mb-1`}
-                  >
-                    <span className="text-sm font-sans mr-2">
-                      {line.number}.
-                    </span>
-                    <p className="text-sm font-sans">{line.content}</p>
-                  </div>
-                );
-              }
-
-              if (line.type === "subpoint") {
-                return (
-                  <div key={index} className={`flex ${subPointMargin} mb-1`}>
-                    <span className="text-sm font-sans mr-2">
-                      {line.letter}.
-                    </span>
-                    <p className="text-sm font-sans">{line.content}</p>
-                  </div>
-                );
-              }
-
-              // Regular content
-              return (
-                <p
-                  key={index}
-                  className={`text-sm font-sans ${numberedPointMargin} mb-1`}
-                >
-                  {line.content}
-                </p>
-              );
-            })}
-          </div>
+        <div className="ml-5 space-y-2">
+          {paragraphs.map((para, i) => (
+            <p
+              key={i}
+              className="text-sm font-sans whitespace-pre-line leading-relaxed"
+            >
+              {para.trim()}
+            </p>
+          ))}
         </div>
       );
     }
 
-    // If no numbered points, apply normal margin
-    return <p className="text-sm ml-5 font-sans">{answer}</p>;
+    // --- Numbered points path (your existing logic) ---
+    const firstPointMatch = answer.match(/\d+\.\s/);
+    if (!firstPointMatch) {
+      return (
+        <p className="text-sm ml-5 font-sans whitespace-pre-line leading-relaxed">
+          {answer}
+        </p>
+      );
+    }
+
+    const firstPointIndex = answer.indexOf(firstPointMatch[0]);
+    const beforePoints = answer.substring(0, firstPointIndex).trim();
+    const pointsSection = answer.substring(firstPointIndex);
+
+    const lines = pointsSection.split("\n");
+    const processedLines: AnswerPart[] = [];
+
+    lines.forEach((line) => {
+      if (line.trim() === "") {
+        processedLines.push({ type: "empty", content: "" });
+        return;
+      }
+      const numberedMatch = line.match(/^(\d+)\.\s(.*)$/);
+      if (numberedMatch) {
+        processedLines.push({
+          type: "numbered",
+          number: numberedMatch[1],
+          content: numberedMatch[2],
+        });
+        return;
+      }
+      const subPointMatch = line.match(/^\s*([a-z])\.\s(.*)$/);
+      if (subPointMatch) {
+        processedLines.push({
+          type: "subpoint",
+          letter: subPointMatch[1],
+          content: subPointMatch[2],
+        });
+        return;
+      }
+      processedLines.push({ type: "content", content: line });
+    });
+
+    const numberedPointMargin = beforePoints ? "ml-10" : "ml-5";
+    const subPointMargin = "ml-15";
+
+    return (
+      <div>
+        {beforePoints && (
+          <p className="text-sm ml-5 font-sans mb-2 whitespace-pre-line leading-relaxed">
+            {beforePoints}
+          </p>
+        )}
+        <div>
+          {processedLines.map((line, i) => {
+            if (line.type === "empty") return <div key={i} className="h-2" />;
+            if (line.type === "numbered") {
+              return (
+                <div key={i} className={`flex ${numberedPointMargin} mb-1`}>
+                  <span className="text-sm font-sans mr-2">{line.number}.</span>
+                  <p className="text-sm font-sans">{line.content}</p>
+                </div>
+              );
+            }
+            if (line.type === "subpoint") {
+              return (
+                <div key={i} className={`flex ${subPointMargin} mb-1`}>
+                  <span className="text-sm font-sans mr-2">{line.letter}.</span>
+                  <p className="text-sm font-sans">{line.content}</p>
+                </div>
+              );
+            }
+            return (
+              <p
+                key={i}
+                className={`text-sm font-sans ${numberedPointMargin} mb-1`}
+              >
+                {line.content}
+              </p>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   return (

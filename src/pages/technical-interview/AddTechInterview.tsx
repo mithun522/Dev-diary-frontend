@@ -46,6 +46,7 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
   row,
 }) => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { selectedLanguage } = TechInterviewStore();
   const {
     data: Languages = [],
@@ -113,14 +114,42 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
       language: formData.language,
     };
 
+    setIsSubmitting(true);
     try {
       if (formData.id) {
+        const questionId = formData.id;
         const response = await AxiosInstance.put(
-          `${TECHNICAL_INTERVIEW}/${formData.id}`,
+          `${TECHNICAL_INTERVIEW}/${questionId}`,
           payload
         );
 
         if (response.status === 200) {
+          const updatedQuestion = response.data as TechnicalQuestion;
+          queryClient.setQueriesData(
+            { queryKey: ["techInterview"], exact: false },
+            (oldData: unknown) => {
+              const infiniteData = oldData as
+                | {
+                    pages: { questions: TechnicalQuestion[]; total: number }[];
+                    pageParams: unknown[];
+                  }
+                | undefined;
+
+              if (!infiniteData?.pages) return oldData;
+
+              return {
+                ...infiniteData,
+                pages: infiniteData.pages.map((page) => ({
+                  ...page,
+                  questions: page.questions.map((question) =>
+                    question.id === questionId
+                      ? { ...question, ...updatedQuestion }
+                      : question
+                  ),
+                })),
+              };
+            }
+          );
           await queryClient.invalidateQueries({
             queryKey: ["techInterview", selectedLanguage],
           });
@@ -132,6 +161,34 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
           payload
         );
         if (response.status === 201) {
+          const newQuestion = response.data as TechnicalQuestion;
+          queryClient.setQueriesData(
+            { queryKey: ["techInterview"], exact: false },
+            (oldData: unknown) => {
+              const infiniteData = oldData as
+                | {
+                    pages: { questions: TechnicalQuestion[]; total: number }[];
+                    pageParams: unknown[];
+                  }
+                | undefined;
+
+              if (!infiniteData?.pages?.length) return oldData;
+
+              const [firstPage, ...restPages] = infiniteData.pages;
+
+              return {
+                ...infiniteData,
+                pages: [
+                  {
+                    ...firstPage,
+                    questions: [newQuestion, ...firstPage.questions],
+                    total: firstPage.total + 1,
+                  },
+                  ...restPages,
+                ],
+              };
+            }
+          );
           await queryClient.invalidateQueries({
             queryKey: ["techInterview", selectedLanguage],
           });
@@ -158,6 +215,8 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
           "An error occurred. Please try again."
       );
       logger.error("Error adding or updating question:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -298,12 +357,30 @@ const AddTechnicalQuestionForm: React.FC<AddTechnicalQuestionFormProps> = ({
               type="button"
               variant="outlinePrimary"
               onClick={() => setOpen(false)}
+              disabled={isSubmitting}
               data-cy="add-tech-question-cancel"
             >
               Cancel
             </Button>
-            <Button data-cy="add-tech-question-save-button" type="submit">
-              {isEdit ? "Update" : "Save"}
+            <Button
+              data-cy="add-tech-question-save-button"
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center justify-center gap-2 min-w-[70px]"
+            >
+              {isSubmitting ? (
+                <>
+                  <span
+                    className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
+                    data-cy="add-tech-question-save-spinner"
+                  />
+                  {isEdit ? "Updating..." : "Saving..."}
+                </>
+              ) : isEdit ? (
+                "Update"
+              ) : (
+                "Save"
+              )}
             </Button>
           </DialogFooter>
         </form>
