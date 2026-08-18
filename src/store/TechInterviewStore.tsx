@@ -6,6 +6,6 @@ type TechInterviewStore = {
 };
 
 export const TechInterviewStore = create<TechInterviewStore>()((set) => ({
-  selectedLanguage: "JAVASCRIPT",
+  selectedLanguage: "",
   setSelectedLanguage: (selectedLanguage) => set({ selectedLanguage }),
 }));
