@@ -433,7 +433,7 @@ const SettingsPage = () => {
                       </Badge>
                     ))}
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outlinePrimary" size="sm">
                     Manage Categories
                   </Button>
                 </div>
@@ -518,7 +518,7 @@ const SettingsPage = () => {
                   </Select>
                 </div>
                 <Separator />
-                <Button variant="outline">Change Password</Button>
+                <Button variant="outlinePrimary">Change Password</Button>
               </CardContent>
             </Card>
 
@@ -533,7 +533,7 @@ const SettingsPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={exportData} variant="outline" data-cy="settings-export-data">
+                <Button onClick={exportData} variant="outlinePrimary" data-cy="settings-export-data">
                   Export My Data
                 </Button>
               </CardContent>
@@ -552,7 +552,7 @@ const SettingsPage = () => {
               <CardContent>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" data-cy="settings-delete-account-trigger">
+                    <Button variant="danger" data-cy="settings-delete-account-trigger">
                       Delete Account
                     </Button>
                   </AlertDialogTrigger>
