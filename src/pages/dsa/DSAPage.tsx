@@ -217,7 +217,7 @@ const DSAPage: React.FC = () => {
               </Button>
             </div>
           </div>
-          {dsa && dsa.length > 0 ? (
+          {isLoadingFetch || (dsa && dsa.length > 0) ? (
             <DsaTable
               isLoadingFetch={isLoadingFetch}
               isFetching={isFetchingFetch}

@@ -153,8 +153,9 @@ const TechnicalInterviewPage = () => {
             />
           </div>
         ))}
-        {isLoading ||
-          (isFetching && <QuestionsShimmer data-cy="questions-shimmer" />)}
+        {(isLoading || isFetching) && (
+          <QuestionsShimmer data-cy="questions-shimmer" />
+        )}
         {!isSearching && hasNextPage && (
           <div className="flex justify-center mt-4">
             <Button
