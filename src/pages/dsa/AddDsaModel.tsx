@@ -97,18 +97,19 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
       problem: data.problem,
       difficulty: data.difficulty,
       language: data.language,
-      topics: data.topics,
-      link: data.link,
+      topics: data.topics ?? [],
+      link: data.link ?? "",
       status: data.status,
-      notes: data.notes,
+      notes: data.notes ?? "",
       bruteForceSolution: data.bruteForceSolution,
-      betterSolution: data.betterSolution,
-      optimisedSolution: data.optimisedSolution,
+      betterSolution: data.betterSolution ?? "",
+      optimisedSolution: data.optimisedSolution ?? "",
     };
     try {
       let response;
       if (problemData) {
         response = await AxiosInstance.put(`${DSA}/${problemData.id}`, payload);
+        console.log(response);
         if (response.status === 200) {
           toast.success("DSA problem updated successfully");
 
