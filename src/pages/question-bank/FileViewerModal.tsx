@@ -17,6 +17,7 @@ import {
 import { Skeleton } from "../../components/ui/skeleton";
 import type { QuestionBankFile } from "../../data/questionBankData";
 import { getFilePreviewKind } from "../../utils/fileType";
+import PdfViewer from "./PdfViewer";
 
 interface FileViewerModalProps {
   file: QuestionBankFile | null;
@@ -137,13 +138,7 @@ const FileViewerModal = ({ file, onClose }: FileViewerModalProps) => {
           <DialogTitle className="truncate">{file.fileName}</DialogTitle>
         </DialogHeader>
 
-        {kind === "pdf" && (
-          <iframe
-            src={file.downloadUrl}
-            title={file.fileName}
-            className="w-full h-[75vh] rounded-md border"
-          />
-        )}
+        {kind === "pdf" && <PdfViewer fileUrl={file.downloadUrl} />}
 
         {kind === "image" && (
           <img
