@@ -24,6 +24,7 @@ export const Topics = {
   HEAP_SORT: "HEAP_SORT",
   INSERTION_SORT: "INSERTION_SORT",
   BUBBLE_SORT: "BUBBLE_SORT",
+  PREFIX_SUM: "PREFIX_SUM"
 } as const;
 
 export const TopicColors: Record<Topic, string> = {
@@ -76,6 +77,8 @@ export const TopicColors: Record<Topic, string> = {
     "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   [Topics.BUBBLE_SORT]:
     "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  [Topics.PREFIX_SUM]:
+    "bg-red-100 text-slate-800 dark:bg-red-900 dark:text-slate-200"
 } as const;
 
 export type Topic = (typeof Topics)[keyof typeof Topics];

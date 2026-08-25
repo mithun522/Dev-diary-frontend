@@ -18,3 +18,16 @@ export const QUESTION_DELETE_FAILED = "Failed to delete";
 // Blogs
 export const BLOG_PUBLISHED_SUCCESS = "Blog published successfully";
 export const BLOG_PUBLISHED_ERROR = "Failed to publish blog";
+
+// DSA Todos
+export const TODO_ADD_SUCCESS = "Todo added successfully";
+export const TODO_UPDATE_SUCCESS = "Todo updated successfully";
+export const TODO_DELETE_SUCCESS = "Todo deleted successfully";
+export const TODO_SAVE_FAILED = "Failed to save todo";
+export const TODO_DELETE_FAILED = "Failed to delete todo";
+
+// Question Bank
+export const FILE_UPLOAD_SUCCESS = "File uploaded successfully";
+export const FILE_UPLOAD_FAILED = "Failed to upload file";
+export const FILE_DELETE_SUCCESS = "File deleted successfully";
+export const FILE_DELETE_FAILED = "Failed to delete file";

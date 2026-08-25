@@ -26,6 +26,9 @@ export const SYSTEM_DESIGN_API_URL =
 export const ANALYTICS_API_URL =
   import.meta.env.VITE_ANALYTICS_API_URL ??
   "https://ip97o2az6c.execute-api.ap-south-1.amazonaws.com/dev";
+export const QUESTION_BANK_API_URL =
+  import.meta.env.VITE_QUESTION_BANK_API_URL ??
+  "https://d1lenhdl7k.execute-api.ap-south-1.amazonaws.com/dev";
 
 // ---- auth-service ----
 export const REGISTER = `${AUTH_API_URL}/register`;
@@ -42,6 +45,8 @@ export const DSA = `${DSA_API_URL}/dsa`;
 export const DSA_BY_USER = `${DSA}/user`;
 export const DSA_BY_PROGRESS = `${DSA}/progress/user`;
 export const LANGUAGE = `${DSA_API_URL}/language`;
+export const DSA_TODOS = `${DSA_API_URL}/dsa/todos`;
+export const DSA_TODOS_BY_USER = `${DSA_TODOS}/user`;
 
 // ---- tech-interview-service ----
 export const TECHNICAL_INTERVIEW = `${TECH_INTERVIEW_API_URL}/techinterview`;
@@ -71,3 +76,11 @@ export const ANALYTICS_SUMMARY = `${ANALYTICS_API_URL}/analytics/summary`;
 export const ANALYTICS_ACTIVITY = `${ANALYTICS_API_URL}/analytics/activity`;
 export const ANALYTICS_SKILLS = `${ANALYTICS_API_URL}/analytics/skills`;
 export const ANALYTICS_PRACTICE_LOG = `${ANALYTICS_API_URL}/analytics/practice-log`;
+
+// ---- question-bank-service ----
+export const QUESTION_BANK = `${QUESTION_BANK_API_URL}/materials`;
+export const QUESTION_BANK_BY_USER = `${QUESTION_BANK}/user`;
+// POST { fileName, contentType } -> { uploadUrl, fileKey } (same presigned-upload pattern as
+// BLOG_COVER_IMAGE_UPLOAD_URL — the frontend PUTs the file straight to S3, then POSTs metadata
+// to QUESTION_BANK to create the record).
+export const QUESTION_BANK_UPLOAD_URL = `${QUESTION_BANK}/upload-url`;

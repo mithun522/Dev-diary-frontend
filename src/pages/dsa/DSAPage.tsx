@@ -1,11 +1,4 @@
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import Button from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import {
@@ -22,15 +15,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import { weeklyProgress, type DSAProblem } from "../../data/dsaProblemsData";
-import {
-  BarChart,
-  Bar,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from "recharts";
+import type { DSAProblem } from "../../data/dsaProblemsData";
 import DsaFormModal from "./AddDsaModel";
 import AxiosInstance from "../../utils/AxiosInstance";
 import { DSA } from "../../constants/Api";
@@ -46,6 +31,7 @@ import { useDebounce } from "../../api/hooks/use-debounce";
 import { useQueryClient } from "@tanstack/react-query";
 import OverallProgress from "./progress/OverallProgress";
 import TopicCoverage from "./progress/TopicCoverage";
+import WeeklyActivity from "./progress/WeeklyActivity";
 import noDataImage from "../../assets/no-data-available.jpg";
 import Todo from "./todo/Todo";
 
@@ -249,44 +235,7 @@ const DSAPage: React.FC = () => {
         <TabsContent value="progress" className="pt-4">
           <div className="grid md:grid-cols-3 gap-6">
             <OverallProgress />
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Weekly Activity</CardTitle>
-                <CardDescription>
-                  Problems solved in the last 7 days
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart
-                    data={weeklyProgress}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                  >
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={(date) =>
-                        new Date(date).toLocaleDateString(undefined, {
-                          weekday: "short",
-                        })
-                      }
-                    />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip
-                      formatter={(value) => [`${value} problems`, "Solved"]}
-                      labelFormatter={(date) =>
-                        new Date(date).toLocaleDateString()
-                      }
-                    />
-                    <Bar
-                      dataKey="problemsSolved"
-                      fill="#8884d8"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <WeeklyActivity />
             <TopicCoverage />
           </div>
         </TabsContent>

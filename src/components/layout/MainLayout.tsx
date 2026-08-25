@@ -13,6 +13,7 @@ import {
   useSidebar,
 } from "../../components/ui/sidebar";
 import {
+  Archive,
   Book,
   Building,
   Code,
@@ -148,6 +149,23 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
                 >
                   <Laptop />
                   {state !== "collapsed" && <span>Technical Interview</span>}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Question Bank">
+                <Link
+                  to="/question-bank"
+                  data-cy="sidebar-nav-question-bank"
+                  className={`flex items-center gap-2 ${
+                    location.pathname.startsWith("/question-bank")
+                      ? "bg-accent text-accent-foreground"
+                      : ""
+                  }`}
+                >
+                  <Archive />
+                  {state !== "collapsed" && <span>Question Bank</span>}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

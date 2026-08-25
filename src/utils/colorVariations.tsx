@@ -37,6 +37,47 @@ export const getDifficultyColor = (difficulty: string) => {
   }
 };
 
+export const getPriorityColor = (priority?: string) => {
+  switch (priority) {
+    case "HIGH":
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+    case "MEDIUM":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300";
+    case "LOW":
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    default:
+      return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+  }
+};
+
+// Left-border accent used to give priority a visual weight in list rows without relying on the
+// badge alone (e.g. a quick glance down a scrolled list should still read urgency).
+export const getPriorityAccentBorder = (priority?: string) => {
+  switch (priority) {
+    case "HIGH":
+      return "border-l-4 border-l-red-500";
+    case "MEDIUM":
+      return "border-l-4 border-l-amber-500";
+    case "LOW":
+      return "border-l-4 border-l-green-500";
+    default:
+      return "border-l-4 border-l-gray-300 dark:border-l-gray-600";
+  }
+};
+
+export const getPriorityDot = (priority?: string) => {
+  switch (priority) {
+    case "HIGH":
+      return "bg-red-500";
+    case "MEDIUM":
+      return "bg-amber-500";
+    case "LOW":
+      return "bg-green-500";
+    default:
+      return "bg-gray-400";
+  }
+};
+
 export const getStatusVariant = (status: string) => {
   switch (status) {
     case "Solved":

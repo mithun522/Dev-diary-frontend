@@ -18,6 +18,7 @@ import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import MyProfilePage from "./pages/my-profile/MyProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import TechnicalInterviewPage from "./pages/technical-interview/Index";
+import QuestionBankPage from "./pages/question-bank/QuestionBankPage";
 import RedirectIfAuth from "./components/RedirectIfAuth";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => {
                   path="/technical-interview"
                   element={<TechnicalInterviewPage />}
                 />
+                <Route path="/question-bank" element={<QuestionBankPage />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />
