@@ -23,6 +23,7 @@ import {
   LOGIN_SUCCESSFUL,
 } from "../../constants/ToastMessage";
 import { Eye, EyeClosed } from "lucide-react";
+import Seo from "../../components/Seo";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -86,6 +87,7 @@ const LoginPage = () => {
 
   return (
     <AuthLayout>
+      <Seo title="Log In" path="/auth/login" noindex />
       <Card className="bg-gray-50 dark:bg-background">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>

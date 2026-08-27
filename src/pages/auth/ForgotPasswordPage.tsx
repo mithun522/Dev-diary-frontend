@@ -15,6 +15,7 @@ import { Label } from "../../components/ui/label";
 import axios, { AxiosError } from "axios";
 import { SEND_OTP } from "../../constants/Api";
 import { toast } from "react-toastify";
+import Seo from "../../components/Seo";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -48,6 +49,7 @@ const ForgotPasswordPage = () => {
 
   return (
     <AuthLayout>
+      <Seo title="Forgot Password" path="/auth/forgot-password" noindex />
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl" data-cy="forgot-password-title">

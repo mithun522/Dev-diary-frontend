@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Button from "../components/ui/button";
 import { ThemeToggle } from "../components/ThemeToggle";
+import Seo from "../components/Seo";
 import {
   Book,
   BrainCircuit,
@@ -20,6 +21,10 @@ import {
 const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <Seo
+        title="Track DSA, Ace Interviews, Master System Design"
+        path="/"
+      />
       {/* Header */}
       <header className="border-b border-gray-300 dark:border-gray-700 shadow-sm fixed w-full bg-white py-4 px-6 flex items-center justify-between">
         <div className="flex items-center gap-2">

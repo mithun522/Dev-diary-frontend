@@ -18,6 +18,7 @@ import type { AxiosError } from "axios";
 import { logger } from "../../utils/logger";
 import axios from "axios";
 import { SEND_OTP, VERIFY_OTP } from "../../constants/Api";
+import Seo from "../../components/Seo";
 
 const VerifyOTPPage = () => {
   const [otp, setOtp] = useState("");
@@ -78,6 +79,7 @@ const VerifyOTPPage = () => {
 
   return (
     <AuthLayout>
+      <Seo title="Verify OTP" path="/auth/verify-otp" noindex />
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl" data-cy="verify-otp-title">

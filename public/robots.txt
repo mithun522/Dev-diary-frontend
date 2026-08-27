@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /auth/
+Disallow: /dsa
+Disallow: /interview
+Disallow: /system-design
+Disallow: /knowledge
+Disallow: /analytics
+Disallow: /profile
+Disallow: /settings
+Disallow: /technical-interview
+Disallow: /question-bank
+
+Sitemap: https://dev-diary-frontend-sigma.vercel.app/sitemap.xml

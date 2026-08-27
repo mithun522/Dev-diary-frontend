@@ -15,6 +15,7 @@ import { Progress } from "../../components/ui/progress";
 import axios, { type AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { RESET_PASSWORD } from "../../constants/Api";
+import Seo from "../../components/Seo";
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState("");
@@ -116,6 +117,7 @@ const ResetPasswordPage = () => {
 
   return (
     <AuthLayout>
+      <Seo title="Reset Password" path="/auth/reset-password" noindex />
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl" data-cy="reset-password-title">

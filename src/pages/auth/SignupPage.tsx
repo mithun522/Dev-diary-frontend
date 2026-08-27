@@ -21,6 +21,7 @@ import {
   REGISTRATION_FAILED,
 } from "../../constants/ToastMessage";
 import { FIRST_NAME_REQUIRED } from "../../constants/ErrorMessage";
+import Seo from "../../components/Seo";
 
 interface FormData {
   firstName: string;
@@ -195,6 +196,7 @@ const SignupPage = () => {
 
   return (
     <AuthLayout>
+      <Seo title="Sign Up" path="/auth/signup" noindex />
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl" data-cy="register-title">

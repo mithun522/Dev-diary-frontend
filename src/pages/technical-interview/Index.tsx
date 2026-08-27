@@ -30,6 +30,7 @@ import { formatDate } from "../../utils/formatDate";
 import Button from "../../components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import Languages from "./Languages";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 
 export interface TechnicalQuestion {
   id: string;
@@ -200,10 +201,8 @@ const TechnicalInterviewPage = () => {
             {selectedQuestion?.answer && (
               <div>
                 <h4 className="font-medium mb-2">Answer:</h4>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <pre className="whitespace-pre-wrap text-sm font-mono">
-                    {selectedQuestion.answer}
-                  </pre>
+                <div className="bg-muted/50 p-4 rounded-lg prose dark:prose-invert max-w-none">
+                  <MarkdownPreview source={selectedQuestion.answer} />
                 </div>
               </div>
             )}
@@ -211,10 +210,8 @@ const TechnicalInterviewPage = () => {
             {selectedQuestion?.notes && (
               <div>
                 <h4 className="font-medium mb-2">Notes:</h4>
-                <div className="bg-muted/30 p-4 rounded-lg">
-                  <pre className="whitespace-pre-wrap text-sm">
-                    {selectedQuestion.notes}
-                  </pre>
+                <div className="bg-muted/30 p-4 rounded-lg prose dark:prose-invert max-w-none">
+                  <MarkdownPreview source={selectedQuestion.notes} />
                 </div>
               </div>
             )}
