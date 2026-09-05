@@ -109,7 +109,6 @@ const DsaFormModal: React.FC<DsaFormModalProps> = ({
       let response;
       if (problemData) {
         response = await AxiosInstance.put(`${DSA}/${problemData.id}`, payload);
-        console.log(response);
         if (response.status === 200) {
           toast.success("DSA problem updated successfully");
 

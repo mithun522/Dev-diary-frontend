@@ -29,6 +29,10 @@ export const ANALYTICS_API_URL =
 export const QUESTION_BANK_API_URL =
   import.meta.env.VITE_QUESTION_BANK_API_URL ??
   "https://d1lenhdl7k.execute-api.ap-south-1.amazonaws.com/dev";
+// code-execution-service (https://0i56doitt8.execute-api.ap-south-1.amazonaws.com/dev) is
+// internal-only, deliberately not wired here — it needs hidden test cases the browser must never
+// see, so it is only ever called server-to-server by dsa-service. Judge a submission via
+// CATALOG_SUBMISSIONS below, never by calling that service directly.
 
 // ---- auth-service ----
 export const REGISTER = `${AUTH_API_URL}/register`;
@@ -47,6 +51,10 @@ export const DSA_BY_PROGRESS = `${DSA}/progress/user`;
 export const LANGUAGE = `${DSA_API_URL}/language`;
 export const DSA_TODOS = `${DSA_API_URL}/dsa/todos`;
 export const DSA_TODOS_BY_USER = `${DSA_TODOS}/user`;
+// Shared catalog of solvable problems (distinct from a user's own DSA_BY_USER log) — browse,
+// view detail (with sample test cases only), submit a solution, list past submissions.
+export const CATALOG = `${DSA_API_URL}/catalog`;
+export const CATALOG_SUBMISSIONS = (id: string) => `${CATALOG}/${id}/submissions`;
 
 // ---- tech-interview-service ----
 export const TECHNICAL_INTERVIEW = `${TECH_INTERVIEW_API_URL}/techinterview`;

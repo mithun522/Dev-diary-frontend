@@ -34,6 +34,7 @@ import TopicCoverage from "./progress/TopicCoverage";
 import WeeklyActivity from "./progress/WeeklyActivity";
 import noDataImage from "../../assets/no-data-available.jpg";
 import Todo from "./todo/Todo";
+import PracticeTab from "./practice/PracticeTab";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -130,9 +131,12 @@ const DSAPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="problems">
-        <TabsList className="grid grid-cols-3 md:w-[400px]">
+        <TabsList className="grid grid-cols-4 md:w-[500px]">
           <TabsTrigger value="problems" data-cy="dsa-tab-problems">
             Problems
+          </TabsTrigger>
+          <TabsTrigger value="practice" data-cy="dsa-tab-practice">
+            Practice
           </TabsTrigger>
           <TabsTrigger value="progress" data-cy="dsa-tab-progress">
             Progress
@@ -230,6 +234,10 @@ const DSAPage: React.FC = () => {
               />
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="practice" className="pt-4">
+          <PracticeTab />
         </TabsContent>
 
         <TabsContent value="progress" className="pt-4">

@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"/private/tmp/claude-501/-Users-mithunjt-Develop-myprojects-Dev-diary-frontend/acb27cf1-632c-4454-aa80-d9f51c3df283/scratchpad\")",
+      "Artifact",
+      "WebFetch(domain:claude.ai)",
+      "Bash(node -e ' *)",
+      "Bash(node --check /tmp/mockup_check.js)",
+      "Bash(open *)",
+      "Bash(node -e \"console.log\\(require.resolve\\('jsdom'\\)\\)\")",
+      "Bash(mkdir -p /private/tmp/claude-501/-Users-mithunjt-Develop-myprojects-Dev-diary-frontend/acb27cf1-632c-4454-aa80-d9f51c3df283/scratchpad/jsdomtest)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(node test.js)",
+      "Bash(sed -i.bak \"s/window.scrollTo\\(0,0\\);/try{window.scrollTo\\(0,0\\);}catch\\(e\\){}/\" ../../../../../../Users/mithunjt/Develop/myprojects/Dev-diary-frontend/app-mockup.html)",
+      "Bash(node *)",
+      "Bash(rm -rf /private/tmp/claude-501/-Users-mithunjt-Develop-myprojects-Dev-diary-frontend/acb27cf1-632c-4454-aa80-d9f51c3df283/scratchpad/jsdomtest)",
+      "Bash(xargs -I{} echo {})",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173 --max-time 3)",
+      "Bash(npx cypress *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(jobs -l)",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"08-KnowledgeBase\")",
+      "Bash(sysctl -n hw.ncpu)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(cd *)",
+      "Bash(npm view *)"
+    ]
+  }
+}

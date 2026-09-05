@@ -10,6 +10,7 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyOTPPage from "./pages/auth/VerifyOtp";
 import DSAPage from "./pages/dsa/DSAPage";
+import SolveProblemPage from "./pages/dsa/practice/SolveProblemPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import InterviewPage from "./pages/interview/InterviewPage";
 import SystemDesignPage from "./pages/system-design/SystemDesign";
@@ -54,6 +55,7 @@ const App = () => {
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/dsa" element={<DSAPage />} />
+                <Route path="/dsa/practice/:id" element={<SolveProblemPage />} />
                 <Route path="/interview" element={<InterviewPage />} />
                 <Route path="/system-design" element={<SystemDesignPage />} />
                 <Route path="/knowledge" element={<KnowledgePage />} />
