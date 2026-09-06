@@ -15,6 +15,7 @@ import {
 import ErrorPage from "../../ErrorPage";
 import {
   useFetchCatalogProblemDetail,
+  useRunSolution,
   useSubmitSolution,
 } from "../../../api/hooks/useFetchCatalog";
 import { getDifficultyColor } from "../../../utils/colorVariations";
@@ -24,7 +25,8 @@ import {
 } from "../../../utils/convertToPascalCase";
 import { TopicColors, type Topic } from "../../../constants/Topics";
 import { logger } from "../../../utils/logger";
-import type { Submission } from "../../../data/catalogData";
+import type { JudgeResult } from "../../../data/catalogData";
+import { formatTestCaseArgs } from "../../../utils/formatTestCaseArgs";
 import CodeEditor from "./CodeEditor";
 import TestResultsPanel from "./TestResultsPanel";
 import SubmissionHistory from "./SubmissionHistory";
@@ -43,7 +45,7 @@ const SolveProblemPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: problem, isLoading, error } = useFetchCatalogProblemDetail(id);
   const [sourceCode, setSourceCode] = useState("");
-  const [activeResult, setActiveResult] = useState<Submission | null>(null);
+  const [activeResult, setActiveResult] = useState<JudgeResult | null>(null);
 
   useEffect(() => {
     if (!problem) return;
@@ -56,7 +58,25 @@ const SolveProblemPage: React.FC = () => {
     localStorage.setItem(draftKey(problem.id), sourceCode);
   }, [problem, sourceCode]);
 
+  const runMutation = useRunSolution(id ?? "");
   const submitMutation = useSubmitSolution(id ?? "");
+
+  const handleRun = () => {
+    runMutation.mutate(sourceCode, {
+      onSuccess: (result) => {
+        setActiveResult(result);
+        if (result.status === "ACCEPTED") {
+          toast.success("All sample test cases passed.");
+        } else {
+          toast.error(`Run result: ${pascalizeUnderscore(result.status)}`);
+        }
+      },
+      onError: (err) => {
+        toast.error(errorMessage(err, "Failed to run solution"));
+        logger.error("Error running solution:", err);
+      },
+    });
+  };
 
   const handleSubmit = () => {
     submitMutation.mutate(sourceCode, {
@@ -140,7 +160,7 @@ const SolveProblemPage: React.FC = () => {
                       key={testCase.id}
                       className="rounded-md border p-3 text-sm font-mono"
                     >
-                      <div>Input {index + 1}: {JSON.stringify(testCase.args)}</div>
+                      <div>Input {index + 1}: {formatTestCaseArgs(problem.paramNames, testCase.args)}</div>
                       <div>Output: {JSON.stringify(testCase.expected)}</div>
                     </div>
                   ))}
@@ -160,15 +180,26 @@ const SolveProblemPage: React.FC = () => {
         <div className="lg:w-3/5 flex flex-col min-h-0 min-w-0 gap-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">JavaScript</span>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleSubmit}
-              disabled={submitMutation.isPending}
-              data-cy="solve-submit"
-            >
-              {submitMutation.isPending ? "Judging..." : "Submit"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outlinePrimary"
+                size="sm"
+                onClick={handleRun}
+                disabled={runMutation.isPending || submitMutation.isPending}
+                data-cy="solve-run"
+              >
+                {runMutation.isPending ? "Running..." : "Run"}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSubmit}
+                disabled={submitMutation.isPending || runMutation.isPending}
+                data-cy="solve-submit"
+              >
+                {submitMutation.isPending ? "Judging..." : "Submit"}
+              </Button>
+            </div>
           </div>
 
           <div className="flex-1 min-h-[300px] min-w-0 rounded-md border overflow-hidden">
@@ -177,7 +208,7 @@ const SolveProblemPage: React.FC = () => {
 
           {activeResult && (
             <div className="max-h-64 overflow-y-auto">
-              <TestResultsPanel result={activeResult} />
+              <TestResultsPanel result={activeResult} paramNames={problem.paramNames} />
             </div>
           )}
         </div>

@@ -43,3 +43,17 @@ export const loggedInUserId = () => {
     return null;
   }
 };
+
+export const loggedInUserRole = () => {
+  const token = getAccessToken();
+  if (!token) return null;
+  try {
+    const decoded: DecodedToken = jwtDecode(token);
+    return decoded.role ?? null;
+  } catch (error: any) {
+    logger.error(error);
+    return null;
+  }
+};
+
+export const isAdmin = () => loggedInUserRole() === "admin";

@@ -43,18 +43,28 @@ export const RESET_PASSWORD = `${AUTH_API_URL}/auth/reset-password`;
 
 // ---- user-service ----
 export const SINGLE_USER = `${USER_API_URL}/user`;
+// Admin-only: manage every user's role (list + promote/demote). Backed by requireAdmin.
+export const ADMIN_USERS = `${USER_API_URL}/admin/users`;
+export const ADMIN_USER_ROLE = (id: string) => `${ADMIN_USERS}/${id}/role`;
 
 // ---- dsa-service ----
 export const DSA = `${DSA_API_URL}/dsa`;
 export const DSA_BY_USER = `${DSA}/user`;
 export const DSA_BY_PROGRESS = `${DSA}/progress/user`;
 export const LANGUAGE = `${DSA_API_URL}/language`;
+export const LANGUAGE_BY_ID = (id: string) => `${LANGUAGE}/${id}`;
 export const DSA_TODOS = `${DSA_API_URL}/dsa/todos`;
 export const DSA_TODOS_BY_USER = `${DSA_TODOS}/user`;
 // Shared catalog of solvable problems (distinct from a user's own DSA_BY_USER log) — browse,
 // view detail (with sample test cases only), submit a solution, list past submissions.
 export const CATALOG = `${DSA_API_URL}/catalog`;
+export const CATALOG_BY_ID = (id: string) => `${CATALOG}/${id}`;
 export const CATALOG_SUBMISSIONS = (id: string) => `${CATALOG}/${id}/submissions`;
+// Judges only the sample test cases and does not persist a submission row — used for "Run".
+export const CATALOG_RUN = (id: string) => `${CATALOG}/${id}/run`;
+// Admin-only: regenerate a catalog problem's test cases.
+export const CATALOG_GENERATE_TEST_CASES = (id: string) =>
+  `${CATALOG}/${id}/generate-test-cases`;
 
 // ---- tech-interview-service ----
 export const TECHNICAL_INTERVIEW = `${TECH_INTERVIEW_API_URL}/techinterview`;
@@ -67,16 +77,28 @@ export const GET_DRAFTED_BLOGS = `${BLOGS}/draft`;
 export const PUBLISH_BLOG = `${BLOGS}`; // PUT `${PUBLISH_BLOG}/:id/publish`
 export const BLOG_COVER_IMAGE_UPLOAD_URL = `${BLOGS}/cover-image-upload-url`;
 export const NOTES = `${KNOWLEDGE_API_URL}/notes`;
+// Admin-only: delete any user's blog regardless of ownership (moderation). Listing reuses BLOGS
+// itself — GET /blogs already returns every user's blogs, not just the caller's.
+export const ADMIN_BLOG_DELETE = (id: string) => `${KNOWLEDGE_API_URL}/admin/blogs/${id}`;
 
 // ---- interview-simulator-service ----
 export const MOCK_INTERVIEWS = `${INTERVIEW_SIMULATOR_API_URL}/mock-interviews`;
+export const MOCK_INTERVIEW_BY_ID = (id: string) => `${MOCK_INTERVIEWS}/${id}`;
+export const MOCK_INTERVIEW_QUESTIONS = (interviewId: string) =>
+  `${MOCK_INTERVIEWS}/${interviewId}/questions`;
+export const MOCK_INTERVIEW_QUESTION_BY_ID = (interviewId: string, questionId: string) =>
+  `${MOCK_INTERVIEWS}/${interviewId}/questions/${questionId}`;
 export const INTERVIEW_ATTEMPTS = `${INTERVIEW_SIMULATOR_API_URL}/interview-attempts`;
 export const COMPANY_PROBLEMS = `${INTERVIEW_SIMULATOR_API_URL}/company-problems`;
+export const COMPANY_PROBLEM_BY_ID = (id: string) => `${COMPANY_PROBLEMS}/${id}`;
 export const BEHAVIORAL_QUESTIONS = `${INTERVIEW_SIMULATOR_API_URL}/behavioral-questions`;
+export const BEHAVIORAL_QUESTION_BY_ID = (id: string) => `${BEHAVIORAL_QUESTIONS}/${id}`;
 
 // ---- system-design-service ----
 export const SYSTEM_DESIGN_CASES = `${SYSTEM_DESIGN_API_URL}/system-design/cases`;
+export const SYSTEM_DESIGN_CASE_BY_ID = (id: string) => `${SYSTEM_DESIGN_CASES}/${id}`;
 export const SCALABILITY_PATTERNS = `${SYSTEM_DESIGN_API_URL}/system-design/patterns`;
+export const SCALABILITY_PATTERN_BY_ID = (id: string) => `${SCALABILITY_PATTERNS}/${id}`;
 export const SYSTEM_METRICS = `${SYSTEM_DESIGN_API_URL}/system-design/metrics`;
 
 // ---- analytics-service ----
@@ -92,3 +114,6 @@ export const QUESTION_BANK_BY_USER = `${QUESTION_BANK}/user`;
 // BLOG_COVER_IMAGE_UPLOAD_URL — the frontend PUTs the file straight to S3, then POSTs metadata
 // to QUESTION_BANK to create the record).
 export const QUESTION_BANK_UPLOAD_URL = `${QUESTION_BANK}/upload-url`;
+// Admin-only: list/delete every user's materials regardless of ownership (moderation).
+export const ADMIN_MATERIALS = `${QUESTION_BANK_API_URL}/admin/materials`;
+export const ADMIN_MATERIAL_DELETE = (id: string) => `${ADMIN_MATERIALS}/${id}`;

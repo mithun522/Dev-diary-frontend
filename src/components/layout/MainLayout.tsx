@@ -21,10 +21,12 @@ import {
   LogOut,
   MessageSquareCode,
   PieChart,
+  ShieldCheck,
   Users2,
 } from "lucide-react";
 import Button from "../ui/button";
 import LogoutModal from "../LogoutModal";
+import { isAdmin } from "../../utils/auth";
 
 interface MainLayoutProps {
   children?: React.ReactNode; // Made optional since we're using Outlet
@@ -186,6 +188,24 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {isAdmin() && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Admin">
+                  <Link
+                    to="/admin"
+                    data-cy="sidebar-nav-admin"
+                    className={`flex items-center gap-2 ${
+                      location.pathname.startsWith("/admin")
+                        ? "bg-accent text-accent-foreground"
+                        : ""
+                    }`}
+                  >
+                    <ShieldCheck />
+                    {state !== "collapsed" && <span>Admin</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarContent>
 

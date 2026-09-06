@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import AuthLayout from "../../components/layout/AuthLayout";
 import axios, { AxiosError } from "axios";
 import { LOGIN } from "../../constants/Api";
-import { setAccessToken } from "../../utils/auth";
+import { isAdmin, setAccessToken } from "../../utils/auth";
 import { useAuthStore } from "../../store/AuthStore";
 import {
   ENTER_EMAIL_AND_PASSWORD,
@@ -54,7 +54,7 @@ const LoginPage = () => {
       if (response.data.token) {
         setAccessToken(response.data.token);
         useAuthStore.getState().setAuth(response.data.token);
-        navigate("/dsa");
+        navigate(isAdmin() ? "/admin" : "/dsa");
         toast.success(LOGIN_SUCCESSFUL);
       }
     } catch (error) {

@@ -1,8 +1,15 @@
-import { CATALOG, CATALOG_SUBMISSIONS } from "../../constants/Api";
+import {
+  CATALOG,
+  CATALOG_GENERATE_TEST_CASES,
+  CATALOG_RUN,
+  CATALOG_SUBMISSIONS,
+} from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
 import type {
   CatalogProblemDetail,
   CatalogProblemPage,
+  JudgeResult,
+  SampleTestCase,
   Submission,
 } from "../../data/catalogData";
 
@@ -44,4 +51,30 @@ export const submitSolution = async (
     sourceCode,
   });
   return response.data;
+};
+
+export const runSolution = async (
+  id: string,
+  sourceCode: string
+): Promise<JudgeResult> => {
+  const response = await AxiosInstance.post(CATALOG_RUN(id), {
+    sourceCode,
+  });
+  return response.data;
+};
+
+// Admin-only: asks the backend to (re)generate this problem's test cases. `referenceSolution` is
+// required by the backend (GenerateTestCasesInput) — a known-correct JS implementation it runs
+// LLM-proposed inputs through to compute real `expected` values. Doesn't persist anything by
+// itself — the admin form replaces its testCases field array with the response for review, then
+// saves via updateCatalogProblem like any other edit.
+export const generateTestCases = async (
+  id: string,
+  referenceSolution: string
+): Promise<SampleTestCase[]> => {
+  const response = await AxiosInstance.post(CATALOG_GENERATE_TEST_CASES(id), {
+    referenceSolution,
+  });
+  // Response is GenerateTestCasesResult: {requested, generated, duplicatesSkipped, inserted, testCases}
+  return response.data?.testCases ?? [];
 };

@@ -1,6 +1,7 @@
 import { Badge } from "../../../components/ui/badge";
 import type { JudgeResult } from "../../../data/catalogData";
 import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
+import { formatTestCaseArgs } from "../../../utils/formatTestCaseArgs";
 
 const STATUS_BADGE: Record<JudgeResult["status"], string> = {
   ACCEPTED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -13,9 +14,10 @@ const stringify = (value: unknown) => JSON.stringify(value);
 
 interface TestResultsPanelProps {
   result: JudgeResult;
+  paramNames?: string[];
 }
 
-const TestResultsPanel: React.FC<TestResultsPanelProps> = ({ result }) => {
+const TestResultsPanel: React.FC<TestResultsPanelProps> = ({ result, paramNames }) => {
   const passedCount = result.results.filter((r) => r.passed).length;
 
   return (
@@ -47,7 +49,7 @@ const TestResultsPanel: React.FC<TestResultsPanelProps> = ({ result }) => {
               </span>
             </div>
             <div className="mt-1 grid gap-1 text-muted-foreground font-mono text-xs">
-              <span>Input: {stringify(testCase.args)}</span>
+              <span>Input: {formatTestCaseArgs(paramNames, testCase.args)}</span>
               <span>Expected: {stringify(testCase.expected)}</span>
               {!testCase.passed && "actual" in testCase && (
                 <span>Actual: {stringify(testCase.actual)}</span>

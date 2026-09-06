@@ -11,6 +11,7 @@ export type CatalogProblem = {
   topics: Topic[];
   description: string;
   functionName: string;
+  paramNames: string[];
   starterCode: string;
   createdAt?: string;
   updatedAt?: string;

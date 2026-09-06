@@ -3,6 +3,8 @@ import {
   fetchCatalogProblemDetail,
   fetchCatalogProblems,
   fetchSubmissions,
+  generateTestCases,
+  runSolution,
   submitSolution,
 } from "../services/catalog.service";
 import type { CatalogProblemPage } from "../../data/catalogData";
@@ -53,5 +55,21 @@ export const useSubmitSolution = (id: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["catalog", "submissions", id] });
     },
+  });
+};
+
+// Doesn't persist a submission row, so there's nothing to invalidate.
+export const useRunSolution = (id: string) => {
+  return useMutation({
+    mutationFn: (sourceCode: string) => runSolution(id, sourceCode),
+  });
+};
+
+// Admin-only: (re)generate a catalog problem's test cases for review. Doesn't persist anything
+// itself, so nothing to invalidate — the admin form saves the reviewed result via a normal
+// updateCatalogProblem call.
+export const useGenerateTestCases = (id: string) => {
+  return useMutation({
+    mutationFn: (referenceSolution: string) => generateTestCases(id, referenceSolution),
   });
 };
