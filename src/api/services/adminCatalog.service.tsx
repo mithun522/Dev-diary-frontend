@@ -21,10 +21,10 @@ export type CatalogProblemInputPayload = Pick<
   | "starterCode"
 > & {
   // Backend's CatalogProblemInput names this field `testCases` (not `sampleTestCases` — that name
-  // is only used on the read-side CatalogProblemDetail response).
-  testCases: Array<
-    Pick<SampleTestCase, "args" | "expected" | "isSample"> & { id?: string }
-  >;
+  // is only used on the read-side CatalogProblemDetail response). Its TestCaseInput schema has
+  // additionalProperties: false and no `id` property, so an existing test case's `id` must never
+  // be included here.
+  testCases: Array<Pick<SampleTestCase, "args" | "expected" | "isSample">>;
 };
 
 export const createCatalogProblem = async (

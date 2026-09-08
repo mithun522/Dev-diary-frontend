@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Same mark as the landing header logo, but on a filled brand-colour tile: a standalone
+       favicon can't inherit currentColor, and a bare dark stroke disappears against dark tab bars. -->
+  <rect width="24" height="24" rx="5" fill="#0f172a" />
+  <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 7 7.5 7" />
+    <path d="M7.5 7 13 17" />
+    <path d="M13 17 21 17" />
+    <path d="M21 17 15.5 7" />
+    <path d="M15.5 7 10 17" />
+    <path d="M10 17 3 17" />
+    <path d="M3 17 3 7" />
+    <path d="M3 7 7.5 7" />
+  </g>
+</svg>

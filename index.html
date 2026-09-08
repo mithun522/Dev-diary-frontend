@@ -2,38 +2,129 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dev Diary — Track DSA, Ace Interviews, Master System Design</title>
+
+    <title>Dev Diary — Interview Preparation for Software Engineers</title>
     <meta
       name="description"
-      content="Dev Diary helps you crack product-based company interviews. Track DSA progress, practice with a technical interview simulator, master system design, and build your own coding knowledge base — all in one place."
+      content="Dev Diary is an all-in-one interview preparation app for software engineers. Track DSA progress, practice in a technical interview simulator, master system design, and build your own coding knowledge base."
     />
-    <link rel="canonical" href="https://dev-diary-frontend-sigma.vercel.app/" />
+    <link rel="canonical" href="https://dev-diary.in/" />
+
+    <!-- Icons & PWA -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0f172a" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Dev Diary" />
-    <meta property="og:url" content="https://dev-diary-frontend-sigma.vercel.app/" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:url" content="https://dev-diary.in/" />
     <meta
       property="og:title"
-      content="Dev Diary — Track DSA, Ace Interviews, Master System Design"
+      content="Dev Diary — Interview Preparation for Software Engineers"
     />
     <meta
       property="og:description"
-      content="Dev Diary helps you crack product-based company interviews. Track DSA progress, practice with a technical interview simulator, master system design, and build your own coding knowledge base — all in one place."
+      content="Dev Diary is an all-in-one interview preparation app for software engineers. Track DSA progress, practice in a technical interview simulator, master system design, and build your own coding knowledge base."
+    />
+    <meta property="og:image" content="https://dev-diary.in/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Dev Diary — interview preparation for software engineers"
     />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="Dev Diary — Track DSA, Ace Interviews, Master System Design"
+      content="Dev Diary — Interview Preparation for Software Engineers"
     />
     <meta
       name="twitter:description"
-      content="Dev Diary helps you crack product-based company interviews. Track DSA progress, practice with a technical interview simulator, master system design, and build your own coding knowledge base — all in one place."
+      content="Dev Diary is an all-in-one interview preparation app for software engineers. Track DSA progress, practice in a technical interview simulator, master system design, and build your own coding knowledge base."
     />
+    <meta name="twitter:image" content="https://dev-diary.in/og-image.png" />
+
+    <!--
+      Structured data. Every claim here must stay in sync with what is actually rendered on the
+      landing page - Google treats structured data that contradicts visible content as spam. The
+      offers below mirror the pricing section (Free / $19 / $49 per month). Deliberately no
+      aggregateRating: there are testimonials on the page but no real collected ratings, and
+      inventing them risks a manual action.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://dev-diary.in/#organization",
+            "name": "Dev Diary",
+            "url": "https://dev-diary.in/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://dev-diary.in/og-image.png"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://dev-diary.in/#website",
+            "url": "https://dev-diary.in/",
+            "name": "Dev Diary",
+            "description": "Interview preparation for software engineers",
+            "publisher": { "@id": "https://dev-diary.in/#organization" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://dev-diary.in/#webapp",
+            "name": "Dev Diary",
+            "url": "https://dev-diary.in/",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Any (web browser)",
+            "browserRequirements": "Requires JavaScript",
+            "description": "An all-in-one interview preparation platform for software engineers: DSA progress tracking, a technical interview simulator, system design practice, and a personal coding knowledge base.",
+            "publisher": { "@id": "https://dev-diary.in/#organization" },
+            "featureList": [
+              "DSA Tracker",
+              "Interview Simulator",
+              "System Design Studio",
+              "Knowledge Base",
+              "Progress Analytics",
+              "Smart Recommendations"
+            ],
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Basic",
+                "price": "0",
+                "priceCurrency": "USD",
+                "description": "Perfect for beginners"
+              },
+              {
+                "@type": "Offer",
+                "name": "Pro",
+                "price": "19",
+                "priceCurrency": "USD",
+                "description": "For serious candidates"
+              },
+              {
+                "@type": "Offer",
+                "name": "Enterprise",
+                "price": "49",
+                "priceCurrency": "USD",
+                "description": "For teams & professionals"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,6 +1,7 @@
 export const Topics = {
   ARRAY: "ARRAY",
   STRING: "STRING",
+  MATH: "MATH",
   LINKED_LIST: "LINKED_LIST",
   STACK: "STACK",
   QUEUE: "QUEUE",
@@ -32,6 +33,8 @@ export const TopicColors: Record<Topic, string> = {
     "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   [Topics.STRING]:
     "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  [Topics.MATH]:
+    "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
   [Topics.LINKED_LIST]:
     "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   [Topics.STACK]:

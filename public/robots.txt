@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
+
+# Everything below is behind authentication - crawlers only ever get the login redirect, so
+# disallowing keeps them out of dead ends and keeps the crawl budget on public pages.
 Disallow: /auth/
+Disallow: /admin
 Disallow: /dsa
 Disallow: /interview
 Disallow: /system-design
@@ -11,4 +15,4 @@ Disallow: /settings
 Disallow: /technical-interview
 Disallow: /question-bank
 
-Sitemap: https://dev-diary-frontend-sigma.vercel.app/sitemap.xml
+Sitemap: https://dev-diary.in/sitemap.xml

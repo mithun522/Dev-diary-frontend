@@ -190,8 +190,11 @@ const AdminCatalogFormModal: React.FC<AdminCatalogFormModalProps> = ({
         if (!Array.isArray(args)) {
           throw new Error(`Test case ${index + 1}: args must be a JSON array`);
         }
+        // Backend's TestCaseInput has additionalProperties: false and no `id` property — an
+        // existing test case's `id` (carried in the form from CatalogProblemDetail's response,
+        // or from a generate-test-cases result) must never be sent back, or API Gateway rejects
+        // the whole request before it reaches the Lambda.
         return {
-          ...(tc.id ? { id: tc.id } : {}),
           args,
           expected,
           isSample: tc.isSample,
