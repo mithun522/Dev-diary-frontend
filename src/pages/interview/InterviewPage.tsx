@@ -29,8 +29,6 @@ import {
   FileText,
   MicOff,
   Mic,
-  Play,
-  Star,
   Search,
   History,
 } from "lucide-react";
@@ -42,22 +40,75 @@ import {
   TableHead,
   TableRow,
 } from "../../components/ui/table";
+import { type MockInterview } from "../../data/interviewData";
 import {
-  companyProblems,
-  behavioralQuestions,
-  mockInterviews,
-  type MockInterview,
-} from "../../data/interviewData";
-import {
-  interviewQuestions,
   type InterviewSession,
   type InterviewAttempt,
+  type Question,
 } from "../../data/interviewQuestions";
+import {
+  fetchLiveInterviewQuestions,
+  type InterviewQuestion,
+} from "../../api/services/liveInterview.service";
 import InterviewStartModal from "../../components/interview/InterviewStartModal";
 import InterviewWorkspace from "../../components/interview/InterviewWorkSpace";
 import InterviewSubmission from "../../components/interview/InterviewSubmission";
 import InterviewHistory from "../../components/interview/InterviewHistory";
+import MockInterviewCard from "../../components/interview/MockInterviewCard";
 import { useToast } from "../../api/hooks/use-toast";
+import {
+  useFetchMockInterviews,
+  useFetchCompanyProblems,
+  useFetchBehavioralQuestions,
+} from "../../api/hooks/useAdminInterviewSimulator";
+
+// The backend returns a flat InterviewQuestion (type-specific fields spread onto the object
+// itself); the local demo workspace/submission components expect the older Question union from
+// data/interviewQuestions.ts instead, so backfill the fields each variant requires but the API
+// might omit (e.g. a coding question with no test cases yet) rather than let them crash on
+// missing data.
+const toLocalQuestion = (q: InterviewQuestion): Question => {
+  const base = {
+    id: q.id,
+    question: q.question,
+    difficulty: q.difficulty,
+    topics: q.topics,
+    timeLimit: q.timeLimit,
+  };
+
+  switch (q.type) {
+    case "mcq":
+      return {
+        ...base,
+        type: "mcq",
+        options: q.options ?? [],
+        correctAnswer: q.correctAnswer ?? 0,
+        explanation: q.explanation,
+      };
+    case "descriptive":
+      return {
+        ...base,
+        type: "descriptive",
+        expectedPoints: q.expectedPoints,
+        maxWords: q.maxWords,
+      };
+    case "coding":
+      return {
+        ...base,
+        type: "coding",
+        boilerplate: q.boilerplate,
+        testCases: q.testCases ?? [],
+        solution: q.solution,
+      };
+    case "frontend":
+      return {
+        ...base,
+        type: "frontend",
+        instructions: q.instructions ?? "",
+        requirements: q.requirements ?? [],
+      };
+  }
+};
 
 const InterviewPage = () => {
   const [selectedCompany, setSelectedCompany] = useState("google");
@@ -82,8 +133,17 @@ const InterviewPage = () => {
   const [interviewHistory, setInterviewHistory] = useState<InterviewAttempt[]>(
     []
   );
+  const [isStartingInterview, setIsStartingInterview] = useState(false);
 
   const { toast } = useToast();
+  const { data: mockInterviews = [], isLoading: isLoadingMockInterviews } =
+    useFetchMockInterviews();
+  const { data: companyProblems = [], isLoading: isLoadingCompanyProblems } =
+    useFetchCompanyProblems();
+  const {
+    data: behavioralQuestions = [],
+    isLoading: isLoadingBehavioralQuestions,
+  } = useFetchBehavioralQuestions();
 
   // Load interview history from localStorage
   useEffect(() => {
@@ -150,31 +210,53 @@ const InterviewPage = () => {
     setShowStartModal(true);
   };
 
-  const startInterviewSession = () => {
-    if (!selectedInterview) return;
+  const startInterviewSession = async () => {
+    if (!selectedInterview || isStartingInterview) return;
 
-    const questions = interviewQuestions[selectedInterview.id] || [];
-    const session: InterviewSession = {
-      id: Date.now().toString(),
-      interviewId: selectedInterview.id,
-      title: selectedInterview.title,
-      startTime: Date.now(),
-      duration: selectedInterview.duration,
-      questions,
-      currentQuestionIndex: 0,
-      answers: {},
-      status: "in_progress",
-      timeRemaining: selectedInterview.duration * 60, // Convert to seconds
-    };
+    setIsStartingInterview(true);
+    try {
+      const fetchedQuestions = await fetchLiveInterviewQuestions(
+        selectedInterview.id
+      );
 
-    setCurrentSession(session);
-    setShowStartModal(false);
-    setViewState("workspace");
+      if (fetchedQuestions.length === 0) {
+        toast({
+          title: "No Questions Yet",
+          description: "This interview doesn't have any questions yet.",
+        });
+        return;
+      }
 
-    toast({
-      title: "Interview Started",
-      description: `Good luck with your ${selectedInterview.title}!`,
-    });
+      const questions = fetchedQuestions.map(toLocalQuestion);
+      const session: InterviewSession = {
+        id: Date.now().toString(),
+        interviewId: selectedInterview.id,
+        title: selectedInterview.title,
+        startTime: Date.now(),
+        duration: selectedInterview.duration,
+        questions,
+        currentQuestionIndex: 0,
+        answers: {},
+        status: "in_progress",
+        timeRemaining: selectedInterview.duration * 60, // Convert to seconds
+      };
+
+      setCurrentSession(session);
+      setShowStartModal(false);
+      setViewState("workspace");
+
+      toast({
+        title: "Interview Started",
+        description: `Good luck with your ${selectedInterview.title}!`,
+      });
+    } catch {
+      toast({
+        title: "Couldn't Start Interview",
+        description: "Failed to load this interview's questions. Please try again.",
+      });
+    } finally {
+      setIsStartingInterview(false);
+    }
   };
 
   const handleUpdateAnswer = (questionId: string, answer: any) => {
@@ -458,6 +540,15 @@ const InterviewPage = () => {
             </div>
           </div>
 
+          {isLoadingCompanyProblems ? (
+            <p className="text-center text-muted-foreground py-12">
+              Loading company questions...
+            </p>
+          ) : filteredProblems.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">
+              No company questions yet.
+            </p>
+          ) : (
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -529,10 +620,20 @@ const InterviewPage = () => {
               </TableBody>
             </Table>
           </div>
+          )}
         </TabsContent>
 
         {/* Behavioral Questions tab */}
         <TabsContent value="behavioral" className="space-y-4">
+          {isLoadingBehavioralQuestions ? (
+            <p className="text-center text-muted-foreground py-12">
+              Loading behavioral questions...
+            </p>
+          ) : behavioralQuestions.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">
+              No behavioral questions yet.
+            </p>
+          ) : (
           <div className="grid gap-6">
             {behavioralQuestions.map((question) => (
               <Card key={question.id}>
@@ -590,6 +691,7 @@ const InterviewPage = () => {
               </Card>
             ))}
           </div>
+          )}
         </TabsContent>
 
         {/* Mock Interview tab */}
@@ -635,87 +737,25 @@ const InterviewPage = () => {
             </Select>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMockInterviews.map((interview) => (
-              <Card
-                key={interview.id}
-                className="flex flex-col hover:shadow-lg transition-shadow duration-200"
-                data-cy="mock-interview-card"
-              >
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-start">
-                    <span className="text-lg">{interview.title}</span>
-                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                      {interview.duration} mins
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    {interview.description}
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="flex-grow">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Difficulty:</span>
-                      <Badge
-                        className={getDifficultyColor(interview.difficulty)}
-                      >
-                        {interview.difficulty}
-                      </Badge>
-                    </div>
-
-                    <div>
-                      <span className="text-sm font-medium mb-2 block">
-                        Topics:
-                      </span>
-                      <div className="flex flex-wrap gap-1">
-                        {interview.topics.map((topic, idx) => (
-                          <Badge
-                            key={idx}
-                            variant="outline"
-                            className="text-xs"
-                          >
-                            {topic}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2 text-sm text-muted-foreground">
-                      <span>
-                        {interviewQuestions[interview.id]?.length || 0}{" "}
-                        questions
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`h-3 w-3 ${
-                              star <= interview.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-muted-foreground"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-
-                <CardFooter className="flex items-center justify-center pt-4 border-t">
-                  <Button
-                    className="flex max-w-3xl justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={() => handleStartInterview(interview)}
-                    data-cy="mock-interview-start-button"
-                  >
-                    <Play className="h-4 w-4 mr-2 mt-1" />
-                    Start Interview
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          {isLoadingMockInterviews ? (
+            <p className="text-center text-muted-foreground py-12">
+              Loading mock interviews...
+            </p>
+          ) : filteredMockInterviews.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">
+              No mock interviews yet.
+            </p>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredMockInterviews.map((interview) => (
+                <MockInterviewCard
+                  key={interview.id}
+                  interview={interview}
+                  onStartInterview={handleStartInterview}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -725,6 +765,7 @@ const InterviewPage = () => {
         isOpen={showStartModal}
         onClose={() => setShowStartModal(false)}
         onStart={startInterviewSession}
+        isStarting={isStartingInterview}
       />
     </div>
   );

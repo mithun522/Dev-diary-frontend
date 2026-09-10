@@ -13,6 +13,7 @@ import DSAPage from "./pages/dsa/DSAPage";
 import SolveProblemPage from "./pages/dsa/practice/SolveProblemPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import InterviewPage from "./pages/interview/InterviewPage";
+import LiveInterviewPage from "./pages/interview/LiveInterviewPage";
 import SystemDesignPage from "./pages/system-design/SystemDesign";
 import KnowledgePage from "./pages/knowledge/KnowledgePage";
 import AnalyticsPage from "./pages/analytics/AnalyticsPage";
@@ -68,6 +69,10 @@ const App = () => {
                 <Route path="/dsa" element={<DSAPage />} />
                 <Route path="/dsa/practice/:id" element={<SolveProblemPage />} />
                 <Route path="/interview" element={<InterviewPage />} />
+                <Route
+                  path="/interview/live/:interviewId"
+                  element={<LiveInterviewPage />}
+                />
                 <Route path="/system-design" element={<SystemDesignPage />} />
                 <Route path="/knowledge" element={<KnowledgePage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
