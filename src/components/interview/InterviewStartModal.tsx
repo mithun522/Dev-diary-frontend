@@ -9,13 +9,14 @@ import Button from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Clock, FileText, Star, Users } from "lucide-react";
 import { type MockInterview } from "../../data/interviewData";
-import { interviewQuestions } from "../../data/interviewQuestions";
+import { useFetchMockInterviewQuestions } from "../../api/hooks/useAdminInterviewSimulator";
 
 interface InterviewStartModalProps {
   interview: MockInterview | null;
   isOpen: boolean;
   onClose: () => void;
   onStart: () => void;
+  isStarting?: boolean;
 }
 
 const InterviewStartModal = ({
@@ -23,11 +24,14 @@ const InterviewStartModal = ({
   isOpen,
   onClose,
   onStart,
+  isStarting,
 }: InterviewStartModalProps) => {
-  if (!interview) return null;
-
-  const questions = interviewQuestions[interview.id] || [];
+  const { data: questions = [] } = useFetchMockInterviewQuestions(
+    interview?.id
+  );
   const totalQuestions = questions.length;
+
+  if (!interview) return null;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -133,8 +137,13 @@ const InterviewStartModal = ({
             <Button variant="outlinePrimary" onClick={onClose} data-cy="interview-start-cancel">
               Cancel
             </Button>
-            <Button onClick={onStart} className="px-8" data-cy="interview-start-confirm">
-              Start Interview
+            <Button
+              onClick={onStart}
+              disabled={isStarting}
+              className="px-8"
+              data-cy="interview-start-confirm"
+            >
+              {isStarting ? "Starting..." : "Start Interview"}
             </Button>
           </div>
         </div>

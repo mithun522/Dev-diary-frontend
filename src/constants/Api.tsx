@@ -89,6 +89,40 @@ export const MOCK_INTERVIEW_QUESTIONS = (interviewId: string) =>
 export const MOCK_INTERVIEW_QUESTION_BY_ID = (interviewId: string, questionId: string) =>
   `${MOCK_INTERVIEWS}/${interviewId}/questions/${questionId}`;
 export const INTERVIEW_ATTEMPTS = `${INTERVIEW_SIMULATOR_API_URL}/interview-attempts`;
+// PUT here (submitInterviewAttempt, openapi.yaml) grades and completes the attempt in one shot —
+// it takes the whole batch of answers (`{ answers: [{questionId, answer}, ...] }`, min 1 item),
+// there is no per-answer submit route.
+export const INTERVIEW_ATTEMPT_BY_ID = (id: string) =>
+  `${INTERVIEW_ATTEMPTS}/${id}`;
+// Live (recorded) interview sessions — used by the voice+camera+screen-recorded interview flow.
+// Distinct from interview-attempts above: a session snapshots its question list at creation, and
+// grades per-question as the candidate goes (mcq exact-match / non-empty-text for everything else
+// via `answer`; `run`+`submit` for coding questions backed by the shared dsa catalog). There is no
+// session-level aggregate score from the backend — the client sums each question's `score`.
+export const INTERVIEW_SESSIONS = `${INTERVIEW_SIMULATOR_API_URL}/interview-sessions`;
+export const INTERVIEW_SESSION_BY_ID = (id: string) => `${INTERVIEW_SESSIONS}/${id}`;
+export const INTERVIEW_SESSION_END = (id: string) =>
+  `${INTERVIEW_SESSION_BY_ID(id)}/end`;
+export const INTERVIEW_SESSION_QUESTION_RUN = (
+  sessionId: string,
+  questionId: string
+) => `${INTERVIEW_SESSION_BY_ID(sessionId)}/questions/${questionId}/run`;
+export const INTERVIEW_SESSION_QUESTION_SUBMIT = (
+  sessionId: string,
+  questionId: string
+) => `${INTERVIEW_SESSION_BY_ID(sessionId)}/questions/${questionId}/submit`;
+export const INTERVIEW_SESSION_QUESTION_ANSWER = (
+  sessionId: string,
+  questionId: string
+) => `${INTERVIEW_SESSION_BY_ID(sessionId)}/questions/${questionId}/answer`;
+// Recorded video, per session — camera and screen are independent chunk streams (`kind`), each
+// numbered from 0 (`chunkIndex`). Presigned-S3-PUT: request an upload URL, PUT bytes to S3
+// directly, then confirm the chunk's metadata.
+export const INTERVIEW_SESSION_VIDEO_CHUNKS = (sessionId: string) =>
+  `${INTERVIEW_SESSION_BY_ID(sessionId)}/video-chunks`;
+export const INTERVIEW_SESSION_VIDEO_CHUNKS_UPLOAD_URL = (sessionId: string) =>
+  `${INTERVIEW_SESSION_VIDEO_CHUNKS(sessionId)}/upload-url`;
+
 export const COMPANY_PROBLEMS = `${INTERVIEW_SIMULATOR_API_URL}/company-problems`;
 export const COMPANY_PROBLEM_BY_ID = (id: string) => `${COMPANY_PROBLEMS}/${id}`;
 export const BEHAVIORAL_QUESTIONS = `${INTERVIEW_SIMULATOR_API_URL}/behavioral-questions`;
