@@ -31,11 +31,13 @@ import {
   runSessionCodingQuestion,
   submitSessionCodingQuestion,
   answerSessionQuestion,
+  getSessionVideoPlayback,
   isCodingCatalogQuestion,
   type InterviewSession,
   type InterviewSessionQuestion,
   type MockQuestionSnapshot,
   type DsaCatalogSnapshot,
+  type SessionVideoPlayback,
 } from "../../api/services/interviewSession.service";
 import type { JudgeResult } from "../../data/catalogData";
 import { formatTestCaseArgs } from "../../utils/formatTestCaseArgs";
@@ -122,6 +124,9 @@ const LiveInterviewPage = () => {
   const [runResult, setRunResult] = useState<JudgeResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [videoPlayback, setVideoPlayback] = useState<SessionVideoPlayback | null>(
+    null
+  );
 
   const cameraPreviewRef = useRef<HTMLVideoElement>(null);
   const setupStarted = useRef(false);
@@ -165,6 +170,38 @@ const LiveInterviewPage = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
+
+  // The backend stitches the recorded chunks asynchronously (a fire-and-forget Lambda invoke, no
+  // push notification) — poll for playback URLs once the interview is over, until the video is
+  // ready or the backend gives up.
+  useEffect(() => {
+    if (phase !== "results" || !session) return;
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      try {
+        const result = await getSessionVideoPlayback(session.id);
+        if (cancelled) return;
+        setVideoPlayback(result);
+        if (result.videoStatus === "ready" || result.videoStatus === "failed") {
+          return;
+        }
+      } catch {
+        // Keep retrying — a transient failure here shouldn't give up on the poll.
+      }
+      if (!cancelled) {
+        timeoutId = setTimeout(poll, 5000);
+      }
+    };
+
+    poll();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [phase, session]);
 
   useEffect(() => {
     setAnswerText(finalTranscript);
@@ -451,11 +488,47 @@ const LiveInterviewPage = () => {
               </div>
             ))}
 
-            {session.videoStatus === "processing" && (
-              <p className="text-sm text-muted-foreground border-t pt-3">
-                Your recording is queued for processing.
-              </p>
-            )}
+            <div className="border-t pt-3 space-y-2" data-cy="live-interview-recording-playback">
+              <h3 className="font-semibold">Recording</h3>
+              {!videoPlayback ||
+              videoPlayback.videoStatus === "pending" ||
+              videoPlayback.videoStatus === "recording" ||
+              videoPlayback.videoStatus === "processing" ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing your recording — this can take a minute or two.
+                </div>
+              ) : videoPlayback.videoStatus === "failed" ? (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  Your recording couldn't be processed.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {videoPlayback.videoUrl && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Camera</p>
+                      <video
+                        controls
+                        className="w-full rounded-md border"
+                        src={videoPlayback.videoUrl}
+                        data-cy="live-interview-camera-playback"
+                      />
+                    </div>
+                  )}
+                  {videoPlayback.screenVideoUrl && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Screen</p>
+                      <video
+                        controls
+                        className="w-full rounded-md border"
+                        src={videoPlayback.screenVideoUrl}
+                        data-cy="live-interview-screen-playback"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {uploadDegraded && (
               <div className="border-t pt-3 space-y-2">

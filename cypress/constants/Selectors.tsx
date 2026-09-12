@@ -206,8 +206,6 @@ export const SKILL_MODAL_SAVE = '[data-cy="skill-modal-save"]';
 
 // Interview Simulator
 export const INTERVIEW_PAGE = '[data-cy="interview-page"]';
-export const INTERVIEW_VIEW_HISTORY_BUTTON =
-  '[data-cy="interview-view-history-button"]';
 export const INTERVIEW_TAB_MOCK = '[data-cy="interview-tab-mock"]';
 export const INTERVIEW_TAB_COMPANY = '[data-cy="interview-tab-company"]';
 export const INTERVIEW_TAB_BEHAVIORAL = '[data-cy="interview-tab-behavioral"]';
@@ -219,33 +217,17 @@ export const INTERVIEW_DIFFICULTY_FILTER_TRIGGER =
 export const INTERVIEW_DIFFICULTY_FILTER_CONTENT =
   '[data-cy="interview-difficulty-filter-content"]';
 export const MOCK_INTERVIEW_CARD = '[data-cy="mock-interview-card"]';
+// Navigates to the live (recorded) interview flow at /interview/live/:id.
 export const MOCK_INTERVIEW_START_BUTTON =
   '[data-cy="mock-interview-start-button"]';
-export const INTERVIEW_HISTORY_PAGE = '[data-cy="interview-history-page"]';
-export const INTERVIEW_HISTORY_BACK_BUTTON =
-  '[data-cy="interview-history-back-button"]';
-export const INTERVIEW_HISTORY_ITEM = '[data-cy="interview-history-item"]';
-export const INTERVIEW_HISTORY_EMPTY = '[data-cy="interview-history-empty"]';
 
-// Interview start modal
-export const INTERVIEW_START_MODAL = '[data-cy="interview-start-modal"]';
-export const INTERVIEW_START_CANCEL = '[data-cy="interview-start-cancel"]';
-export const INTERVIEW_START_CONFIRM = '[data-cy="interview-start-confirm"]';
-
-// Interview workspace
-export const INTERVIEW_WORKSPACE = '[data-cy="interview-workspace"]';
-export const INTERVIEW_SUBMIT_BUTTON = '[data-cy="interview-submit-button"]';
-export const INTERVIEW_MCQ_OPTION = '[data-cy="interview-mcq-option"]';
-export const INTERVIEW_PREVIOUS_BUTTON = '[data-cy="interview-previous-button"]';
-export const INTERVIEW_NEXT_BUTTON = '[data-cy="interview-next-button"]';
-export const INTERVIEW_QUESTION_JUMP = '[data-cy="interview-question-jump"]';
-
-// Interview submission
-export const INTERVIEW_SUBMISSION = '[data-cy="interview-submission"]';
-export const INTERVIEW_SCORE = '[data-cy="interview-score"]';
-export const INTERVIEW_RETAKE_BUTTON = '[data-cy="interview-retake-button"]';
-export const INTERVIEW_BACK_HOME_BUTTON =
-  '[data-cy="interview-back-home-button"]';
+// Live (recorded) interview — camera/screen recording + voice, gated behind a permission prompt
+// that can't be granted headlessly, so e2e coverage stops at confirming the gate itself renders.
+export const LIVE_INTERVIEW_UNSUPPORTED = '[data-cy="live-interview-unsupported"]';
+export const LIVE_INTERVIEW_PERMISSION_SETUP =
+  '[data-cy="live-interview-permission-setup"]';
+export const LIVE_INTERVIEW_ENABLE_RECORDING =
+  '[data-cy="live-interview-enable-recording"]';
 
 // System Design
 export const SYSTEM_DESIGN_PAGE = '[data-cy="system-design-page"]';

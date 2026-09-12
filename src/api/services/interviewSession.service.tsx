@@ -16,6 +16,7 @@ import {
   INTERVIEW_SESSION_QUESTION_RUN,
   INTERVIEW_SESSION_QUESTION_SUBMIT,
   INTERVIEW_SESSION_QUESTION_ANSWER,
+  INTERVIEW_SESSION_VIDEO,
 } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
 import type { JudgeResult } from "../../data/catalogData";
@@ -76,14 +77,30 @@ export interface InterviewSessionQuestion {
   score: number | null;
 }
 
+export type VideoStatus =
+  | "pending"
+  | "recording"
+  | "processing"
+  | "ready"
+  | "failed";
+
 export interface InterviewSession {
   id: string;
   mockInterviewId: string;
   status: "in_progress" | "completed" | "abandoned";
   startedAt: string;
   endedAt?: string;
-  videoStatus: "pending" | "recording" | "processing" | "ready" | "failed";
+  videoStatus: VideoStatus;
   questions: InterviewSessionQuestion[];
+}
+
+// Presigned GET URLs for the stitched camera/screen recordings — null until videoStatus is
+// "ready". Backed by a fire-and-forget Lambda invoke on session end (video-finalizer), not a
+// tracked job queue, so there's no push notification when it finishes — the caller must poll.
+export interface SessionVideoPlayback {
+  videoStatus: VideoStatus;
+  videoUrl: string | null;
+  screenVideoUrl: string | null;
 }
 
 // Only a coding question backed by the live dsa catalog gets the code-editor + run/submit UI —
@@ -148,5 +165,12 @@ export const endInterviewSession = async (
   id: string
 ): Promise<InterviewSession> => {
   const response = await AxiosInstance.put(INTERVIEW_SESSION_END(id));
+  return response.data;
+};
+
+export const getSessionVideoPlayback = async (
+  id: string
+): Promise<SessionVideoPlayback> => {
+  const response = await AxiosInstance.get(INTERVIEW_SESSION_VIDEO(id));
   return response.data;
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Tabs,
   TabsContent,
@@ -24,14 +24,7 @@ import { Badge } from "../../components/ui/badge";
 import Button from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
-import {
-  Clock,
-  FileText,
-  MicOff,
-  Mic,
-  Search,
-  History,
-} from "lucide-react";
+import { Clock, FileText, MicOff, Mic, Search } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -40,73 +33,23 @@ import {
   TableHead,
   TableRow,
 } from "../../components/ui/table";
-import { type MockInterview } from "../../data/interviewData";
-import {
-  type InterviewSession,
-  type InterviewAttempt,
-  type Question,
-} from "../../data/interviewQuestions";
-import {
-  fetchLiveInterviewQuestions,
-  type InterviewQuestion,
-} from "../../api/services/liveInterview.service";
-import InterviewStartModal from "../../components/interview/InterviewStartModal";
-import InterviewWorkspace from "../../components/interview/InterviewWorkSpace";
-import InterviewSubmission from "../../components/interview/InterviewSubmission";
-import InterviewHistory from "../../components/interview/InterviewHistory";
 import MockInterviewCard from "../../components/interview/MockInterviewCard";
-import { useToast } from "../../api/hooks/use-toast";
 import {
   useFetchMockInterviews,
   useFetchCompanyProblems,
   useFetchBehavioralQuestions,
 } from "../../api/hooks/useAdminInterviewSimulator";
 
-// The backend returns a flat InterviewQuestion (type-specific fields spread onto the object
-// itself); the local demo workspace/submission components expect the older Question union from
-// data/interviewQuestions.ts instead, so backfill the fields each variant requires but the API
-// might omit (e.g. a coding question with no test cases yet) rather than let them crash on
-// missing data.
-const toLocalQuestion = (q: InterviewQuestion): Question => {
-  const base = {
-    id: q.id,
-    question: q.question,
-    difficulty: q.difficulty,
-    topics: q.topics,
-    timeLimit: q.timeLimit,
-  };
-
-  switch (q.type) {
-    case "mcq":
-      return {
-        ...base,
-        type: "mcq",
-        options: q.options ?? [],
-        correctAnswer: q.correctAnswer ?? 0,
-        explanation: q.explanation,
-      };
-    case "descriptive":
-      return {
-        ...base,
-        type: "descriptive",
-        expectedPoints: q.expectedPoints,
-        maxWords: q.maxWords,
-      };
-    case "coding":
-      return {
-        ...base,
-        type: "coding",
-        boilerplate: q.boilerplate,
-        testCases: q.testCases ?? [],
-        solution: q.solution,
-      };
-    case "frontend":
-      return {
-        ...base,
-        type: "frontend",
-        instructions: q.instructions ?? "",
-        requirements: q.requirements ?? [],
-      };
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty.toLowerCase()) {
+    case "easy":
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    case "medium":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+    case "hard":
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+    default:
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
   }
 };
 
@@ -117,25 +60,6 @@ const InterviewPage = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
 
-  // Interview flow states
-  const [selectedInterview, setSelectedInterview] =
-    useState<MockInterview | null>(null);
-  const [showStartModal, setShowStartModal] = useState(false);
-  const [currentSession, setCurrentSession] = useState<InterviewSession | null>(
-    null
-  );
-  const [currentAttempt, setCurrentAttempt] = useState<InterviewAttempt | null>(
-    null
-  );
-  const [viewState, setViewState] = useState<
-    "lobby" | "workspace" | "submission" | "history"
-  >("lobby");
-  const [interviewHistory, setInterviewHistory] = useState<InterviewAttempt[]>(
-    []
-  );
-  const [isStartingInterview, setIsStartingInterview] = useState(false);
-
-  const { toast } = useToast();
   const { data: mockInterviews = [], isLoading: isLoadingMockInterviews } =
     useFetchMockInterviews();
   const { data: companyProblems = [], isLoading: isLoadingCompanyProblems } =
@@ -144,20 +68,6 @@ const InterviewPage = () => {
     data: behavioralQuestions = [],
     isLoading: isLoadingBehavioralQuestions,
   } = useFetchBehavioralQuestions();
-
-  // Load interview history from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("interview-history");
-    if (saved) {
-      setInterviewHistory(JSON.parse(saved));
-    }
-  }, []);
-
-  // Save interview history to localStorage
-  const saveHistory = (history: InterviewAttempt[]) => {
-    localStorage.setItem("interview-history", JSON.stringify(history));
-    setInterviewHistory(history);
-  };
 
   // Filter problems based on company and search query
   const filteredProblems = companyProblems
@@ -205,294 +115,14 @@ const InterviewPage = () => {
     setIsRecording(!isRecording);
   };
 
-  const handleStartInterview = (interview: MockInterview) => {
-    setSelectedInterview(interview);
-    setShowStartModal(true);
-  };
-
-  const startInterviewSession = async () => {
-    if (!selectedInterview || isStartingInterview) return;
-
-    setIsStartingInterview(true);
-    try {
-      const fetchedQuestions = await fetchLiveInterviewQuestions(
-        selectedInterview.id
-      );
-
-      if (fetchedQuestions.length === 0) {
-        toast({
-          title: "No Questions Yet",
-          description: "This interview doesn't have any questions yet.",
-        });
-        return;
-      }
-
-      const questions = fetchedQuestions.map(toLocalQuestion);
-      const session: InterviewSession = {
-        id: Date.now().toString(),
-        interviewId: selectedInterview.id,
-        title: selectedInterview.title,
-        startTime: Date.now(),
-        duration: selectedInterview.duration,
-        questions,
-        currentQuestionIndex: 0,
-        answers: {},
-        status: "in_progress",
-        timeRemaining: selectedInterview.duration * 60, // Convert to seconds
-      };
-
-      setCurrentSession(session);
-      setShowStartModal(false);
-      setViewState("workspace");
-
-      toast({
-        title: "Interview Started",
-        description: `Good luck with your ${selectedInterview.title}!`,
-      });
-    } catch {
-      toast({
-        title: "Couldn't Start Interview",
-        description: "Failed to load this interview's questions. Please try again.",
-      });
-    } finally {
-      setIsStartingInterview(false);
-    }
-  };
-
-  const handleUpdateAnswer = (questionId: string, answer: any) => {
-    if (!currentSession) return;
-
-    setCurrentSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            answers: { ...prev.answers, [questionId]: answer },
-          }
-        : null
-    );
-  };
-
-  const handleTimeUpdate = (timeRemaining: number) => {
-    if (!currentSession) return;
-
-    setCurrentSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            timeRemaining,
-          }
-        : null
-    );
-  };
-
-  const handleNavigation = (index: number) => {
-    if (!currentSession) return;
-
-    setCurrentSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            currentQuestionIndex: index,
-          }
-        : null
-    );
-  };
-
-  const calculateScore = (session: InterviewSession): InterviewAttempt => {
-    let correctAnswers = 0;
-    const topicScores: Record<string, { correct: number; total: number }> = {};
-
-    session.questions.forEach((question) => {
-      const answer = session.answers[question.id];
-      let isCorrect = false;
-
-      // Initialize topic score
-      question.topics.forEach((topic) => {
-        if (!topicScores[topic]) {
-          topicScores[topic] = { correct: 0, total: 0 };
-        }
-        topicScores[topic].total++;
-      });
-
-      // Check answer correctness based on question type
-      if (question.type === "mcq") {
-        const mcq = question as any;
-        isCorrect = answer === mcq.correctAnswer;
-      } else if (question.type === "coding") {
-        // For demo, consider answered as partially correct
-        isCorrect = answer && answer.trim().length > 10;
-      } else if (question.type === "descriptive") {
-        // For demo, consider answered as partially correct
-        isCorrect = answer && answer.trim().length > 20;
-      } else if (question.type === "frontend") {
-        // For demo, consider answered as partially correct
-        isCorrect = answer && (answer.html || answer.css || answer.js);
-      }
-
-      if (isCorrect) {
-        correctAnswers++;
-        question.topics.forEach((topic) => {
-          topicScores[topic].correct++;
-        });
-      }
-    });
-
-    return {
-      id: Date.now().toString(),
-      interviewId: session.interviewId,
-      interviewTitle: session.title,
-      startTime: session.startTime,
-      endTime: Date.now(),
-      score: correctAnswers,
-      totalQuestions: session.questions.length,
-      correctAnswers,
-      status: "completed",
-      topicScores,
-    };
-  };
-
-  const handleSubmitInterview = () => {
-    if (!currentSession) return;
-
-    const attempt = calculateScore(currentSession);
-    setCurrentAttempt(attempt);
-
-    // Save to history
-    const newHistory = [attempt, ...interviewHistory];
-    saveHistory(newHistory);
-
-    setViewState("submission");
-
-    toast({
-      title: "Interview Submitted",
-      description: "Your answers have been submitted successfully!",
-    });
-  };
-
-  const handleRetakeInterview = () => {
-    setCurrentSession(null);
-    setCurrentAttempt(null);
-    setViewState("lobby");
-    if (selectedInterview) {
-      handleStartInterview(selectedInterview);
-    }
-  };
-
-  const handleBackToHome = () => {
-    setCurrentSession(null);
-    setCurrentAttempt(null);
-    setSelectedInterview(null);
-    setViewState("lobby");
-  };
-
-  const handleSubmitFeedback = (rating: number, comment: string) => {
-    if (!currentSession) return;
-
-    setCurrentSession((prev) =>
-      prev
-        ? {
-            ...prev,
-            feedback: { rating, comment },
-          }
-        : null
-    );
-
-    toast({
-      title: "Feedback Submitted",
-      description: "Thank you for your feedback!",
-    });
-  };
-
-  // Early returns for different view states
-  if (viewState === "workspace" && currentSession) {
-    return (
-      <InterviewWorkspace
-        session={currentSession}
-        onUpdateAnswer={handleUpdateAnswer}
-        onTimeUpdate={handleTimeUpdate}
-        onSubmit={handleSubmitInterview}
-        onNavigate={handleNavigation}
-      />
-    );
-  }
-
-  if (viewState === "submission" && currentAttempt && currentSession) {
-    return (
-      <InterviewSubmission
-        session={currentSession}
-        attempt={currentAttempt}
-        onRetakeInterview={handleRetakeInterview}
-        onBackToHome={handleBackToHome}
-        onSubmitFeedback={handleSubmitFeedback}
-      />
-    );
-  }
-
-  if (viewState === "history") {
-    return (
-      <div className="space-y-6" data-cy="interview-history-page">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Interview History</h1>
-            <p className="text-muted-foreground">
-              Track your progress and review past interviews.
-            </p>
-          </div>
-          <Button
-            onClick={() => setViewState("lobby")}
-            variant="outlinePrimary"
-            data-cy="interview-history-back-button"
-          >
-            Back to Interviews
-          </Button>
-        </div>
-
-        <InterviewHistory
-          attempts={interviewHistory}
-          onViewDetails={() => {
-            // For demo, just show a toast
-            toast({
-              title: "Feature Coming Soon",
-              description: "Detailed review will be available soon!",
-            });
-          }}
-        />
-      </div>
-    );
-  }
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "hard":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      default:
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-    }
-  };
-
   return (
     <div className="space-y-6" data-cy="interview-page">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold">Mock Interview Platform</h1>
-          <p className="text-muted-foreground">
-            Practice technical and behavioral interviews with our comprehensive
-            platform.
-          </p>
-        </div>
-        <Button
-          onClick={() => setViewState("history")}
-          variant="outlinePrimary"
-          className="flex items-center gap-2"
-          data-cy="interview-view-history-button"
-        >
-          <History className="h-4 w-4" />
-          View History
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold">Mock Interview Platform</h1>
+        <p className="text-muted-foreground">
+          Practice technical and behavioral interviews with our comprehensive
+          platform.
+        </p>
       </div>
 
       <Tabs defaultValue="mock">
@@ -549,77 +179,71 @@ const InterviewPage = () => {
               No company questions yet.
             </p>
           ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40%]">Title</TableHead>
-                  <TableHead>Difficulty</TableHead>
-                  <TableHead>Topics</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProblems.map((problem) => (
-                  <TableRow key={problem.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={problem.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:text-primary hover:underline"
-                        >
-                          {problem.title}
-                        </a>
-                        {problem.solved && (
-                          <Badge
-                            variant="outline"
-                            className="bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-800 dark:text-green-300"
-                          >
-                            Solved
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getDifficultyColor(problem.difficulty)}>
-                        {problem.difficulty}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {problem.tags.map((tag, idx) => (
-                          <Badge
-                            key={idx}
-                            variant="outline"
-                            className="text-xs"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant={
-                            problem.solved ? "outlinePrimary" : "primary"
-                          }
-                        >
-                          {problem.solved ? "Revisit" : "Solve"}
-                        </Button>
-                        <Button size="sm" variant="outlinePrimary">
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40%]">Title</TableHead>
+                    <TableHead>Difficulty</TableHead>
+                    <TableHead>Topics</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredProblems.map((problem) => (
+                    <TableRow key={problem.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={problem.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary hover:underline"
+                          >
+                            {problem.title}
+                          </a>
+                          {problem.solved && (
+                            <Badge
+                              variant="outline"
+                              className="bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-800 dark:text-green-300"
+                            >
+                              Solved
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getDifficultyColor(problem.difficulty)}>
+                          {problem.difficulty}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {problem.tags.map((tag, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant={problem.solved ? "outlinePrimary" : "primary"}
+                          >
+                            {problem.solved ? "Revisit" : "Solve"}
+                          </Button>
+                          <Button size="sm" variant="outlinePrimary">
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </TabsContent>
 
@@ -634,63 +258,63 @@ const InterviewPage = () => {
               No behavioral questions yet.
             </p>
           ) : (
-          <div className="grid gap-6">
-            {behavioralQuestions.map((question) => (
-              <Card key={question.id}>
-                <CardHeader>
-                  <div className="flex justify-between">
-                    <CardTitle>{question.question}</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outlinePrimary"
-                        onClick={toggleRecording}
-                      >
-                        {isRecording ? (
-                          <MicOff className="h-4 w-4 text-red-500" />
-                        ) : (
-                          <Mic className="h-4 w-4" />
-                        )}
-                        {isRecording ? "Stop Recording" : "Record Answer"}
-                      </Button>
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        2-3 mins
-                      </span>
+            <div className="grid gap-6">
+              {behavioralQuestions.map((question) => (
+                <Card key={question.id}>
+                  <CardHeader>
+                    <div className="flex justify-between">
+                      <CardTitle>{question.question}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outlinePrimary"
+                          onClick={toggleRecording}
+                        >
+                          {isRecording ? (
+                            <MicOff className="h-4 w-4 text-red-500" />
+                          ) : (
+                            <Mic className="h-4 w-4" />
+                          )}
+                          {isRecording ? "Stop Recording" : "Record Answer"}
+                        </Button>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          2-3 mins
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <CardDescription>
-                    Category:{" "}
-                    <Badge variant="outline">{question.category}</Badge>
-                  </CardDescription>
-                </CardHeader>
+                    <CardDescription>
+                      Category:{" "}
+                      <Badge variant="outline">{question.category}</Badge>
+                    </CardDescription>
+                  </CardHeader>
 
-                <CardContent>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Your Response:
-                    </label>
-                    <Textarea
-                      placeholder="Type your answer using the STAR method (Situation, Task, Action, Result)..."
-                      className="min-h-[150px]"
-                      defaultValue={question.response || ""}
-                    />
-                  </div>
-                </CardContent>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Your Response:
+                      </label>
+                      <Textarea
+                        placeholder="Type your answer using the STAR method (Situation, Task, Action, Result)..."
+                        className="min-h-[150px]"
+                        defaultValue={question.response || ""}
+                      />
+                    </div>
+                  </CardContent>
 
-                {question.tips && (
-                  <CardFooter className="flex flex-col items-start border-t pt-4">
-                    <p className="text-sm font-medium">Tips:</p>
-                    <ul className="text-sm text-muted-foreground list-disc pl-5 mt-1">
-                      {question.tips.map((tip, idx) => (
-                        <li key={idx}>{tip}</li>
-                      ))}
-                    </ul>
-                  </CardFooter>
-                )}
-              </Card>
-            ))}
-          </div>
+                  {question.tips && (
+                    <CardFooter className="flex flex-col items-start border-t pt-4">
+                      <p className="text-sm font-medium">Tips:</p>
+                      <ul className="text-sm text-muted-foreground list-disc pl-5 mt-1">
+                        {question.tips.map((tip, idx) => (
+                          <li key={idx}>{tip}</li>
+                        ))}
+                      </ul>
+                    </CardFooter>
+                  )}
+                </Card>
+              ))}
+            </div>
           )}
         </TabsContent>
 
@@ -710,7 +334,10 @@ const InterviewPage = () => {
             </div>
 
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-48" data-cy="interview-category-filter-trigger">
+              <SelectTrigger
+                className="w-full md:w-48"
+                data-cy="interview-category-filter-trigger"
+              >
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -721,11 +348,11 @@ const InterviewPage = () => {
               </SelectContent>
             </Select>
 
-            <Select
-              value={difficultyFilter}
-              onValueChange={setDifficultyFilter}
-            >
-              <SelectTrigger className="w-full md:w-48" data-cy="interview-difficulty-filter-trigger">
+            <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+              <SelectTrigger
+                className="w-full md:w-48"
+                data-cy="interview-difficulty-filter-trigger"
+              >
                 <SelectValue placeholder="Difficulty" />
               </SelectTrigger>
               <SelectContent data-cy="interview-difficulty-filter-content">
@@ -748,25 +375,12 @@ const InterviewPage = () => {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredMockInterviews.map((interview) => (
-                <MockInterviewCard
-                  key={interview.id}
-                  interview={interview}
-                  onStartInterview={handleStartInterview}
-                />
+                <MockInterviewCard key={interview.id} interview={interview} />
               ))}
             </div>
           )}
         </TabsContent>
       </Tabs>
-
-      {/* Interview Start Modal */}
-      <InterviewStartModal
-        interview={selectedInterview}
-        isOpen={showStartModal}
-        onClose={() => setShowStartModal(false)}
-        onStart={startInterviewSession}
-        isStarting={isStartingInterview}
-      />
     </div>
   );
 };
