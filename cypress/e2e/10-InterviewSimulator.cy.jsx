@@ -2,7 +2,6 @@
 
 import {
   INTERVIEW_PAGE,
-  INTERVIEW_VIEW_HISTORY_BUTTON,
   INTERVIEW_TAB_MOCK,
   INTERVIEW_TAB_COMPANY,
   INTERVIEW_TAB_BEHAVIORAL,
@@ -12,39 +11,16 @@ import {
   INTERVIEW_DIFFICULTY_FILTER_CONTENT,
   MOCK_INTERVIEW_CARD,
   MOCK_INTERVIEW_START_BUTTON,
-  INTERVIEW_HISTORY_PAGE,
-  INTERVIEW_HISTORY_BACK_BUTTON,
-  INTERVIEW_HISTORY_ITEM,
-  INTERVIEW_START_MODAL,
-  INTERVIEW_START_CANCEL,
-  INTERVIEW_START_CONFIRM,
-  INTERVIEW_WORKSPACE,
-  INTERVIEW_SUBMIT_BUTTON,
-  INTERVIEW_MCQ_OPTION,
-  INTERVIEW_NEXT_BUTTON,
-  INTERVIEW_PREVIOUS_BUTTON,
-  INTERVIEW_SUBMISSION,
-  INTERVIEW_SCORE,
-  INTERVIEW_BACK_HOME_BUTTON,
+  LIVE_INTERVIEW_PERMISSION_SETUP,
+  LIVE_INTERVIEW_UNSUPPORTED,
 } from "../constants/Selectors";
 
 describe("Interview Simulator", () => {
-  let historyCleared = false;
-
   beforeEach(() => {
     cy.session("user", () => {
       cy.login();
     });
-    cy.visit("/interview", {
-      onBeforeLoad(win) {
-        // Only wipe history once at the start of the suite - later tests (e.g. checking
-        // the history view) rely on the interview completed earlier in this same run.
-        if (!historyCleared) {
-          win.localStorage.removeItem("interview-history");
-          historyCleared = true;
-        }
-      },
-    });
+    cy.visit("/interview");
   });
 
   it("Navigates to the Interview Simulator page", () => {
@@ -79,52 +55,26 @@ describe("Interview Simulator", () => {
     });
   });
 
-  it("Opens and cancels the start-interview modal", () => {
+  // The live interview is camera+mic+screen-share recorded, gated behind a permission prompt
+  // that can't be granted headlessly (no fake-media launch flags configured for this suite, and
+  // getDisplayMedia in particular has no reliable headless auto-grant) — so this only confirms
+  // "Start Interview" actually routes into the live flow and the gate itself renders, rather than
+  // walking a full answer-and-submit path the way the old text-based flow's test used to.
+  it("Starts an interview and reaches the recording permission gate", () => {
     cy.get(INTERVIEW_SEARCH).type("Google");
     cy.get(MOCK_INTERVIEW_START_BUTTON).click();
-    cy.get(INTERVIEW_START_MODAL).should("be.visible").and("contain", "Google SDE Interview");
-    cy.get(INTERVIEW_START_CANCEL).click();
-    cy.get(INTERVIEW_START_MODAL).should("not.exist");
+
+    cy.url().should("include", "/interview/live/");
+    cy.get(LIVE_INTERVIEW_PERMISSION_SETUP, { timeout: 10000 })
+      .should("be.visible")
+      .and("contain", "Camera & Screen Recording Required");
   });
 
-  // Kept as one test (rather than split into "starts/submits" + "shows in history")
-  // because cy.session restores localStorage to its cached-at-login snapshot at the
-  // start of every test - splitting this across tests would wipe the interview-history
-  // entry this assertion depends on before the next test ever ran.
-  it("Starts an interview, answers a question, submits, and shows it in history", () => {
-    cy.get(INTERVIEW_SEARCH).type("Google");
-    cy.get(MOCK_INTERVIEW_START_BUTTON).click();
-    cy.get(INTERVIEW_START_MODAL).should("be.visible");
-    cy.get(INTERVIEW_START_CONFIRM).click();
-
-    cy.get(INTERVIEW_WORKSPACE).should("be.visible");
-    cy.contains("Question 1 of").should("be.visible");
-
-    // First question of the Google SDE interview is a multiple-choice question.
-    cy.get(INTERVIEW_MCQ_OPTION).first().click();
-
-    cy.get(INTERVIEW_NEXT_BUTTON).click();
-    cy.contains("Question 2 of").should("be.visible");
-    cy.get(INTERVIEW_PREVIOUS_BUTTON).click();
-    cy.contains("Question 1 of").should("be.visible");
-
-    cy.get(INTERVIEW_SUBMIT_BUTTON).click();
-
-    cy.get(INTERVIEW_SUBMISSION).should("be.visible");
-    cy.get(INTERVIEW_SCORE).should("be.visible");
-    cy.contains("Interview Complete!").should("be.visible");
-
-    cy.get(INTERVIEW_BACK_HOME_BUTTON).click();
-    cy.get(INTERVIEW_PAGE).should("be.visible");
-
-    cy.get(INTERVIEW_VIEW_HISTORY_BUTTON).click();
-    cy.get(INTERVIEW_HISTORY_PAGE).should("be.visible");
-    cy.get(INTERVIEW_HISTORY_ITEM)
-      .should("have.length", 1)
-      .and("contain", "Google SDE Interview")
-      .and("contain", "Completed");
-
-    cy.get(INTERVIEW_HISTORY_BACK_BUTTON).click();
-    cy.get(INTERVIEW_PAGE).should("be.visible");
+  // In browsers without SpeechRecognition support, the permission gate itself never renders —
+  // the whole page is replaced by this notice instead. Not exercised here as a separate browser
+  // run (this suite runs on Chrome, which supports it), just documented via the selector's
+  // existence so a future cross-browser pass has something to assert against.
+  it.skip("Shows the unsupported-browser notice outside Chrome/Edge", () => {
+    cy.get(LIVE_INTERVIEW_UNSUPPORTED).should("be.visible");
   });
 });

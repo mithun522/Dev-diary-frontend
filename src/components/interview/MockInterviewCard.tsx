@@ -9,13 +9,12 @@ import {
 } from "../ui/card";
 import { Badge } from "../ui/badge";
 import Button from "../ui/button";
-import { Play, Star, Headphones } from "lucide-react";
+import { Play, Star } from "lucide-react";
 import { type MockInterview } from "../../data/interviewData";
 import { useFetchMockInterviewQuestions } from "../../api/hooks/useAdminInterviewSimulator";
 
 interface MockInterviewCardProps {
   interview: MockInterview;
-  onStartInterview: (interview: MockInterview) => void;
 }
 
 const getDifficultyColor = (difficulty: string) => {
@@ -33,10 +32,7 @@ const getDifficultyColor = (difficulty: string) => {
 
 // Fetches its own question count from the real backend (one hook call per card instance, since
 // react's rules of hooks disallow calling a hook inside the parent's .map() loop).
-const MockInterviewCard = ({
-  interview,
-  onStartInterview,
-}: MockInterviewCardProps) => {
+const MockInterviewCard = ({ interview }: MockInterviewCardProps) => {
   const navigate = useNavigate();
   const { data: questions } = useFetchMockInterviewQuestions(interview.id);
 
@@ -95,23 +91,14 @@ const MockInterviewCard = ({
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-2 pt-4 border-t">
+      <CardFooter className="pt-4 border-t">
         <Button
           className="flex w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
-          onClick={() => onStartInterview(interview)}
+          onClick={() => navigate(`/interview/live/${interview.id}`)}
           data-cy="mock-interview-start-button"
         >
           <Play className="h-4 w-4 mr-2 mt-1" />
           Start Interview
-        </Button>
-        <Button
-          variant="outlinePrimary"
-          className="flex w-full justify-center items-center gap-2"
-          onClick={() => navigate(`/interview/live/${interview.id}`)}
-          data-cy="mock-interview-live-voice-button"
-        >
-          <Headphones className="h-4 w-4" />
-          Live Voice Interview (AI-graded)
         </Button>
       </CardFooter>
     </Card>

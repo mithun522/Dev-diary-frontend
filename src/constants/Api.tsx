@@ -88,21 +88,21 @@ export const MOCK_INTERVIEW_QUESTIONS = (interviewId: string) =>
   `${MOCK_INTERVIEWS}/${interviewId}/questions`;
 export const MOCK_INTERVIEW_QUESTION_BY_ID = (interviewId: string, questionId: string) =>
   `${MOCK_INTERVIEWS}/${interviewId}/questions/${questionId}`;
-export const INTERVIEW_ATTEMPTS = `${INTERVIEW_SIMULATOR_API_URL}/interview-attempts`;
-// PUT here (submitInterviewAttempt, openapi.yaml) grades and completes the attempt in one shot —
-// it takes the whole batch of answers (`{ answers: [{questionId, answer}, ...] }`, min 1 item),
-// there is no per-answer submit route.
-export const INTERVIEW_ATTEMPT_BY_ID = (id: string) =>
-  `${INTERVIEW_ATTEMPTS}/${id}`;
-// Live (recorded) interview sessions — used by the voice+camera+screen-recorded interview flow.
-// Distinct from interview-attempts above: a session snapshots its question list at creation, and
-// grades per-question as the candidate goes (mcq exact-match / non-empty-text for everything else
-// via `answer`; `run`+`submit` for coding questions backed by the shared dsa catalog). There is no
-// session-level aggregate score from the backend — the client sums each question's `score`.
+// Live (recorded) interview sessions — the voice+camera+screen-recorded interview flow, and the
+// only one this app uses (the earlier interview-attempts resource — no recording, batch-graded —
+// was retired in favor of this single flow). A session snapshots its question list at creation,
+// and grades per-question as the candidate goes (mcq exact-match / non-empty-text for everything
+// else via `answer`; `run`+`submit` for coding questions backed by the shared dsa catalog). There
+// is no session-level aggregate score from the backend — the client sums each question's `score`.
 export const INTERVIEW_SESSIONS = `${INTERVIEW_SIMULATOR_API_URL}/interview-sessions`;
 export const INTERVIEW_SESSION_BY_ID = (id: string) => `${INTERVIEW_SESSIONS}/${id}`;
 export const INTERVIEW_SESSION_END = (id: string) =>
   `${INTERVIEW_SESSION_BY_ID(id)}/end`;
+// Presigned GET URLs for the stitched camera/screen recordings, once the backend's video-finalizer
+// Lambda (fired when a session ends) has concatenated the uploaded chunks. videoUrl/screenVideoUrl
+// stay null until videoStatus is "ready" — poll this after /end.
+export const INTERVIEW_SESSION_VIDEO = (id: string) =>
+  `${INTERVIEW_SESSION_BY_ID(id)}/video`;
 export const INTERVIEW_SESSION_QUESTION_RUN = (
   sessionId: string,
   questionId: string
