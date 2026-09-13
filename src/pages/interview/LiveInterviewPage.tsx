@@ -242,7 +242,10 @@ const LiveInterviewPage = () => {
     async (currentSession: InterviewSession) => {
       setPhase("ending");
       setEndError(null);
-      stopAndFinalize();
+      // Awaited on purpose: this resolves only once the final recording chunks have been uploaded
+      // and confirmed. Ending the session queues the backend stitching job, so kicking that off
+      // while the last chunk is still in flight would leave it out of the finished recording.
+      await stopAndFinalize();
 
       try {
         const finalSession = await endInterviewSession(currentSession.id);
@@ -591,7 +594,12 @@ const LiveInterviewPage = () => {
         ) : (
           <>
             <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-            <p className="text-muted-foreground">Finishing up...</p>
+            <p className="text-muted-foreground">
+              Saving your recording and finishing up...
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Please keep this tab open — closing it now could cut the end off your recording.
+            </p>
           </>
         )}
       </div>

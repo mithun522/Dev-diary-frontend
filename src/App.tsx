@@ -33,6 +33,8 @@ import AdminPatternsPage from "./pages/admin/systemDesign/AdminPatternsPage";
 import AdminMockInterviewsPage from "./pages/admin/interviewSimulator/AdminMockInterviewsPage";
 import AdminCompanyProblemsPage from "./pages/admin/interviewSimulator/AdminCompanyProblemsPage";
 import AdminBehavioralQuestionsPage from "./pages/admin/interviewSimulator/AdminBehavioralQuestionsPage";
+import AdminInterviewSessionsPage from "./pages/admin/interviewSimulator/AdminInterviewSessionsPage";
+import AdminInterviewSessionDetailPage from "./pages/admin/interviewSimulator/AdminInterviewSessionDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +114,14 @@ const App = () => {
                 <Route
                   path="/admin/interview-simulator/behavioral-questions"
                   element={<AdminBehavioralQuestionsPage />}
+                />
+                <Route
+                  path="/admin/interview-sessions"
+                  element={<AdminInterviewSessionsPage />}
+                />
+                <Route
+                  path="/admin/interview-sessions/:id"
+                  element={<AdminInterviewSessionDetailPage />}
                 />
               </Route>
 

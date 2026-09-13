@@ -122,6 +122,11 @@ export const INTERVIEW_SESSION_VIDEO_CHUNKS = (sessionId: string) =>
   `${INTERVIEW_SESSION_BY_ID(sessionId)}/video-chunks`;
 export const INTERVIEW_SESSION_VIDEO_CHUNKS_UPLOAD_URL = (sessionId: string) =>
   `${INTERVIEW_SESSION_VIDEO_CHUNKS(sessionId)}/upload-url`;
+// Admin-only review surface: every candidate's interview sessions (paginated/filterable list),
+// and a full per-session detail (answers, scoring, topic breakdown, recording playback).
+export const ADMIN_INTERVIEW_SESSIONS = `${INTERVIEW_SIMULATOR_API_URL}/admin/interview-sessions`;
+export const ADMIN_INTERVIEW_SESSION_BY_ID = (id: string) =>
+  `${ADMIN_INTERVIEW_SESSIONS}/${id}`;
 
 export const COMPANY_PROBLEMS = `${INTERVIEW_SIMULATOR_API_URL}/company-problems`;
 export const COMPANY_PROBLEM_BY_ID = (id: string) => `${COMPANY_PROBLEMS}/${id}`;

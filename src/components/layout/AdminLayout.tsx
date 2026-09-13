@@ -22,6 +22,7 @@ import {
   Languages,
   LogOut,
   Layers,
+  MonitorPlay,
   Newspaper,
   ShieldCheck,
   Users,
@@ -74,6 +75,12 @@ const NAV_ITEMS = [
     label: "Behavioral Questions",
     icon: HelpCircle,
     cy: "admin-behavioral-questions",
+  },
+  {
+    to: "/admin/interview-sessions",
+    label: "Interview Sessions",
+    icon: MonitorPlay,
+    cy: "admin-interview-sessions",
   },
 ];
 
