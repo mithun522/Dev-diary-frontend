@@ -18,6 +18,13 @@ const pickMimeType = () =>
 
 const CHUNK_INTERVAL_MS = 60_000;
 
+// How long stopAndFinalize will wait for outstanding chunk uploads before giving up and letting
+// the interview finish anyway. Long enough for a final ~60s chunk on a slow connection, short
+// enough that a hung request never traps the candidate on the "ending" screen. Anything that does
+// land in S3 after this is still picked up — the backend stitches from the bucket, not from the
+// confirmed-chunk table.
+const FINAL_UPLOAD_GRACE_MS = 20_000;
+
 interface RecorderState {
   recorder: MediaRecorder;
   stream: MediaStream;
@@ -57,6 +64,9 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
     {}
   );
   const warnedRef = useRef(false);
+  // Every in-flight chunk upload. stopAndFinalize drains this before the interview is allowed to
+  // end, so the final chunk is in S3 and confirmed before the backend is told to stitch.
+  const pendingUploadsRef = useRef<Promise<void>[]>([]);
 
   const handleChunk = useCallback((kind: RecordingKind, blob: Blob) => {
     const state = recordersRef.current[kind];
@@ -68,7 +78,7 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
     const durationSeconds = Math.round((Date.now() - state.chunkStartedAt) / 1000);
     state.chunkStartedAt = Date.now();
 
-    uploadRecordingChunk(
+    const upload = uploadRecordingChunk(
       sessionIdRef.current,
       kind,
       sequence,
@@ -83,6 +93,10 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
         );
       }
     });
+
+    // Tracked (not fire-and-forget) so stopAndFinalize can wait for it. Already .catch()-ed above,
+    // so a failed upload settles rather than rejecting the drain.
+    pendingUploadsRef.current.push(upload);
   }, []);
 
   const requestPermissions = useCallback(async () => {
@@ -169,7 +183,26 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
         state.recorder.stop();
       });
 
+    // Stopping a MediaRecorder emits one last `dataavailable` (the tail of the current chunk)
+    // before it fires `stop`, so by the time these resolve the final chunk's upload has been
+    // started and registered in pendingUploadsRef.
     await Promise.all([stopOne(states.camera), stopOne(states.screen)]);
+
+    // Drain every upload, including those final chunks. Without this the caller goes straight on
+    // to PUT /end, which queues backend stitching immediately — and a last chunk still in flight
+    // would not be in S3 yet, so it would be missing from the stitched recording entirely.
+    const pending = pendingUploadsRef.current;
+    pendingUploadsRef.current = [];
+    if (pending.length > 0) {
+      let graceTimer: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        Promise.allSettled(pending),
+        new Promise<void>((resolve) => {
+          graceTimer = setTimeout(resolve, FINAL_UPLOAD_GRACE_MS);
+        }),
+      ]);
+      clearTimeout(graceTimer);
+    }
 
     [cameraStreamRef.current, screenStreamRef.current].forEach((stream) =>
       stream?.getTracks().forEach((track) => track.stop())
@@ -177,8 +210,8 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
 
     setIsRecording(false);
     // No dedicated "finalize" call — PUT /interview-sessions/{id}/end (called right after this)
-    // already flips videoStatus to "processing", which is what should trigger any backend
-    // stitching pipeline once chunk upload exists.
+    // flips videoStatus to "processing" and queues the stitching job, which is why every chunk
+    // has to have landed before this resolves.
   }, []);
 
   const downloadLocalRecording = useCallback((kind: RecordingKind) => {
