@@ -5,6 +5,8 @@ import type { AxiosError } from "axios";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Mic,
   MicOff,
@@ -22,16 +24,26 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
 import { Textarea } from "../../components/ui/textarea";
 import {
   startInterviewSession,
+  getInterviewSession,
+  listInterviewSessions,
   endInterviewSession,
   runSessionCodingQuestion,
   submitSessionCodingQuestion,
   answerSessionQuestion,
   getSessionVideoPlayback,
+  updateSessionStrikeCount,
   isCodingCatalogQuestion,
   type InterviewSession,
   type InterviewSessionQuestion,
@@ -52,7 +64,9 @@ import { useInterviewRecording } from "../../hooks/useInterviewRecording";
 // interview-sessions grades per-question as the candidate goes (no batch submit like
 // interview-attempts has, and no session-level aggregate score — that's computed client-side from
 // each question's own `score`). Camera + screen recording span "permission-setup" -> "answering"
-// -> "ending" and stop the moment the candidate finishes the last question.
+// -> "ending" and stop the moment the candidate finishes the last question. Navigation between
+// questions is free (Previous/Next/jump-from-modal) — answering a question no longer forces the
+// candidate forward; finishing only happens via the explicit "Submit Interview" action.
 type Phase = "permission-setup" | "loading" | "answering" | "ending" | "results";
 
 const getMockSnapshot = (q: InterviewSessionQuestion) =>
@@ -81,6 +95,19 @@ const getDifficultyColor = (difficulty: string) => {
     default:
       return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
   }
+};
+
+// Starter/default value for a question's answer draft the first time it's visited — a coding
+// question gets its boilerplate/starter code, a text-answered question gets whatever was already
+// saved (e.g. the candidate navigated back to it after answering), or "" for a fresh question.
+const initialDraftFor = (q: InterviewSessionQuestion): string => {
+  if (q.type === "coding") {
+    return isCodingCatalogQuestion(q)
+      ? getCatalogSnapshot(q).starterCode ?? ""
+      : getMockSnapshot(q).boilerplate ?? "";
+  }
+  const savedText = q.answer?.text;
+  return typeof savedText === "string" ? savedText : "";
 };
 
 const errorMessage = (err: unknown, fallback: string) => {
@@ -119,20 +146,30 @@ const LiveInterviewPage = () => {
   const [session, setSession] = useState<InterviewSession | null>(null);
   const [questions, setQuestions] = useState<InterviewSessionQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answerText, setAnswerText] = useState("");
-  const [sourceCode, setSourceCode] = useState("");
+  // Per-question drafts (text answer or source code, keyed by question id) so navigating away
+  // and back with Previous/Next never loses what the candidate typed or already saved.
+  const [answerDrafts, setAnswerDrafts] = useState<Record<string, string>>({});
   const [runResult, setRunResult] = useState<JudgeResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [showUnansweredModal, setShowUnansweredModal] = useState(false);
   const [videoPlayback, setVideoPlayback] = useState<SessionVideoPlayback | null>(
     null
   );
+  // Malpractice tracking: leaving the tab/window during the interview counts as a strike. Two
+  // strikes just warn; a third auto-submits whatever's been answered so far. This can only ever
+  // catch tab switches / minimizing (the Page Visibility API) — an actual browser/tab close can be
+  // deterred with a native confirm prompt, but once the tab is gone no JS runs to count it.
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [showTabSwitchWarning, setShowTabSwitchWarning] = useState(false);
+  const [autoSubmitReason, setAutoSubmitReason] = useState<string | null>(null);
 
   const cameraPreviewRef = useRef<HTMLVideoElement>(null);
   const setupStarted = useRef(false);
+  const handledTabSwitchCount = useRef(0);
   const speechSupported = isSpeechRecognitionSupported();
   const currentQuestion = questions[currentIndex] ?? null;
-  const isLastQuestion = currentIndex === questions.length - 1;
+  const currentDraft = currentQuestion ? answerDrafts[currentQuestion.id] ?? "" : "";
 
   useEffect(() => {
     if (cameraPreviewRef.current) {
@@ -153,23 +190,19 @@ const LiveInterviewPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reset per-question draft state whenever the current question changes.
+  // Seed a draft for the current question the first time it's visited (never overwrites one
+  // already in the map, so re-visiting via Previous/Next preserves whatever's there).
   useEffect(() => {
     if (!currentQuestion) return;
     resetTranscript();
-    setAnswerText("");
     setRunResult(null);
-    if (currentQuestion.type === "coding") {
-      setSourceCode(
-        isCodingCatalogQuestion(currentQuestion)
-          ? getCatalogSnapshot(currentQuestion).starterCode ?? ""
-          : getMockSnapshot(currentQuestion).boilerplate ?? ""
-      );
-    } else {
-      setSourceCode("");
-    }
+    setAnswerDrafts((prev) =>
+      prev[currentQuestion.id] !== undefined
+        ? prev
+        : { ...prev, [currentQuestion.id]: initialDraftFor(currentQuestion) }
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex]);
+  }, [currentQuestion]);
 
   // The backend stitches the recorded chunks asynchronously (a fire-and-forget Lambda invoke, no
   // push notification) — poll for playback URLs once the interview is over, until the video is
@@ -203,9 +236,13 @@ const LiveInterviewPage = () => {
     };
   }, [phase, session]);
 
+  // Live dictation overwrites the current question's draft as it's recognized. Guarded on a
+  // non-empty transcript so a freshly-seeded draft (e.g. a previously saved answer) isn't
+  // clobbered by the reset-to-"" that happens when a new question mounts.
   useEffect(() => {
-    setAnswerText(finalTranscript);
-  }, [finalTranscript]);
+    if (!currentQuestion || !finalTranscript) return;
+    setAnswerDrafts((prev) => ({ ...prev, [currentQuestion.id]: finalTranscript }));
+  }, [finalTranscript, currentQuestion]);
 
   const handleEnableRecording = async () => {
     setRequestingPermissions(true);
@@ -220,15 +257,49 @@ const LiveInterviewPage = () => {
 
     (async () => {
       try {
-        const newSession = await startInterviewSession(mockInterviewId);
-        if (newSession.questions.length === 0) {
+        // Resume an existing in-progress session for this interview rather than always starting
+        // a new one — otherwise a reload (or just navigating back to this URL) would silently
+        // abandon whatever was already answered. There's no "abandon" action yet (see
+        // endInterviewSession — only ending completes a session), so any in-progress session for
+        // this interview is assumed to be "the one the candidate is still working on."
+        const existingSessions = await listInterviewSessions().catch(() => []);
+        const resumable = existingSessions.find(
+          (s) => s.mockInterviewId === mockInterviewId && s.status === "in_progress"
+        );
+
+        const activeSession = resumable
+          ? await getInterviewSession(resumable.id)
+          : await startInterviewSession(mockInterviewId);
+
+        if (activeSession.questions.length === 0) {
           setLoadError("This interview has no questions yet.");
           return;
         }
 
-        setSession(newSession);
-        setQuestions(newSession.questions);
-        startRecording(newSession.id);
+        setSession(activeSession);
+        setQuestions(activeSession.questions);
+        // Land on the first unanswered question rather than always index 0 — a no-op for a fresh
+        // session (nothing's answered yet either way), but skips straight past what's already done
+        // when resuming.
+        const firstUnanswered = activeSession.questions.findIndex(
+          (q) => q.status !== "answered"
+        );
+        setCurrentIndex(firstUnanswered >= 0 ? firstUnanswered : 0);
+
+        const initialStrikes = activeSession.strikeCount ?? 0;
+        handledTabSwitchCount.current = initialStrikes;
+        setTabSwitchCount(initialStrikes);
+
+        if (resumable) {
+          toast.info("Resuming your in-progress interview.");
+        }
+        // `resume: true` continues chunk numbering from wherever the previous recording left off
+        // (see useInterviewRecording) instead of restarting at 0 and overwriting it. The candidate
+        // will be re-prompted for camera/screen permissions regardless — a reload always tears
+        // down the previous MediaStream, and browsers never let a page silently resume screen
+        // capture across a reload for security reasons — so the stitched recording will have a
+        // jump-cut across the reload gap, not a corrupted or truncated one.
+        startRecording(activeSession.id, Boolean(resumable));
         setPhase("answering");
       } catch (err) {
         setLoadError(
@@ -259,27 +330,84 @@ const LiveInterviewPage = () => {
     [stopAndFinalize]
   );
 
-  const applyAnsweredQuestion = useCallback(
-    (updated: InterviewSessionQuestion) => {
-      const updatedQuestions = questions.map((q) =>
-        q.id === updated.id ? updated : q
-      );
-      setQuestions(updatedQuestions);
+  // Count a strike every time the candidate leaves this tab/window (switches tabs, switches
+  // apps, minimizes) while the interview is in progress. Only listens during "answering" — not
+  // during setup or after the interview's already finished.
+  useEffect(() => {
+    if (phase !== "answering") return;
 
-      if (isLastQuestion && session) {
-        finishSession(session);
-      } else {
-        setCurrentIndex((i) => i + 1);
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setTabSwitchCount((prev) => prev + 1);
       }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [phase]);
+
+  // Best-effort deterrent against closing the tab/browser outright — browsers show their own
+  // native "leave site?" prompt (the message text itself can't be customized). If the candidate
+  // actually confirms leaving, the page unloads before any of our code can react, so a real close
+  // can never be counted as a strike the way a tab switch can.
+  useEffect(() => {
+    if (phase !== "answering") return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [phase]);
+
+  // React to a new strike exactly once per count: the first two just warn, the third auto-submits
+  // whatever's been answered so far, bypassing the normal unanswered-questions confirmation since
+  // this isn't a candidate-initiated submit.
+  useEffect(() => {
+    if (phase !== "answering") return;
+    if (tabSwitchCount <= handledTabSwitchCount.current) return;
+    handledTabSwitchCount.current = tabSwitchCount;
+
+    // Best-effort sync to the session so the count isn't only ever held in this tab's React state
+    // (e.g. so an admin reviewing the session later can see it). Swallows errors deliberately — a
+    // transient network hiccup here shouldn't block showing the warning/auto-submit locally, which
+    // is what actually matters to the candidate in the moment.
+    if (session) {
+      updateSessionStrikeCount(session.id, tabSwitchCount).catch(() => {});
+    }
+
+    if (tabSwitchCount >= 3) {
+      setAutoSubmitReason(
+        "Your interview was automatically submitted after repeated tab switches (3 strikes)."
+      );
+      toast.error("Interview auto-submitted — repeated tab switching detected.");
+      if (session) finishSession(session);
+    } else {
+      setShowTabSwitchWarning(true);
+    }
+  }, [tabSwitchCount, phase, session, finishSession]);
+
+  const applyAnsweredQuestion = useCallback((updated: InterviewSessionQuestion) => {
+    setQuestions((prev) => prev.map((q) => (q.id === updated.id ? updated : q)));
+  }, []);
+
+  const goToQuestion = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= questions.length) return;
+      if (isListening) stopListening();
+      setCurrentIndex(index);
     },
-    [questions, isLastQuestion, session, finishSession]
+    [questions.length, isListening, stopListening]
   );
 
   const handleAnswerSubmit = useCallback(
     async (answerValue: string) => {
       if (!session || !currentQuestion) return;
       if (!answerValue.trim()) {
-        toast.error("Give an answer before continuing.");
+        toast.error("Give an answer before saving.");
         return;
       }
       if (isListening) stopListening();
@@ -292,6 +420,7 @@ const LiveInterviewPage = () => {
           answerValue.trim()
         );
         applyAnsweredQuestion(updated);
+        toast.success("Answer saved");
       } catch (err) {
         toast.error(errorMessage(err, "Couldn't submit that answer."));
       } finally {
@@ -308,7 +437,7 @@ const LiveInterviewPage = () => {
       const result = await runSessionCodingQuestion(
         session.id,
         currentQuestion.id,
-        sourceCode
+        currentDraft
       );
       setRunResult(result);
     } catch (err) {
@@ -325,14 +454,36 @@ const LiveInterviewPage = () => {
       const updated = await submitSessionCodingQuestion(
         session.id,
         currentQuestion.id,
-        sourceCode
+        currentDraft
       );
       applyAnsweredQuestion(updated);
+      toast.success("Answer saved");
     } catch (err) {
       toast.error(errorMessage(err, "Couldn't submit your solution."));
     } finally {
       setIsSubmittingAnswer(false);
     }
+  };
+
+  const unansweredQuestions = questions.filter((q) => q.status !== "answered");
+
+  const handleSubmitInterviewClick = () => {
+    if (unansweredQuestions.length > 0) {
+      setShowUnansweredModal(true);
+      return;
+    }
+    if (session) finishSession(session);
+  };
+
+  const handleJumpToUnanswered = (questionId: string) => {
+    const index = questions.findIndex((q) => q.id === questionId);
+    setShowUnansweredModal(false);
+    if (index >= 0) goToQuestion(index);
+  };
+
+  const handleSubmitAnyway = () => {
+    setShowUnansweredModal(false);
+    if (session) finishSession(session);
   };
 
   if (!mockInterviewId) {
@@ -465,6 +616,14 @@ const LiveInterviewPage = () => {
       <div className="max-w-2xl mx-auto space-y-6" data-cy="live-interview-results">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Interview Complete</h1>
+          {autoSubmitReason && (
+            <p
+              className="text-sm text-red-600 dark:text-red-400"
+              data-cy="live-interview-auto-submit-reason"
+            >
+              {autoSubmitReason}
+            </p>
+          )}
         </div>
 
         <Card>
@@ -610,12 +769,16 @@ const LiveInterviewPage = () => {
   const isCoding = currentQuestion.type === "coding";
   const isCodingCatalog = isCodingCatalogQuestion(currentQuestion);
   const questionNumber = currentIndex + 1;
+  const selectedMcqAnswer =
+    isMcq && typeof currentQuestion.answer?.text === "string"
+      ? Number(currentQuestion.answer.text)
+      : null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6" data-cy="live-interview-page">
       {recordingIndicator}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <Button
           variant="outlinePrimary"
           size="sm"
@@ -625,15 +788,57 @@ const LiveInterviewPage = () => {
           <ArrowLeft className="h-4 w-4" />
           Exit
         </Button>
-        <span className="text-sm text-muted-foreground">
-          Question {questionNumber} of {questions.length}
-        </span>
+        <div className="flex flex-col items-center">
+          <span className="text-sm text-muted-foreground">
+            Question {questionNumber} of {questions.length}
+          </span>
+          {tabSwitchCount > 0 && (
+            <span
+              className="text-xs text-amber-600 dark:text-amber-400"
+              data-cy="live-interview-tab-switch-count"
+            >
+              Tab switches: {tabSwitchCount}/3
+            </span>
+          )}
+        </div>
+        <Button
+          size="sm"
+          onClick={handleSubmitInterviewClick}
+          data-cy="live-interview-submit-interview"
+        >
+          Submit Interview
+        </Button>
       </div>
 
       <Progress
         value={(questionNumber / questions.length) * 100}
         data-cy="live-interview-progress"
       />
+
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outlinePrimary"
+          size="sm"
+          onClick={() => goToQuestion(currentIndex - 1)}
+          disabled={currentIndex === 0}
+          className="flex items-center gap-1"
+          data-cy="live-interview-previous"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Previous
+        </Button>
+        <Button
+          variant="outlinePrimary"
+          size="sm"
+          onClick={() => goToQuestion(currentIndex + 1)}
+          disabled={currentIndex === questions.length - 1}
+          className="flex items-center gap-1"
+          data-cy="live-interview-next"
+        >
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
 
       <Card>
         <CardHeader>
@@ -660,7 +865,7 @@ const LiveInterviewPage = () => {
               {getMockSnapshot(currentQuestion).options?.map((option, idx) => (
                 <Button
                   key={idx}
-                  variant="outlinePrimary"
+                  variant={idx === selectedMcqAnswer ? "primary" : "outlinePrimary"}
                   className="text-left justify-start"
                   disabled={isSubmittingAnswer}
                   onClick={() => handleAnswerSubmit(String(idx))}
@@ -716,17 +921,18 @@ const LiveInterviewPage = () => {
                     disabled={isRunning || isSubmittingAnswer}
                     data-cy="live-interview-submit-code"
                   >
-                    {isSubmittingAnswer
-                      ? "Judging..."
-                      : isLastQuestion
-                      ? "Submit & Finish Interview"
-                      : "Submit & Continue"}
+                    {isSubmittingAnswer ? "Judging..." : "Submit Answer"}
                   </Button>
                 </div>
               </div>
 
               <div className="h-72 rounded-md border overflow-hidden">
-                <CodeEditor value={sourceCode} onChange={setSourceCode} />
+                <CodeEditor
+                  value={currentDraft}
+                  onChange={(value) =>
+                    setAnswerDrafts((prev) => ({ ...prev, [currentQuestion.id]: value }))
+                  }
+                />
               </div>
 
               {runResult && (
@@ -749,35 +955,59 @@ const LiveInterviewPage = () => {
               </p>
 
               <div className="h-72 rounded-md border overflow-hidden">
-                <CodeEditor value={sourceCode} onChange={setSourceCode} />
+                <CodeEditor
+                  value={currentDraft}
+                  onChange={(value) =>
+                    setAnswerDrafts((prev) => ({ ...prev, [currentQuestion.id]: value }))
+                  }
+                />
               </div>
 
               <Button
-                onClick={() => handleAnswerSubmit(sourceCode)}
-                disabled={isSubmittingAnswer}
+                onClick={() => handleAnswerSubmit(currentDraft)}
+                disabled={isSubmittingAnswer || !currentDraft.trim()}
                 data-cy="live-interview-submit-code-fallback"
               >
-                {isSubmittingAnswer
-                  ? "Submitting..."
-                  : isLastQuestion
-                  ? "Submit & Finish Interview"
-                  : "Submit & Continue"}
+                {isSubmittingAnswer ? "Submitting..." : "Save Answer"}
               </Button>
             </div>
           )}
 
           {!isMcq && !isCoding && (
             <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-sm font-medium">
+                  Your answer{" "}
+                  <span className="text-muted-foreground font-normal">
+                    — type it directly, or record it and edit the transcript below
+                  </span>
+                </label>
+                <Textarea
+                  value={
+                    isListening ? `${currentDraft} ${interimTranscript}`.trim() : currentDraft
+                  }
+                  onChange={(e) =>
+                    setAnswerDrafts((prev) => ({
+                      ...prev,
+                      [currentQuestion.id]: e.target.value,
+                    }))
+                  }
+                  readOnly={isListening}
+                  className="min-h-[120px]"
+                  data-cy="live-interview-transcript"
+                />
+              </div>
+
               <div className="flex items-center gap-3">
                 <Button
-                  variant={isListening ? "outlineDanger" : "primary"}
+                  variant={isListening ? "outlineDanger" : "outlinePrimary"}
                   onClick={isListening ? undefined : startListening}
                   disabled={isListening || isSubmittingAnswer}
                   className="flex items-center gap-2"
                   data-cy="live-interview-start-listening"
                 >
                   <Mic className="h-4 w-4" />
-                  {isListening ? "Listening..." : "Start Answering"}
+                  {isListening ? "Listening..." : "Record Answer"}
                 </Button>
 
                 {isListening && (
@@ -788,52 +1018,97 @@ const LiveInterviewPage = () => {
                     data-cy="live-interview-done-answering"
                   >
                     <MicOff className="h-4 w-4" />
-                    I'm Done Answering
+                    Stop Recording
                   </Button>
                 )}
-              </div>
 
-              {(isListening || answerText) && (
-                <div className="space-y-1">
-                  <label className="text-sm font-medium">
-                    Live transcript{" "}
-                    {isListening && (
-                      <span className="text-muted-foreground font-normal">
-                        (edit after stopping if it mis-heard you)
-                      </span>
-                    )}
-                  </label>
-                  <Textarea
-                    value={
-                      isListening
-                        ? `${answerText} ${interimTranscript}`.trim()
-                        : answerText
-                    }
-                    onChange={(e) => setAnswerText(e.target.value)}
-                    readOnly={isListening}
-                    className="min-h-[120px]"
-                    data-cy="live-interview-transcript"
-                  />
-                </div>
-              )}
-
-              {!isListening && answerText && (
                 <Button
-                  onClick={() => handleAnswerSubmit(answerText)}
-                  disabled={isSubmittingAnswer}
+                  onClick={() => handleAnswerSubmit(currentDraft)}
+                  disabled={isSubmittingAnswer || isListening || !currentDraft.trim()}
                   data-cy="live-interview-submit-answer"
                 >
-                  {isSubmittingAnswer
-                    ? "Submitting..."
-                    : isLastQuestion
-                    ? "Finish Interview"
-                    : "Save & Continue"}
+                  {isSubmittingAnswer ? "Submitting..." : "Save Answer"}
                 </Button>
-              )}
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={showUnansweredModal}
+        onOpenChange={(open) => !open && setShowUnansweredModal(false)}
+      >
+        <DialogContent
+          onClose={() => setShowUnansweredModal(false)}
+          data-cy="live-interview-unanswered-modal"
+        >
+          <DialogHeader>
+            <DialogTitle>
+              You haven't answered {unansweredQuestions.length}{" "}
+              {unansweredQuestions.length === 1 ? "question" : "questions"}
+            </DialogTitle>
+            <DialogDescription>
+              Click a question below to go answer it, or submit anyway if you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {unansweredQuestions.map((q) => (
+              <button
+                key={q.id}
+                type="button"
+                onClick={() => handleJumpToUnanswered(q.id)}
+                className="w-full text-left rounded-md border px-3 py-2 text-sm hover:bg-muted transition-colors"
+                data-cy="live-interview-unanswered-item"
+              >
+                Question {q.ordinal}: {getPromptTitle(q)}
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outlinePrimary"
+              onClick={() => setShowUnansweredModal(false)}
+              data-cy="live-interview-review-questions"
+            >
+              Review Questions
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleSubmitAnyway}
+              data-cy="live-interview-submit-anyway"
+            >
+              Submit Anyway
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showTabSwitchWarning}
+        onOpenChange={(open) => !open && setShowTabSwitchWarning(false)}
+      >
+        <DialogContent
+          onClose={() => setShowTabSwitchWarning(false)}
+          data-cy="live-interview-tab-switch-warning"
+        >
+          <DialogHeader>
+            <DialogTitle>Tab switch detected (warning {tabSwitchCount} of 2)</DialogTitle>
+            <DialogDescription>
+              Leaving this tab or window during the interview counts as a strike. After 3
+              strikes, your interview will be automatically submitted as-is.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end pt-2">
+            <Button
+              onClick={() => setShowTabSwitchWarning(false)}
+              data-cy="live-interview-tab-switch-acknowledge"
+            >
+              I Understand, Continue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

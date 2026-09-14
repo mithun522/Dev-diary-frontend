@@ -17,9 +17,44 @@ import {
   INTERVIEW_SESSION_QUESTION_SUBMIT,
   INTERVIEW_SESSION_QUESTION_ANSWER,
   INTERVIEW_SESSION_VIDEO,
+  INTERVIEW_SESSION_STRIKES,
 } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
 import type { JudgeResult } from "../../data/catalogData";
+
+// Malpractice strike count (tab-switch/window-hide detections during a live session) — real,
+// implemented backend-side (interview_sessions.strike_count, updateSessionStrikes route).
+//
+//   PUT /interview-sessions/{id}/strikes
+//     body: { count: number }   — the new ABSOLUTE total, not a delta/increment. The client always
+//       knows its own current count and just syncs it, so a retried call after a network hiccup
+//       can't double-count the way "increment by 1" would. 400s if the session has already ended.
+//     -> 200 { id: string, strikeCount: number }
+//     Same auth/ownership as every other session route (Bearer JWT, session must belong to caller).
+//
+//   `GET /interview-sessions/{id}` (InterviewSession) also returns `strikeCount: number`.
+//
+// IMPORTANT CAVEAT this does NOT solve on its own: reloading the page today always starts a
+// brand-new session (LiveInterviewPage always calls startInterviewSession on mount) — nothing
+// currently resumes an existing in-progress session. Persisting the count to the old session is
+// real and useful (e.g. for the admin review page), but it won't outlive a reload in the candidate's
+// own UI until session-resume is built too — and resuming safely also means continuing video-chunk
+// numbering from where it left off (see recordingUpload.service.tsx), not just re-reading this
+// field. Flagged rather than silently implied as "fixed."
+export interface SessionStrikesResponse {
+  id: string;
+  strikeCount: number;
+}
+
+export const updateSessionStrikeCount = async (
+  sessionId: string,
+  count: number
+): Promise<SessionStrikesResponse> => {
+  const response = await AxiosInstance.put(INTERVIEW_SESSION_STRIKES(sessionId), {
+    count,
+  });
+  return response.data;
+};
 
 export type SessionQuestionType =
   | "mcq"
@@ -92,6 +127,7 @@ export interface InterviewSession {
   endedAt?: string;
   videoStatus: VideoStatus;
   questions: InterviewSessionQuestion[];
+  strikeCount?: number;
 }
 
 // Presigned GET URLs for the stitched camera/screen recordings — null until videoStatus is
@@ -122,6 +158,14 @@ export const getInterviewSession = async (
   id: string
 ): Promise<InterviewSession> => {
   const response = await AxiosInstance.get(INTERVIEW_SESSION_BY_ID(id));
+  return response.data;
+};
+
+// Returns every session belonging to the caller, across all mock interviews, newest first — but
+// each with `questions: []` (the list endpoint doesn't join questions; use getInterviewSession for
+// the full detail of one). Used to find a resumable in-progress session before starting a new one.
+export const listInterviewSessions = async (): Promise<InterviewSession[]> => {
+  const response = await AxiosInstance.get(INTERVIEW_SESSIONS);
   return response.data;
 };
 

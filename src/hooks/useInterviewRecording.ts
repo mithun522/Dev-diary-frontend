@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   uploadRecordingChunk,
+  listRecordingChunks,
   type RecordingKind,
 } from "../api/services/recordingUpload.service";
 
@@ -39,7 +40,11 @@ interface UseInterviewRecordingResult {
   permissionError: string | null;
   uploadDegraded: boolean;
   requestPermissions: () => Promise<boolean>;
-  startRecording: (sessionId: string) => void;
+  // `resume: true` looks up how many chunks were already uploaded for this session (a reload
+  // resuming an in-progress session) and continues chunk numbering from there, instead of
+  // restarting at 0 and silently overwriting the earlier part of the recording — chunks upsert by
+  // (session, kind, chunkIndex), so index 0 after a reload would clobber the original index 0.
+  startRecording: (sessionId: string, resume?: boolean) => void;
   stopAndFinalize: () => Promise<void>;
   downloadLocalRecording: (kind: RecordingKind) => void;
   hasLocalRecording: (kind: RecordingKind) => boolean;
@@ -126,8 +131,29 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
   }, []);
 
   const startRecording = useCallback(
-    (sessionId: string) => {
+    async (sessionId: string, resume = false) => {
       sessionIdRef.current = sessionId;
+
+      // On a fresh session both start at 0 (unchanged). On resume, pick up right after the
+      // highest chunk index already confirmed for each stream — using max+1 rather than a plain
+      // count so a previously-failed confirm (which never reached the backend) can't cause a
+      // collision either.
+      const startSequence: Partial<Record<RecordingKind, number>> = {};
+      if (resume) {
+        try {
+          const existingChunks = await listRecordingChunks(sessionId);
+          (["camera", "screen"] as const).forEach((kind) => {
+            const maxIndex = existingChunks
+              .filter((c) => c.kind === kind)
+              .reduce((max, c) => Math.max(max, c.chunkIndex), -1);
+            if (maxIndex >= 0) startSequence[kind] = maxIndex + 1;
+          });
+        } catch {
+          // Couldn't look up existing chunks — fall back to starting at 0. Rare (the session was
+          // just confirmed to exist a moment ago), and the alternative is blocking the resumed
+          // interview entirely over a transient read failure.
+        }
+      }
 
       const streams: [RecordingKind, MediaStream | null][] = [
         ["camera", cameraStreamRef.current],
@@ -143,7 +169,7 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
         recordersRef.current[kind] = {
           recorder,
           stream,
-          sequence: 0,
+          sequence: startSequence[kind] ?? 0,
           chunks: [],
           chunkStartedAt: Date.now(),
         };
