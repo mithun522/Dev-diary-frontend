@@ -25,15 +25,38 @@ import {
 } from "../../../utils/convertToPascalCase";
 import { TopicColors, type Topic } from "../../../constants/Topics";
 import { logger } from "../../../utils/logger";
-import type { JudgeResult } from "../../../data/catalogData";
+import type { JudgeResult, StarterCodeByLanguage } from "../../../data/catalogData";
 import { formatTestCaseArgs } from "../../../utils/formatTestCaseArgs";
+import {
+  CODE_EXECUTION_LANGUAGE_OPTIONS,
+  CodeExecutionLanguages,
+  type CodeExecutionLanguage,
+} from "../../../constants/Languages";
 import CodeEditor from "./CodeEditor";
 import TestResultsPanel from "./TestResultsPanel";
 import SubmissionHistory from "./SubmissionHistory";
 
-// Solving a problem is a multi-visit activity — persist the in-progress draft per problem so
-// navigating away (or an accidental refresh) doesn't lose unsaved work.
-const draftKey = (id: string) => `dsa-practice-draft-${id}`;
+// Solving a problem is a multi-visit activity — persist the in-progress draft per problem *and*
+// per language so switching languages doesn't clobber work left in another one, and a reload
+// picks up where you left off in whichever language was open.
+const draftKey = (id: string, language: CodeExecutionLanguage) =>
+  `dsa-practice-draft-${id}-${language}`;
+
+// Only offer the languages this problem actually has admin-authored starter code for.
+const availableLanguages = (starterCode: StarterCodeByLanguage): CodeExecutionLanguage[] =>
+  CODE_EXECUTION_LANGUAGE_OPTIONS.map((option) => option.value).filter(
+    (lang) => !!starterCode[lang]
+  );
+
+const initialCodeFor = (
+  problem: { id: string; starterCode: StarterCodeByLanguage } | undefined,
+  language: CodeExecutionLanguage
+): string => {
+  if (!problem) return "";
+  const draft = localStorage.getItem(draftKey(problem.id, language));
+  if (draft !== null) return draft;
+  return problem.starterCode[language] ?? "";
+};
 
 const errorMessage = (err: unknown, fallback: string) => {
   const axiosError = err as AxiosError;
@@ -44,25 +67,50 @@ const SolveProblemPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: problem, isLoading, error } = useFetchCatalogProblemDetail(id);
-  const [sourceCode, setSourceCode] = useState("");
+  const [codeByLanguage, setCodeByLanguage] = useState<
+    Partial<Record<CodeExecutionLanguage, string>>
+  >({});
   const [activeResult, setActiveResult] = useState<JudgeResult | null>(null);
+  const [language, setLanguage] = useState<CodeExecutionLanguage>(
+    CodeExecutionLanguages.JAVASCRIPT
+  );
+  const sourceCode = codeByLanguage[language] ?? "";
+  const setSourceCode = (value: string) =>
+    setCodeByLanguage((prev) => ({ ...prev, [language]: value }));
+  const problemLanguages = problem ? availableLanguages(problem.starterCode) : [];
+
+  // A fresh problem invalidates every cached language's code — otherwise navigating from one
+  // problem straight to another (same route, no unmount) would show the previous problem's code.
+  // It also resets the selected language to whichever one the new problem actually offers.
+  useEffect(() => {
+    setCodeByLanguage({});
+    if (!problem) return;
+    const languages = availableLanguages(problem.starterCode);
+    setLanguage(
+      languages.includes(CodeExecutionLanguages.JAVASCRIPT)
+        ? CodeExecutionLanguages.JAVASCRIPT
+        : languages[0] ?? CodeExecutionLanguages.JAVASCRIPT
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problem?.id]);
 
   useEffect(() => {
     if (!problem) return;
-    const draft = localStorage.getItem(draftKey(problem.id));
-    setSourceCode(draft ?? problem.starterCode);
-  }, [problem]);
+    setCodeByLanguage((prev) =>
+      language in prev ? prev : { ...prev, [language]: initialCodeFor(problem, language) }
+    );
+  }, [problem, language]);
 
   useEffect(() => {
-    if (!problem) return;
-    localStorage.setItem(draftKey(problem.id), sourceCode);
-  }, [problem, sourceCode]);
+    if (!problem || !(language in codeByLanguage)) return;
+    localStorage.setItem(draftKey(problem.id, language), codeByLanguage[language] ?? "");
+  }, [problem, language, codeByLanguage]);
 
   const runMutation = useRunSolution(id ?? "");
   const submitMutation = useSubmitSolution(id ?? "");
 
   const handleRun = () => {
-    runMutation.mutate(sourceCode, {
+    runMutation.mutate({ sourceCode, language }, {
       onSuccess: (result) => {
         setActiveResult(result);
         if (result.status === "ACCEPTED") {
@@ -79,7 +127,7 @@ const SolveProblemPage: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    submitMutation.mutate(sourceCode, {
+    submitMutation.mutate({ sourceCode, language }, {
       onSuccess: (submission) => {
         setActiveResult(submission);
         if (submission.status === "ACCEPTED") {
@@ -172,14 +220,33 @@ const SolveProblemPage: React.FC = () => {
               value="submissions"
               className="flex-1 min-h-0 overflow-y-auto pt-4"
             >
-              <SubmissionHistory problemId={problem.id} onSelect={setSourceCode} />
+              <SubmissionHistory
+                problemId={problem.id}
+                onSelect={(code, submissionLanguage) => {
+                  setLanguage(submissionLanguage);
+                  setCodeByLanguage((prev) => ({ ...prev, [submissionLanguage]: code }));
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>
 
         <div className="lg:w-3/5 flex flex-col min-h-0 min-w-0 gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">JavaScript</span>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as CodeExecutionLanguage)}
+              className="text-sm text-muted-foreground bg-transparent border rounded-md px-2 py-1"
+              data-cy="solve-language-select"
+            >
+              {CODE_EXECUTION_LANGUAGE_OPTIONS.filter((option) =>
+                problemLanguages.includes(option.value)
+              ).map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
             <div className="flex items-center gap-2">
               <Button
                 variant="outlinePrimary"
@@ -203,7 +270,7 @@ const SolveProblemPage: React.FC = () => {
           </div>
 
           <div className="flex-1 min-h-[300px] min-w-0 rounded-md border overflow-hidden">
-            <CodeEditor value={sourceCode} onChange={setSourceCode} />
+            <CodeEditor value={sourceCode} onChange={setSourceCode} language={language} />
           </div>
 
           {activeResult && (

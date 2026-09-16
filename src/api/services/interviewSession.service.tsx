@@ -7,6 +7,15 @@
 //   - coding backed by the shared dsa catalog (questionSource: "dsa_catalog")
 //     -> PUT .../run     { sourceCode }  (sample tests only, nothing persisted — like DSA's "Run")
 //     -> PUT .../submit  { sourceCode }  (full judge, persists score: 100 | 0)
+//     IMPORTANT: interview-simulator-service's SessionQuestionSourceCode schema is
+//     `additionalProperties: false` with only `sourceCode` — it does NOT accept a `language` field
+//     today, and its dsaServiceClient.js never forwards one to dsa-service either (always
+//     javascript). dsa-service's catalog run/submit now *requires* `language`, so this whole path
+//     is effectively pinned to javascript until interview-simulator-service adds language support
+//     end-to-end — do not add `language` to this request body before that ships, or every session
+//     Run/Submit call 400s against interview-simulator-service's own API Gateway validation.
+//     `DsaCatalogSnapshot.starterCode` below is the new per-language object (dsa-service's shape,
+//     passed through verbatim by interview-simulator-service's session-question snapshot).
 // There is no session-level score/topicScores from the backend (`end` just flips status/videoStatus)
 // — the client computes an aggregate from each question's own `score`.
 import {
@@ -20,7 +29,7 @@ import {
   INTERVIEW_SESSION_STRIKES,
 } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
-import type { JudgeResult } from "../../data/catalogData";
+import type { JudgeResult, StarterCodeByLanguage } from "../../data/catalogData";
 
 // Malpractice strike count (tab-switch/window-hide detections during a live session) — real,
 // implemented backend-side (interview_sessions.strike_count, updateSessionStrikes route).
@@ -82,7 +91,8 @@ export interface MockQuestionSnapshot {
   testCases?: { input: string; expectedOutput: string }[];
 }
 
-// dsa_catalog-sourced snapshot: shaped like dsa-service's CatalogProblemDetail.
+// dsa_catalog-sourced snapshot: shaped like dsa-service's CatalogProblemDetail — passed through
+// verbatim by interview-simulator-service, so starterCode is the same per-language object.
 export interface DsaCatalogSnapshot {
   id: string;
   title: string;
@@ -91,7 +101,7 @@ export interface DsaCatalogSnapshot {
   description: string;
   functionName: string;
   paramNames: string[];
-  starterCode: string;
+  starterCode: StarterCodeByLanguage;
   sampleTestCases: {
     id: string;
     args: unknown[];
@@ -169,6 +179,8 @@ export const listInterviewSessions = async (): Promise<InterviewSession[]> => {
   return response.data;
 };
 
+// No `language` param — see the header comment: interview-simulator-service doesn't accept one
+// yet, and its dsa-service proxy always judges as javascript regardless.
 export const runSessionCodingQuestion = async (
   sessionId: string,
   questionId: string,

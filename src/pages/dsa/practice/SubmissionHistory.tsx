@@ -2,17 +2,25 @@ import { Badge } from "../../../components/ui/badge";
 import { formatDate } from "../../../utils/formatDate";
 import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
 import { useFetchSubmissions } from "../../../api/hooks/useFetchCatalog";
+import { CODE_EXECUTION_LANGUAGE_OPTIONS, type CodeExecutionLanguage } from "../../../constants/Languages";
 
 const STATUS_BADGE: Record<string, string> = {
   ACCEPTED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   WRONG_ANSWER: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   RUNTIME_ERROR: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  COMPILE_ERROR: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   TIMED_OUT: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
 };
 
+const languageLabel = (language: CodeExecutionLanguage): string =>
+  CODE_EXECUTION_LANGUAGE_OPTIONS.find((option) => option.value === language)?.label ??
+  language;
+
 interface SubmissionHistoryProps {
   problemId: string;
-  onSelect: (sourceCode: string) => void;
+  // Selecting a past submission must also switch the editor to the language it was written in —
+  // otherwise its source gets dropped into whatever language happens to be selected right now.
+  onSelect: (sourceCode: string, language: CodeExecutionLanguage) => void;
 }
 
 const SubmissionHistory: React.FC<SubmissionHistoryProps> = ({ problemId, onSelect }) => {
@@ -43,9 +51,10 @@ const SubmissionHistory: React.FC<SubmissionHistoryProps> = ({ problemId, onSele
           key={submission.id}
           role="button"
           tabIndex={0}
-          onClick={() => onSelect(submission.sourceCode)}
+          onClick={() => onSelect(submission.sourceCode, submission.language)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") onSelect(submission.sourceCode);
+            if (e.key === "Enter" || e.key === " ")
+              onSelect(submission.sourceCode, submission.language);
           }}
           className="w-full flex items-center justify-between rounded-md border p-3 text-sm cursor-pointer hover:bg-muted transition-colors"
           data-cy="practice-submission-row"
@@ -53,6 +62,7 @@ const SubmissionHistory: React.FC<SubmissionHistoryProps> = ({ problemId, onSele
           <Badge className={STATUS_BADGE[submission.status] ?? ""}>
             {pascalizeUnderscore(submission.status)}
           </Badge>
+          <span className="text-muted-foreground">{languageLabel(submission.language)}</span>
           <span className="text-muted-foreground">{submission.runtimeMs}ms</span>
           <span className="text-muted-foreground">{formatDate(submission.createdAt)}</span>
         </div>

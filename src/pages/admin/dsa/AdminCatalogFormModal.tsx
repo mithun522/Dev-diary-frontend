@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useState } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, Controller, useFieldArray, useWatch } from "react-hook-form";
 import type { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { X, Plus, Trash2, Sparkles } from "lucide-react";
@@ -20,7 +20,11 @@ import { MultiSelect } from "../../../components/ui/multiselect";
 import { convertToPascalCase } from "../../../utils/convertToPascalCase";
 import { logger } from "../../../utils/logger";
 import { DifficultyLevels } from "../../../data/dsaProblemsData";
-import type { CatalogDifficulty } from "../../../data/catalogData";
+import {
+  CATALOG_RETURN_TYPES,
+  type CatalogDifficulty,
+  type CatalogReturnType,
+} from "../../../data/catalogData";
 import type { Topic } from "../../../constants/Topics";
 import {
   useFetchCatalogProblemDetail,
@@ -31,6 +35,12 @@ import {
   useUpdateCatalogProblem,
 } from "../../../api/hooks/useAdminCatalog";
 import type { CatalogProblemInputPayload } from "../../../api/services/adminCatalog.service";
+import {
+  CODE_EXECUTION_LANGUAGE_OPTIONS,
+  CodeExecutionLanguages,
+  isReturnTypeLanguage,
+  type CodeExecutionLanguage,
+} from "../../../constants/Languages";
 
 type TestCaseRow = {
   id?: string;
@@ -39,6 +49,17 @@ type TestCaseRow = {
   isSample: boolean;
 };
 
+const STARTER_CODE_PLACEHOLDERS: Record<CodeExecutionLanguage, string> = {
+  [CodeExecutionLanguages.JAVASCRIPT]: "function twoSum(nums, target) {\n\n}",
+  [CodeExecutionLanguages.TYPESCRIPT]: "function twoSum(nums: number[], target: number): number[] {\n\n}",
+  [CodeExecutionLanguages.PYTHON]: "def two_sum(nums, target):\n    pass",
+  [CodeExecutionLanguages.JAVA]: "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n\n    }\n}",
+  [CodeExecutionLanguages.CPP]: "vector<int> twoSum(vector<int>& nums, int target) {\n\n}",
+  [CodeExecutionLanguages.C]: "int* twoSum(int* nums, int numsSize, int target, int* returnSize) {\n\n}",
+};
+
+// One starter-code textarea per language the admin has opted this problem into (at least one is
+// required — dsa-service's CatalogProblemInput.starterCode is minProperties: 1).
 type CatalogFormValues = {
   slug: string;
   title: string;
@@ -47,9 +68,16 @@ type CatalogFormValues = {
   description: string;
   functionName: string;
   paramNamesText: string; // comma-separated parameter names
-  starterCode: string;
+  enabledLanguages: CodeExecutionLanguage[];
+  starterCodeByLanguage: Partial<Record<CodeExecutionLanguage, string>>;
+  // Required whenever starterCodeByLanguage.c or .cpp is present — a single shared value for
+  // both, per dsa-service's CatalogProblem.returnType (a problem property, not per-submission).
+  returnType: CatalogReturnType | "";
   testCases: TestCaseRow[];
 };
+
+const needsReturnType = (languages: CodeExecutionLanguage[]): boolean =>
+  languages.some(isReturnTypeLanguage);
 
 const emptyTestCaseRow = (): TestCaseRow => ({
   argsJson: "[]",
@@ -65,7 +93,9 @@ const emptyDefaults: CatalogFormValues = {
   description: "",
   functionName: "",
   paramNamesText: "",
-  starterCode: "",
+  enabledLanguages: [CodeExecutionLanguages.JAVASCRIPT],
+  starterCodeByLanguage: {},
+  returnType: "",
   testCases: [emptyTestCaseRow()],
 };
 
@@ -87,6 +117,9 @@ const AdminCatalogFormModal: React.FC<AdminCatalogFormModalProps> = ({
 }) => {
   const [disabled, setDisabled] = useState(false);
   const [referenceSolution, setReferenceSolution] = useState("");
+  const [referenceSolutionLanguage, setReferenceSolutionLanguage] =
+    useState<CodeExecutionLanguage>(CodeExecutionLanguages.JAVASCRIPT);
+  const [referenceSolutionReturnType, setReferenceSolutionReturnType] = useState("");
 
   const { data: problemDetail, isLoading: isLoadingDetail } =
     useFetchCatalogProblemDetail(problemId ?? undefined);
@@ -108,13 +141,20 @@ const AdminCatalogFormModal: React.FC<AdminCatalogFormModalProps> = ({
     name: "testCases",
   });
 
+  const enabledLanguages = useWatch({ control, name: "enabledLanguages" }) ?? [];
+
   // Populate the form once the full problem detail (with sampleTestCases) has loaded in edit
   // mode; reset to a blank form for create mode.
   useEffect(() => {
     if (!open) return;
     setReferenceSolution("");
+    setReferenceSolutionLanguage(CodeExecutionLanguages.JAVASCRIPT);
+    setReferenceSolutionReturnType("");
 
     if (problemId && problemDetail) {
+      const existingLanguages = Object.keys(
+        problemDetail.starterCode
+      ) as CodeExecutionLanguage[];
       reset({
         slug: problemDetail.slug,
         title: problemDetail.title,
@@ -123,7 +163,12 @@ const AdminCatalogFormModal: React.FC<AdminCatalogFormModalProps> = ({
         description: problemDetail.description,
         functionName: problemDetail.functionName,
         paramNamesText: (problemDetail.paramNames ?? []).join(", "),
-        starterCode: problemDetail.starterCode,
+        enabledLanguages:
+          existingLanguages.length > 0
+            ? existingLanguages
+            : [CodeExecutionLanguages.JAVASCRIPT],
+        starterCodeByLanguage: problemDetail.starterCode,
+        returnType: problemDetail.returnType ?? "",
         testCases:
           problemDetail.sampleTestCases.length > 0
             ? problemDetail.sampleTestCases.map((tc) => ({
@@ -147,26 +192,33 @@ const AdminCatalogFormModal: React.FC<AdminCatalogFormModalProps> = ({
       return;
     }
 
-    generateMutation.mutate(referenceSolution, {
-      onSuccess: (testCases) => {
-        setValue(
-          "testCases",
-          testCases.length > 0
-            ? testCases.map((tc) => ({
-                id: tc.id,
-                argsJson: JSON.stringify(tc.args),
-                expectedJson: JSON.stringify(tc.expected),
-                isSample: tc.isSample,
-              }))
-            : [emptyTestCaseRow()]
-        );
-        toast.success("Test cases generated — review before saving");
+    generateMutation.mutate(
+      {
+        referenceSolution,
+        referenceSolutionLanguage,
+        referenceSolutionReturnType: referenceSolutionReturnType.trim() || undefined,
       },
-      onError: (err) => {
-        toast.error(errorMessage(err, "Failed to generate test cases"));
-        logger.error("Error generating test cases:", err);
-      },
-    });
+      {
+        onSuccess: (testCases) => {
+          setValue(
+            "testCases",
+            testCases.length > 0
+              ? testCases.map((tc) => ({
+                  id: tc.id,
+                  argsJson: JSON.stringify(tc.args),
+                  expectedJson: JSON.stringify(tc.expected),
+                  isSample: tc.isSample,
+                }))
+              : [emptyTestCaseRow()]
+          );
+          toast.success("Test cases generated — review before saving");
+        },
+        onError: (err) => {
+          toast.error(errorMessage(err, "Failed to generate test cases"));
+          logger.error("Error generating test cases:", err);
+        },
+      }
+    );
   };
 
   const onSubmit = async (data: CatalogFormValues) => {
@@ -208,6 +260,27 @@ const AdminCatalogFormModal: React.FC<AdminCatalogFormModalProps> = ({
       return;
     }
 
+    // Only ship starter code for the languages the admin actually opted this problem into, and
+    // only if it's non-empty — dsa-service's starterCode map is minProperties: 1, so at least one
+    // must survive this filter.
+    const starterCode: CatalogProblemInputPayload["starterCode"] = {};
+    for (const language of data.enabledLanguages) {
+      const code = data.starterCodeByLanguage[language]?.trim();
+      if (code) starterCode[language] = code;
+    }
+    if (Object.keys(starterCode).length === 0) {
+      toast.error("Starter code is required for at least one language");
+      setDisabled(false);
+      return;
+    }
+
+    const hasReturnTypeLanguage = !!starterCode[CodeExecutionLanguages.C] || !!starterCode[CodeExecutionLanguages.CPP];
+    if (hasReturnTypeLanguage && !data.returnType) {
+      toast.error("Return type is required when C or C++ starter code is provided");
+      setDisabled(false);
+      return;
+    }
+
     const payload: CatalogProblemInputPayload = {
       slug: data.slug,
       title: data.title,
@@ -219,7 +292,8 @@ const AdminCatalogFormModal: React.FC<AdminCatalogFormModalProps> = ({
         .split(",")
         .map((name) => name.trim())
         .filter(Boolean),
-      starterCode: data.starterCode,
+      starterCode,
+      ...(hasReturnTypeLanguage ? { returnType: data.returnType as CatalogReturnType } : {}),
       testCases,
     };
 
@@ -402,38 +476,166 @@ const AdminCatalogFormModal: React.FC<AdminCatalogFormModalProps> = ({
                 data-cy="admin-catalog-form-param-names"
               />
 
-              <Label htmlFor="starterCode" isMandatory>
-                Starter code
-              </Label>
-              <div>
-                <Textarea
-                  id="starterCode"
-                  placeholder="function twoSum(nums, target) {\n\n}"
-                  rows={6}
-                  {...register("starterCode", {
-                    required: "Starter code is required",
-                  })}
-                  className={`font-mono ${errors.starterCode ? "border border-red-600" : ""}`}
-                  data-cy="admin-catalog-form-starter-code"
-                />
-                {errors.starterCode && (
-                  <p
-                    className="text-red-500 text-sm"
-                    data-cy="admin-catalog-form-starter-code-error"
-                  >
-                    {errors.starterCode.message}
+              <Label isMandatory>Starter code languages</Label>
+              <Controller
+                name="enabledLanguages"
+                control={control}
+                rules={{
+                  validate: (value) =>
+                    (value && value.length > 0) || "Enable at least one language",
+                }}
+                render={({ field }) => (
+                  <div className="flex flex-wrap gap-3" data-cy="admin-catalog-form-languages">
+                    {CODE_EXECUTION_LANGUAGE_OPTIONS.map((option) => {
+                      const checked = field.value?.includes(option.value) ?? false;
+                      return (
+                        <label
+                          key={option.value}
+                          className="flex items-center gap-2 text-sm"
+                          data-cy="admin-catalog-form-language-option"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(isChecked) => {
+                              field.onChange(
+                                isChecked
+                                  ? [...(field.value ?? []), option.value]
+                                  : (field.value ?? []).filter((v) => v !== option.value)
+                              );
+                            }}
+                          />
+                          {option.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              />
+              {errors.enabledLanguages && (
+                <p
+                  className="text-red-500 text-sm"
+                  data-cy="admin-catalog-form-languages-error"
+                >
+                  {errors.enabledLanguages.message}
+                </p>
+              )}
+
+              <Label isMandatory>Starter code</Label>
+              <div className="space-y-3">
+                {enabledLanguages.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Enable a language above to write its starter code.
                   </p>
                 )}
+                {CODE_EXECUTION_LANGUAGE_OPTIONS.filter((option) =>
+                  enabledLanguages.includes(option.value)
+                ).map((option) => (
+                  <div key={option.value}>
+                    <Label htmlFor={`starterCodeByLanguage.${option.value}`}>
+                      {option.label}
+                    </Label>
+                    <Textarea
+                      id={`starterCodeByLanguage.${option.value}`}
+                      placeholder={STARTER_CODE_PLACEHOLDERS[option.value]}
+                      rows={6}
+                      {...register(
+                        `starterCodeByLanguage.${option.value}` as `starterCodeByLanguage.${CodeExecutionLanguage}`
+                      )}
+                      className="font-mono"
+                      data-cy="admin-catalog-form-starter-code"
+                    />
+                  </div>
+                ))}
               </div>
+
+              {needsReturnType(enabledLanguages) && (
+                <>
+                  <Label htmlFor="returnType" isMandatory>
+                    Return type (C / C++)
+                  </Label>
+                  <Controller
+                    name="returnType"
+                    control={control}
+                    rules={{
+                      validate: (value) =>
+                        !needsReturnType(enabledLanguages) ||
+                        !!value ||
+                        "Return type is required when C or C++ is enabled",
+                    }}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger
+                          className="w-full"
+                          data-cy="admin-catalog-form-return-type-trigger"
+                        >
+                          <SelectValue placeholder="Select return type" />
+                        </SelectTrigger>
+                        <SelectContent
+                          className="z-[9999]"
+                          data-cy="admin-catalog-form-return-type-content"
+                        >
+                          {CATALOG_RETURN_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.returnType && (
+                    <p
+                      className="text-red-500 text-sm"
+                      data-cy="admin-catalog-form-return-type-error"
+                    >
+                      {errors.returnType.message}
+                    </p>
+                  )}
+                </>
+              )}
 
               {problemId && (
                 <div className="rounded-md border p-3 space-y-2">
                   <Label htmlFor="referenceSolution">
                     Reference solution (for test case generation)
                   </Label>
+                  <div className="flex gap-2">
+                    <Select
+                      value={referenceSolutionLanguage}
+                      onValueChange={(val) =>
+                        setReferenceSolutionLanguage(val as CodeExecutionLanguage)
+                      }
+                    >
+                      <SelectTrigger
+                        className="w-40"
+                        data-cy="admin-catalog-reference-solution-language-trigger"
+                      >
+                        <SelectValue placeholder="Language" />
+                      </SelectTrigger>
+                      <SelectContent
+                        className="z-[9999]"
+                        data-cy="admin-catalog-reference-solution-language-content"
+                      >
+                        {CODE_EXECUTION_LANGUAGE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {isReturnTypeLanguage(referenceSolutionLanguage) && (
+                      <Input
+                        placeholder="Return type (e.g. int*)"
+                        value={referenceSolutionReturnType}
+                        onChange={(e) => setReferenceSolutionReturnType(e.target.value)}
+                        className="font-mono"
+                        data-cy="admin-catalog-reference-solution-return-type"
+                      />
+                    )}
+                  </div>
                   <Textarea
                     id="referenceSolution"
-                    placeholder="A known-correct JS implementation of the function, used to compute expected outputs..."
+                    placeholder="A known-correct implementation of the function, used to compute expected outputs..."
                     rows={4}
                     value={referenceSolution}
                     onChange={(e) => setReferenceSolution(e.target.value)}

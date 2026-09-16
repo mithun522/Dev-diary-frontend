@@ -19,6 +19,7 @@ export type CatalogProblemInputPayload = Pick<
   | "functionName"
   | "paramNames"
   | "starterCode"
+  | "returnType"
 > & {
   // Backend's CatalogProblemInput names this field `testCases` (not `sampleTestCases` — that name
   // is only used on the read-side CatalogProblemDetail response). Its TestCaseInput schema has

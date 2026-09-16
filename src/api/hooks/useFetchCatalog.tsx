@@ -8,6 +8,18 @@ import {
   submitSolution,
 } from "../services/catalog.service";
 import type { CatalogProblemPage } from "../../data/catalogData";
+import type { CodeExecutionLanguage } from "../../constants/Languages";
+
+interface RunOrSubmitInput {
+  sourceCode: string;
+  language: CodeExecutionLanguage;
+}
+
+interface GenerateTestCasesInput {
+  referenceSolution: string;
+  referenceSolutionLanguage: CodeExecutionLanguage;
+  referenceSolutionReturnType?: string;
+}
 
 interface FetchCatalogProps {
   search: string;
@@ -51,7 +63,8 @@ export const useSubmitSolution = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (sourceCode: string) => submitSolution(id, sourceCode),
+    mutationFn: ({ sourceCode, language }: RunOrSubmitInput) =>
+      submitSolution(id, sourceCode, language),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["catalog", "submissions", id] });
     },
@@ -61,7 +74,7 @@ export const useSubmitSolution = (id: string) => {
 // Doesn't persist a submission row, so there's nothing to invalidate.
 export const useRunSolution = (id: string) => {
   return useMutation({
-    mutationFn: (sourceCode: string) => runSolution(id, sourceCode),
+    mutationFn: ({ sourceCode, language }: RunOrSubmitInput) => runSolution(id, sourceCode, language),
   });
 };
 
@@ -70,6 +83,16 @@ export const useRunSolution = (id: string) => {
 // updateCatalogProblem call.
 export const useGenerateTestCases = (id: string) => {
   return useMutation({
-    mutationFn: (referenceSolution: string) => generateTestCases(id, referenceSolution),
+    mutationFn: ({
+      referenceSolution,
+      referenceSolutionLanguage,
+      referenceSolutionReturnType,
+    }: GenerateTestCasesInput) =>
+      generateTestCases(
+        id,
+        referenceSolution,
+        referenceSolutionLanguage,
+        referenceSolutionReturnType
+      ),
   });
 };

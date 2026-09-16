@@ -53,6 +53,7 @@ import {
 } from "../../api/services/interviewSession.service";
 import type { JudgeResult } from "../../data/catalogData";
 import { formatTestCaseArgs } from "../../utils/formatTestCaseArgs";
+import { CodeExecutionLanguages } from "../../constants/Languages";
 import CodeEditor from "../dsa/practice/CodeEditor";
 import TestResultsPanel from "../dsa/practice/TestResultsPanel";
 import {
@@ -100,10 +101,13 @@ const getDifficultyColor = (difficulty: string) => {
 // Starter/default value for a question's answer draft the first time it's visited — a coding
 // question gets its boilerplate/starter code, a text-answered question gets whatever was already
 // saved (e.g. the candidate navigated back to it after answering), or "" for a fresh question.
+// Catalog questions are judged as javascript only here (see interviewSession.service.tsx header
+// comment), so always pull the javascript starter code regardless of what other languages the
+// problem offers in DSA practice.
 const initialDraftFor = (q: InterviewSessionQuestion): string => {
   if (q.type === "coding") {
     return isCodingCatalogQuestion(q)
-      ? getCatalogSnapshot(q).starterCode ?? ""
+      ? getCatalogSnapshot(q).starterCode[CodeExecutionLanguages.JAVASCRIPT] ?? ""
       : getMockSnapshot(q).boilerplate ?? "";
   }
   const savedText = q.answer?.text;
@@ -903,6 +907,10 @@ const LiveInterviewPage = () => {
               </div>
 
               <div className="flex items-center justify-between">
+                {/* Pinned to JavaScript: interview-simulator-service doesn't accept/forward a
+                    language yet, so every catalog coding question here is judged as JS regardless
+                    of what DSA practice offers for the same problem — see
+                    interviewSession.service.tsx's header comment. */}
                 <span className="text-sm text-muted-foreground">JavaScript</span>
                 <div className="flex items-center gap-2">
                   <Button
@@ -932,6 +940,7 @@ const LiveInterviewPage = () => {
                   onChange={(value) =>
                     setAnswerDrafts((prev) => ({ ...prev, [currentQuestion.id]: value }))
                   }
+                  language={CodeExecutionLanguages.JAVASCRIPT}
                 />
               </div>
 
