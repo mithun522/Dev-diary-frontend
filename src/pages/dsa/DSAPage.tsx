@@ -32,7 +32,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import OverallProgress from "./progress/OverallProgress";
 import TopicCoverage from "./progress/TopicCoverage";
 import WeeklyActivity from "./progress/WeeklyActivity";
-import noDataImage from "../../assets/no-data-available.jpg";
+import { FolderSearch } from "lucide-react";
 import Todo from "./todo/Todo";
 import PracticeTab from "./practice/PracticeTab";
 
@@ -225,13 +225,16 @@ const DSAPage: React.FC = () => {
             />
           ) : (
             <div
-              className="flex flex-col gap-2 justify-center items-center"
+              className="flex flex-col gap-3 justify-center items-center h-[40vh] text-muted-foreground"
               data-cy="dsa-no-data"
             >
-              <img
-                src={noDataImage}
-                className="flex object-contain h-[60vh] w-[60vw]"
-              />
+              <FolderSearch size={48} strokeWidth={1.5} />
+              <p className="text-lg font-medium">No problems found</p>
+              <p className="text-sm">
+                {searchQuery || difficultyFilter || statusFilter
+                  ? "Try adjusting your search or filters."
+                  : "Add a new DSA problem to get started."}
+              </p>
             </div>
           )}
         </TabsContent>

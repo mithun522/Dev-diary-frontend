@@ -98,6 +98,10 @@ export const INTERVIEW_SESSIONS = `${INTERVIEW_SIMULATOR_API_URL}/interview-sess
 export const INTERVIEW_SESSION_BY_ID = (id: string) => `${INTERVIEW_SESSIONS}/${id}`;
 export const INTERVIEW_SESSION_END = (id: string) =>
   `${INTERVIEW_SESSION_BY_ID(id)}/end`;
+// Malpractice strike count, synced from the client — see the header comment in
+// interviewSession.service.tsx for the full contract.
+export const INTERVIEW_SESSION_STRIKES = (id: string) =>
+  `${INTERVIEW_SESSION_BY_ID(id)}/strikes`;
 // Presigned GET URLs for the stitched camera/screen recordings, once the backend's video-finalizer
 // Lambda (fired when a session ends) has concatenated the uploaded chunks. videoUrl/screenVideoUrl
 // stay null until videoStatus is "ready" — poll this after /end.

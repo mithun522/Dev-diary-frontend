@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   uploadRecordingChunk,
+  listRecordingChunks,
   type RecordingKind,
 } from "../api/services/recordingUpload.service";
 
@@ -17,6 +18,22 @@ const pickMimeType = () =>
   ) ?? "video/webm";
 
 const CHUNK_INTERVAL_MS = 60_000;
+
+// getUserMedia/getDisplayMedia normally either resolve or reject quickly, but on some
+// browser/OS combinations (notably Chrome on macOS without the browser's own Screen Recording OS
+// permission granted in System Settings) getDisplayMedia's promise just never settles — no prompt
+// ever appears, so the caller hangs forever with no error. Racing against a timeout turns that
+// silent hang into an actionable error instead of leaving the "Enable Recording" button spinning
+// indefinitely.
+const PERMISSION_TIMEOUT_MS = 15_000;
+
+const withTimeout = <T,>(promise: Promise<T>, message: string): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error(message)), PERMISSION_TIMEOUT_MS);
+    }),
+  ]);
 
 // How long stopAndFinalize will wait for outstanding chunk uploads before giving up and letting
 // the interview finish anyway. Long enough for a final ~60s chunk on a slow connection, short
@@ -39,7 +56,11 @@ interface UseInterviewRecordingResult {
   permissionError: string | null;
   uploadDegraded: boolean;
   requestPermissions: () => Promise<boolean>;
-  startRecording: (sessionId: string) => void;
+  // `resume: true` looks up how many chunks were already uploaded for this session (a reload
+  // resuming an in-progress session) and continues chunk numbering from there, instead of
+  // restarting at 0 and silently overwriting the earlier part of the recording — chunks upsert by
+  // (session, kind, chunkIndex), so index 0 after a reload would clobber the original index 0.
+  startRecording: (sessionId: string, resume?: boolean) => void;
   stopAndFinalize: () => Promise<void>;
   downloadLocalRecording: (kind: RecordingKind) => void;
   hasLocalRecording: (kind: RecordingKind) => boolean;
@@ -104,30 +125,54 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
     let camera: MediaStream | null = null;
 
     try {
-      camera = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      const screen = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      });
+      camera = await withTimeout(
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }),
+        "Camera/microphone permission didn't respond. Check your browser's site settings and try again."
+      );
+      const screen = await withTimeout(
+        navigator.mediaDevices.getDisplayMedia({ video: true }),
+        "Screen-share permission didn't respond. On macOS, check that your browser has Screen Recording access under System Settings > Privacy & Security, then try again."
+      );
 
       cameraStreamRef.current = camera;
       screenStreamRef.current = screen;
       setCameraStream(camera);
       return true;
-    } catch {
+    } catch (err) {
       camera?.getTracks().forEach((track) => track.stop());
       setPermissionError(
-        "Camera and screen-recording access are both required to start this interview."
+        err instanceof Error && err.message
+          ? err.message
+          : "Camera and screen-recording access are both required to start this interview."
       );
       return false;
     }
   }, []);
 
   const startRecording = useCallback(
-    (sessionId: string) => {
+    async (sessionId: string, resume = false) => {
       sessionIdRef.current = sessionId;
+
+      // On a fresh session both start at 0 (unchanged). On resume, pick up right after the
+      // highest chunk index already confirmed for each stream — using max+1 rather than a plain
+      // count so a previously-failed confirm (which never reached the backend) can't cause a
+      // collision either.
+      const startSequence: Partial<Record<RecordingKind, number>> = {};
+      if (resume) {
+        try {
+          const existingChunks = await listRecordingChunks(sessionId);
+          (["camera", "screen"] as const).forEach((kind) => {
+            const maxIndex = existingChunks
+              .filter((c) => c.kind === kind)
+              .reduce((max, c) => Math.max(max, c.chunkIndex), -1);
+            if (maxIndex >= 0) startSequence[kind] = maxIndex + 1;
+          });
+        } catch {
+          // Couldn't look up existing chunks — fall back to starting at 0. Rare (the session was
+          // just confirmed to exist a moment ago), and the alternative is blocking the resumed
+          // interview entirely over a transient read failure.
+        }
+      }
 
       const streams: [RecordingKind, MediaStream | null][] = [
         ["camera", cameraStreamRef.current],
@@ -143,7 +188,7 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
         recordersRef.current[kind] = {
           recorder,
           stream,
-          sequence: 0,
+          sequence: startSequence[kind] ?? 0,
           chunks: [],
           chunkStartedAt: Date.now(),
         };

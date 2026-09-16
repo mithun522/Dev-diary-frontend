@@ -7,6 +7,7 @@ const STATUS_BADGE: Record<JudgeResult["status"], string> = {
   ACCEPTED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   WRONG_ANSWER: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   RUNTIME_ERROR: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  COMPILE_ERROR: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   TIMED_OUT: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
 };
 

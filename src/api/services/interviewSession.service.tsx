@@ -5,8 +5,16 @@
 //     -> PUT .../answer  { answer: string }   (mcq graded by exact match, everything else just
 //        needs a non-empty string — there's no LLM/human review wired up on the backend yet)
 //   - coding backed by the shared dsa catalog (questionSource: "dsa_catalog")
-//     -> PUT .../run     { sourceCode }  (sample tests only, nothing persisted — like DSA's "Run")
-//     -> PUT .../submit  { sourceCode }  (full judge, persists score: 100 | 0)
+//     -> PUT .../run     { sourceCode, language }  (sample tests only, nothing persisted — like
+//        DSA's "Run")
+//     -> PUT .../submit  { sourceCode, language }  (full judge, persists score: 100 | 0)
+//     interview-simulator-service's SessionQuestionSourceCode schema now requires `language`
+//     (enum: javascript/typescript/python/java/c/cpp, same as dsa-service's LanguageCode) and
+//     forwards it through to dsa-service. The stored answer also returns `language` alongside
+//     `submissionId`/`status`. `DsaCatalogSnapshot.starterCode` below is the per-language object
+//     (dsa-service's shape, passed through verbatim by interview-simulator-service's
+//     session-question snapshot) — no `returnType` field, dsa-service resolves that server-side
+//     from the catalog problem's own stored metadata.
 // There is no session-level score/topicScores from the backend (`end` just flips status/videoStatus)
 // — the client computes an aggregate from each question's own `score`.
 import {
@@ -17,9 +25,45 @@ import {
   INTERVIEW_SESSION_QUESTION_SUBMIT,
   INTERVIEW_SESSION_QUESTION_ANSWER,
   INTERVIEW_SESSION_VIDEO,
+  INTERVIEW_SESSION_STRIKES,
 } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
-import type { JudgeResult } from "../../data/catalogData";
+import type { JudgeResult, StarterCodeByLanguage } from "../../data/catalogData";
+import type { CodeExecutionLanguage } from "../../constants/Languages";
+
+// Malpractice strike count (tab-switch/window-hide detections during a live session) — real,
+// implemented backend-side (interview_sessions.strike_count, updateSessionStrikes route).
+//
+//   PUT /interview-sessions/{id}/strikes
+//     body: { count: number }   — the new ABSOLUTE total, not a delta/increment. The client always
+//       knows its own current count and just syncs it, so a retried call after a network hiccup
+//       can't double-count the way "increment by 1" would. 400s if the session has already ended.
+//     -> 200 { id: string, strikeCount: number }
+//     Same auth/ownership as every other session route (Bearer JWT, session must belong to caller).
+//
+//   `GET /interview-sessions/{id}` (InterviewSession) also returns `strikeCount: number`.
+//
+// IMPORTANT CAVEAT this does NOT solve on its own: reloading the page today always starts a
+// brand-new session (LiveInterviewPage always calls startInterviewSession on mount) — nothing
+// currently resumes an existing in-progress session. Persisting the count to the old session is
+// real and useful (e.g. for the admin review page), but it won't outlive a reload in the candidate's
+// own UI until session-resume is built too — and resuming safely also means continuing video-chunk
+// numbering from where it left off (see recordingUpload.service.tsx), not just re-reading this
+// field. Flagged rather than silently implied as "fixed."
+export interface SessionStrikesResponse {
+  id: string;
+  strikeCount: number;
+}
+
+export const updateSessionStrikeCount = async (
+  sessionId: string,
+  count: number
+): Promise<SessionStrikesResponse> => {
+  const response = await AxiosInstance.put(INTERVIEW_SESSION_STRIKES(sessionId), {
+    count,
+  });
+  return response.data;
+};
 
 export type SessionQuestionType =
   | "mcq"
@@ -43,11 +87,16 @@ export interface MockQuestionSnapshot {
   maxWords?: number;
   instructions?: string;
   requirements?: string[];
-  boilerplate?: string;
+  // Coding fallback's starter code, keyed by language — same per-language shape as
+  // DsaCatalogSnapshot.starterCode below (dsa-service's multi-language contract), not a plain
+  // string.
+  boilerplate?: StarterCodeByLanguage;
+  solutionLanguage?: CodeExecutionLanguage;
   testCases?: { input: string; expectedOutput: string }[];
 }
 
-// dsa_catalog-sourced snapshot: shaped like dsa-service's CatalogProblemDetail.
+// dsa_catalog-sourced snapshot: shaped like dsa-service's CatalogProblemDetail — passed through
+// verbatim by interview-simulator-service, so starterCode is the same per-language object.
 export interface DsaCatalogSnapshot {
   id: string;
   title: string;
@@ -56,7 +105,7 @@ export interface DsaCatalogSnapshot {
   description: string;
   functionName: string;
   paramNames: string[];
-  starterCode: string;
+  starterCode: StarterCodeByLanguage;
   sampleTestCases: {
     id: string;
     args: unknown[];
@@ -73,7 +122,12 @@ export interface InterviewSessionQuestion {
   questionRefId: string;
   question: MockQuestionSnapshot | DsaCatalogSnapshot;
   status: SessionQuestionStatus;
-  answer: { text?: string; submissionId?: string; status?: string } | null;
+  answer: {
+    text?: string;
+    submissionId?: string;
+    status?: string;
+    language?: CodeExecutionLanguage;
+  } | null;
   score: number | null;
 }
 
@@ -92,6 +146,7 @@ export interface InterviewSession {
   endedAt?: string;
   videoStatus: VideoStatus;
   questions: InterviewSessionQuestion[];
+  strikeCount?: number;
 }
 
 // Presigned GET URLs for the stitched camera/screen recordings — null until videoStatus is
@@ -125,14 +180,23 @@ export const getInterviewSession = async (
   return response.data;
 };
 
+// Returns every session belonging to the caller, across all mock interviews, newest first — but
+// each with `questions: []` (the list endpoint doesn't join questions; use getInterviewSession for
+// the full detail of one). Used to find a resumable in-progress session before starting a new one.
+export const listInterviewSessions = async (): Promise<InterviewSession[]> => {
+  const response = await AxiosInstance.get(INTERVIEW_SESSIONS);
+  return response.data;
+};
+
 export const runSessionCodingQuestion = async (
   sessionId: string,
   questionId: string,
-  sourceCode: string
+  sourceCode: string,
+  language: CodeExecutionLanguage
 ): Promise<JudgeResult> => {
   const response = await AxiosInstance.put(
     INTERVIEW_SESSION_QUESTION_RUN(sessionId, questionId),
-    { sourceCode }
+    { sourceCode, language }
   );
   return response.data;
 };
@@ -140,11 +204,12 @@ export const runSessionCodingQuestion = async (
 export const submitSessionCodingQuestion = async (
   sessionId: string,
   questionId: string,
-  sourceCode: string
+  sourceCode: string,
+  language: CodeExecutionLanguage
 ): Promise<InterviewSessionQuestion> => {
   const response = await AxiosInstance.put(
     INTERVIEW_SESSION_QUESTION_SUBMIT(sessionId, questionId),
-    { sourceCode }
+    { sourceCode, language }
   );
   return response.data;
 };
