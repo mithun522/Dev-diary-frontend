@@ -19,6 +19,22 @@ const pickMimeType = () =>
 
 const CHUNK_INTERVAL_MS = 60_000;
 
+// getUserMedia/getDisplayMedia normally either resolve or reject quickly, but on some
+// browser/OS combinations (notably Chrome on macOS without the browser's own Screen Recording OS
+// permission granted in System Settings) getDisplayMedia's promise just never settles — no prompt
+// ever appears, so the caller hangs forever with no error. Racing against a timeout turns that
+// silent hang into an actionable error instead of leaving the "Enable Recording" button spinning
+// indefinitely.
+const PERMISSION_TIMEOUT_MS = 15_000;
+
+const withTimeout = <T,>(promise: Promise<T>, message: string): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error(message)), PERMISSION_TIMEOUT_MS);
+    }),
+  ]);
+
 // How long stopAndFinalize will wait for outstanding chunk uploads before giving up and letting
 // the interview finish anyway. Long enough for a final ~60s chunk on a slow connection, short
 // enough that a hung request never traps the candidate on the "ending" screen. Anything that does
@@ -109,22 +125,25 @@ export const useInterviewRecording = (): UseInterviewRecordingResult => {
     let camera: MediaStream | null = null;
 
     try {
-      camera = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      const screen = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      });
+      camera = await withTimeout(
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }),
+        "Camera/microphone permission didn't respond. Check your browser's site settings and try again."
+      );
+      const screen = await withTimeout(
+        navigator.mediaDevices.getDisplayMedia({ video: true }),
+        "Screen-share permission didn't respond. On macOS, check that your browser has Screen Recording access under System Settings > Privacy & Security, then try again."
+      );
 
       cameraStreamRef.current = camera;
       screenStreamRef.current = screen;
       setCameraStream(camera);
       return true;
-    } catch {
+    } catch (err) {
       camera?.getTracks().forEach((track) => track.stop());
       setPermissionError(
-        "Camera and screen-recording access are both required to start this interview."
+        err instanceof Error && err.message
+          ? err.message
+          : "Camera and screen-recording access are both required to start this interview."
       );
       return false;
     }

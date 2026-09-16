@@ -5,17 +5,16 @@
 //     -> PUT .../answer  { answer: string }   (mcq graded by exact match, everything else just
 //        needs a non-empty string — there's no LLM/human review wired up on the backend yet)
 //   - coding backed by the shared dsa catalog (questionSource: "dsa_catalog")
-//     -> PUT .../run     { sourceCode }  (sample tests only, nothing persisted — like DSA's "Run")
-//     -> PUT .../submit  { sourceCode }  (full judge, persists score: 100 | 0)
-//     IMPORTANT: interview-simulator-service's SessionQuestionSourceCode schema is
-//     `additionalProperties: false` with only `sourceCode` — it does NOT accept a `language` field
-//     today, and its dsaServiceClient.js never forwards one to dsa-service either (always
-//     javascript). dsa-service's catalog run/submit now *requires* `language`, so this whole path
-//     is effectively pinned to javascript until interview-simulator-service adds language support
-//     end-to-end — do not add `language` to this request body before that ships, or every session
-//     Run/Submit call 400s against interview-simulator-service's own API Gateway validation.
-//     `DsaCatalogSnapshot.starterCode` below is the new per-language object (dsa-service's shape,
-//     passed through verbatim by interview-simulator-service's session-question snapshot).
+//     -> PUT .../run     { sourceCode, language }  (sample tests only, nothing persisted — like
+//        DSA's "Run")
+//     -> PUT .../submit  { sourceCode, language }  (full judge, persists score: 100 | 0)
+//     interview-simulator-service's SessionQuestionSourceCode schema now requires `language`
+//     (enum: javascript/typescript/python/java/c/cpp, same as dsa-service's LanguageCode) and
+//     forwards it through to dsa-service. The stored answer also returns `language` alongside
+//     `submissionId`/`status`. `DsaCatalogSnapshot.starterCode` below is the per-language object
+//     (dsa-service's shape, passed through verbatim by interview-simulator-service's
+//     session-question snapshot) — no `returnType` field, dsa-service resolves that server-side
+//     from the catalog problem's own stored metadata.
 // There is no session-level score/topicScores from the backend (`end` just flips status/videoStatus)
 // — the client computes an aggregate from each question's own `score`.
 import {
@@ -30,6 +29,7 @@ import {
 } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
 import type { JudgeResult, StarterCodeByLanguage } from "../../data/catalogData";
+import type { CodeExecutionLanguage } from "../../constants/Languages";
 
 // Malpractice strike count (tab-switch/window-hide detections during a live session) — real,
 // implemented backend-side (interview_sessions.strike_count, updateSessionStrikes route).
@@ -87,7 +87,11 @@ export interface MockQuestionSnapshot {
   maxWords?: number;
   instructions?: string;
   requirements?: string[];
-  boilerplate?: string;
+  // Coding fallback's starter code, keyed by language — same per-language shape as
+  // DsaCatalogSnapshot.starterCode below (dsa-service's multi-language contract), not a plain
+  // string.
+  boilerplate?: StarterCodeByLanguage;
+  solutionLanguage?: CodeExecutionLanguage;
   testCases?: { input: string; expectedOutput: string }[];
 }
 
@@ -118,7 +122,12 @@ export interface InterviewSessionQuestion {
   questionRefId: string;
   question: MockQuestionSnapshot | DsaCatalogSnapshot;
   status: SessionQuestionStatus;
-  answer: { text?: string; submissionId?: string; status?: string } | null;
+  answer: {
+    text?: string;
+    submissionId?: string;
+    status?: string;
+    language?: CodeExecutionLanguage;
+  } | null;
   score: number | null;
 }
 
@@ -179,16 +188,15 @@ export const listInterviewSessions = async (): Promise<InterviewSession[]> => {
   return response.data;
 };
 
-// No `language` param — see the header comment: interview-simulator-service doesn't accept one
-// yet, and its dsa-service proxy always judges as javascript regardless.
 export const runSessionCodingQuestion = async (
   sessionId: string,
   questionId: string,
-  sourceCode: string
+  sourceCode: string,
+  language: CodeExecutionLanguage
 ): Promise<JudgeResult> => {
   const response = await AxiosInstance.put(
     INTERVIEW_SESSION_QUESTION_RUN(sessionId, questionId),
-    { sourceCode }
+    { sourceCode, language }
   );
   return response.data;
 };
@@ -196,11 +204,12 @@ export const runSessionCodingQuestion = async (
 export const submitSessionCodingQuestion = async (
   sessionId: string,
   questionId: string,
-  sourceCode: string
+  sourceCode: string,
+  language: CodeExecutionLanguage
 ): Promise<InterviewSessionQuestion> => {
   const response = await AxiosInstance.put(
     INTERVIEW_SESSION_QUESTION_SUBMIT(sessionId, questionId),
-    { sourceCode }
+    { sourceCode, language }
   );
   return response.data;
 };

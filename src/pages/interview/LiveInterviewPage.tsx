@@ -51,9 +51,13 @@ import {
   type DsaCatalogSnapshot,
   type SessionVideoPlayback,
 } from "../../api/services/interviewSession.service";
-import type { JudgeResult } from "../../data/catalogData";
+import type { JudgeResult, StarterCodeByLanguage } from "../../data/catalogData";
 import { formatTestCaseArgs } from "../../utils/formatTestCaseArgs";
-import { CodeExecutionLanguages } from "../../constants/Languages";
+import {
+  CODE_EXECUTION_LANGUAGE_OPTIONS,
+  CodeExecutionLanguages,
+  type CodeExecutionLanguage,
+} from "../../constants/Languages";
 import CodeEditor from "../dsa/practice/CodeEditor";
 import TestResultsPanel from "../dsa/practice/TestResultsPanel";
 import {
@@ -98,17 +102,51 @@ const getDifficultyColor = (difficulty: string) => {
   }
 };
 
+// Only offer languages this catalog problem actually has admin-authored starter code for — same
+// rule as DSA practice's SolveProblemPage.
+const availableLanguagesFor = (
+  starterCode: StarterCodeByLanguage
+): CodeExecutionLanguage[] =>
+  CODE_EXECUTION_LANGUAGE_OPTIONS.map((option) => option.value).filter(
+    (lang) => !!starterCode[lang]
+  );
+
+// A coding question's per-language starter code — catalog-backed questions use
+// DsaCatalogSnapshot.starterCode, and the mock-interview's own fallback question uses the same
+// per-language shape via MockQuestionSnapshot.boilerplate (never a plain string).
+const codeMapFor = (q: InterviewSessionQuestion): StarterCodeByLanguage =>
+  isCodingCatalogQuestion(q)
+    ? getCatalogSnapshot(q).starterCode
+    : getMockSnapshot(q).boilerplate ?? {};
+
+// Default language for a freshly-visited coding question: whatever it was last answered in
+// (catalog questions only — the mock fallback isn't judged, so it has no answer.language), else
+// its snapshotted solutionLanguage, else javascript if offered, else its first available language.
+const defaultLanguageFor = (q: InterviewSessionQuestion): CodeExecutionLanguage => {
+  const answered = q.answer?.language;
+  if (answered) return answered;
+  const solutionLanguage = !isCodingCatalogQuestion(q)
+    ? getMockSnapshot(q).solutionLanguage
+    : undefined;
+  if (solutionLanguage) return solutionLanguage;
+  const languages = availableLanguagesFor(codeMapFor(q));
+  return languages.includes(CodeExecutionLanguages.JAVASCRIPT)
+    ? CodeExecutionLanguages.JAVASCRIPT
+    : languages[0] ?? CodeExecutionLanguages.JAVASCRIPT;
+};
+
+// A coding question keeps a separate draft per language (switching languages shouldn't clobber
+// code left in another one) — everything else just keys on the question id.
+const draftKeyFor = (q: InterviewSessionQuestion, language: CodeExecutionLanguage): string =>
+  q.type === "coding" ? `${q.id}:${language}` : q.id;
+
 // Starter/default value for a question's answer draft the first time it's visited — a coding
-// question gets its boilerplate/starter code, a text-answered question gets whatever was already
-// saved (e.g. the candidate navigated back to it after answering), or "" for a fresh question.
-// Catalog questions are judged as javascript only here (see interviewSession.service.tsx header
-// comment), so always pull the javascript starter code regardless of what other languages the
-// problem offers in DSA practice.
-const initialDraftFor = (q: InterviewSessionQuestion): string => {
+// question gets its boilerplate/starter code for the selected language, a text-answered question
+// gets whatever was already saved (e.g. the candidate navigated back to it after answering), or ""
+// for a fresh question.
+const initialDraftFor = (q: InterviewSessionQuestion, language: CodeExecutionLanguage): string => {
   if (q.type === "coding") {
-    return isCodingCatalogQuestion(q)
-      ? getCatalogSnapshot(q).starterCode[CodeExecutionLanguages.JAVASCRIPT] ?? ""
-      : getMockSnapshot(q).boilerplate ?? "";
+    return codeMapFor(q)[language] ?? "";
   }
   const savedText = q.answer?.text;
   return typeof savedText === "string" ? savedText : "";
@@ -153,6 +191,10 @@ const LiveInterviewPage = () => {
   // Per-question drafts (text answer or source code, keyed by question id) so navigating away
   // and back with Previous/Next never loses what the candidate typed or already saved.
   const [answerDrafts, setAnswerDrafts] = useState<Record<string, string>>({});
+  // Selected language per catalog coding question (keyed by question id).
+  const [codingLanguages, setCodingLanguages] = useState<
+    Record<string, CodeExecutionLanguage>
+  >({});
   const [runResult, setRunResult] = useState<JudgeResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
@@ -173,7 +215,13 @@ const LiveInterviewPage = () => {
   const handledTabSwitchCount = useRef(0);
   const speechSupported = isSpeechRecognitionSupported();
   const currentQuestion = questions[currentIndex] ?? null;
-  const currentDraft = currentQuestion ? answerDrafts[currentQuestion.id] ?? "" : "";
+  const currentLanguage: CodeExecutionLanguage =
+    currentQuestion && currentQuestion.type === "coding"
+      ? codingLanguages[currentQuestion.id] ?? defaultLanguageFor(currentQuestion)
+      : CodeExecutionLanguages.JAVASCRIPT;
+  const currentDraft = currentQuestion
+    ? answerDrafts[draftKeyFor(currentQuestion, currentLanguage)] ?? ""
+    : "";
 
   useEffect(() => {
     if (cameraPreviewRef.current) {
@@ -200,10 +248,18 @@ const LiveInterviewPage = () => {
     if (!currentQuestion) return;
     resetTranscript();
     setRunResult(null);
+    const language =
+      currentQuestion.type === "coding"
+        ? codingLanguages[currentQuestion.id] ?? defaultLanguageFor(currentQuestion)
+        : CodeExecutionLanguages.JAVASCRIPT;
+    if (currentQuestion.type === "coding" && !(currentQuestion.id in codingLanguages)) {
+      setCodingLanguages((prev) => ({ ...prev, [currentQuestion.id]: language }));
+    }
+    const key = draftKeyFor(currentQuestion, language);
     setAnswerDrafts((prev) =>
-      prev[currentQuestion.id] !== undefined
+      prev[key] !== undefined
         ? prev
-        : { ...prev, [currentQuestion.id]: initialDraftFor(currentQuestion) }
+        : { ...prev, [key]: initialDraftFor(currentQuestion, language) }
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion]);
@@ -441,7 +497,8 @@ const LiveInterviewPage = () => {
       const result = await runSessionCodingQuestion(
         session.id,
         currentQuestion.id,
-        currentDraft
+        currentDraft,
+        currentLanguage
       );
       setRunResult(result);
     } catch (err) {
@@ -458,7 +515,8 @@ const LiveInterviewPage = () => {
       const updated = await submitSessionCodingQuestion(
         session.id,
         currentQuestion.id,
-        currentDraft
+        currentDraft,
+        currentLanguage
       );
       applyAnsweredQuestion(updated);
       toast.success("Answer saved");
@@ -907,11 +965,34 @@ const LiveInterviewPage = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                {/* Pinned to JavaScript: interview-simulator-service doesn't accept/forward a
-                    language yet, so every catalog coding question here is judged as JS regardless
-                    of what DSA practice offers for the same problem — see
-                    interviewSession.service.tsx's header comment. */}
-                <span className="text-sm text-muted-foreground">JavaScript</span>
+                <select
+                  value={currentLanguage}
+                  onChange={(e) => {
+                    const nextLanguage = e.target.value as CodeExecutionLanguage;
+                    setCodingLanguages((prev) => ({
+                      ...prev,
+                      [currentQuestion.id]: nextLanguage,
+                    }));
+                    const key = draftKeyFor(currentQuestion, nextLanguage);
+                    setAnswerDrafts((prev) =>
+                      key in prev
+                        ? prev
+                        : { ...prev, [key]: initialDraftFor(currentQuestion, nextLanguage) }
+                    );
+                  }}
+                  className="text-sm text-muted-foreground bg-transparent border rounded-md px-2 py-1"
+                  data-cy="live-interview-language-select"
+                >
+                  {CODE_EXECUTION_LANGUAGE_OPTIONS.filter((option) =>
+                    availableLanguagesFor(getCatalogSnapshot(currentQuestion).starterCode).includes(
+                      option.value
+                    )
+                  ).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outlinePrimary"
@@ -938,9 +1019,12 @@ const LiveInterviewPage = () => {
                 <CodeEditor
                   value={currentDraft}
                   onChange={(value) =>
-                    setAnswerDrafts((prev) => ({ ...prev, [currentQuestion.id]: value }))
+                    setAnswerDrafts((prev) => ({
+                      ...prev,
+                      [draftKeyFor(currentQuestion, currentLanguage)]: value,
+                    }))
                   }
-                  language={CodeExecutionLanguages.JAVASCRIPT}
+                  language={currentLanguage}
                 />
               </div>
 
@@ -963,12 +1047,45 @@ const LiveInterviewPage = () => {
                 cases — just answer it as you would in a whiteboard round.
               </p>
 
+              {availableLanguagesFor(codeMapFor(currentQuestion)).length > 0 && (
+                <select
+                  value={currentLanguage}
+                  onChange={(e) => {
+                    const nextLanguage = e.target.value as CodeExecutionLanguage;
+                    setCodingLanguages((prev) => ({
+                      ...prev,
+                      [currentQuestion.id]: nextLanguage,
+                    }));
+                    const key = draftKeyFor(currentQuestion, nextLanguage);
+                    setAnswerDrafts((prev) =>
+                      key in prev
+                        ? prev
+                        : { ...prev, [key]: initialDraftFor(currentQuestion, nextLanguage) }
+                    );
+                  }}
+                  className="text-sm text-muted-foreground bg-transparent border rounded-md px-2 py-1"
+                  data-cy="live-interview-fallback-language-select"
+                >
+                  {CODE_EXECUTION_LANGUAGE_OPTIONS.filter((option) =>
+                    availableLanguagesFor(codeMapFor(currentQuestion)).includes(option.value)
+                  ).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+
               <div className="h-72 rounded-md border overflow-hidden">
                 <CodeEditor
                   value={currentDraft}
                   onChange={(value) =>
-                    setAnswerDrafts((prev) => ({ ...prev, [currentQuestion.id]: value }))
+                    setAnswerDrafts((prev) => ({
+                      ...prev,
+                      [draftKeyFor(currentQuestion, currentLanguage)]: value,
+                    }))
                   }
+                  language={currentLanguage}
                 />
               </div>
 
