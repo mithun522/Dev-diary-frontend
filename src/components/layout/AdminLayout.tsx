@@ -18,6 +18,7 @@ import {
   Building,
   Building2,
   Code,
+  GraduationCap,
   HelpCircle,
   Languages,
   LogOut,
@@ -46,6 +47,12 @@ const NAV_ITEMS = [
     cy: "admin-invite-students",
   },
   { to: "/admin/dsa/catalog", label: "DSA Catalog", icon: Code, cy: "admin-dsa-catalog" },
+  {
+    to: "/admin/dsa/curriculum",
+    label: "Curriculum",
+    icon: GraduationCap,
+    cy: "admin-dsa-curriculum",
+  },
   { to: "/admin/dsa/languages", label: "Languages", icon: Languages, cy: "admin-dsa-languages" },
   { to: "/admin/knowledge/blogs", label: "Blogs Moderation", icon: Newspaper, cy: "admin-blogs" },
   {

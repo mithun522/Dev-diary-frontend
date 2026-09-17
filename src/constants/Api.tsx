@@ -79,6 +79,20 @@ export const CATALOG_RUN = (id: string) => `${CATALOG}/${id}/run`;
 export const CATALOG_GENERATE_TEST_CASES = (id: string) =>
   `${CATALOG}/${id}/generate-test-cases`;
 
+// ---- dsa-service: curriculum (topic-based beginner exercises, separate from the catalog
+// above — one row per topic/problem/language, fractional `position` for O(1) insert-between) ----
+export const CURRICULUM_TOPICS = `${DSA_API_URL}/curriculum/topics`;
+export const CURRICULUM_TOPIC_BY_ID = (id: string) => `${CURRICULUM_TOPICS}/${id}`;
+export const CURRICULUM_TOPIC_PROBLEMS = (topicId: string) =>
+  `${CURRICULUM_TOPIC_BY_ID(topicId)}/problems`;
+export const CURRICULUM_PROBLEMS = `${DSA_API_URL}/curriculum/problems`;
+export const CURRICULUM_PROBLEM_BY_ID = (id: string) => `${CURRICULUM_PROBLEMS}/${id}`;
+export const CURRICULUM_PROBLEM_TEST_CASES = (id: string) =>
+  `${CURRICULUM_PROBLEM_BY_ID(id)}/test-cases`;
+export const CURRICULUM_PROBLEM_RUN = (id: string) => `${CURRICULUM_PROBLEM_BY_ID(id)}/run`;
+export const CURRICULUM_PROBLEM_SUBMISSIONS = (id: string) =>
+  `${CURRICULUM_PROBLEM_BY_ID(id)}/submissions`;
+
 // ---- tech-interview-service ----
 export const TECHNICAL_INTERVIEW = `${TECH_INTERVIEW_API_URL}/techinterview`;
 

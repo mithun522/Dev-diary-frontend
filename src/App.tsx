@@ -11,6 +11,7 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyOTPPage from "./pages/auth/VerifyOtp";
 import DSAPage from "./pages/dsa/DSAPage";
 import SolveProblemPage from "./pages/dsa/practice/SolveProblemPage";
+import CurriculumSolveProblemPage from "./pages/dsa/curriculum/CurriculumSolveProblemPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import InterviewPage from "./pages/interview/InterviewPage";
 import LiveInterviewPage from "./pages/interview/LiveInterviewPage";
@@ -29,6 +30,8 @@ import InviteAdminsPage from "./pages/superadmin/InviteAdminsPage";
 import InviteStudentsPage from "./pages/admin/students/InviteStudentsPage";
 import AdminUsersPage from "./pages/admin/users/AdminUsersPage";
 import AdminCatalogPage from "./pages/admin/dsa/AdminCatalogPage";
+import AdminCurriculumTopicsPage from "./pages/admin/dsa/AdminCurriculumTopicsPage";
+import AdminCurriculumProblemsPage from "./pages/admin/dsa/AdminCurriculumProblemsPage";
 import AdminLanguagesPage from "./pages/admin/dsa/AdminLanguagesPage";
 import AdminBlogsPage from "./pages/admin/knowledge/AdminBlogsPage";
 import AdminMaterialsPage from "./pages/admin/questionBank/AdminMaterialsPage";
@@ -78,6 +81,10 @@ const App = () => {
               <Route element={<ProtectedRoute />}>
                 <Route path="/dsa" element={<DSAPage />} />
                 <Route path="/dsa/practice/:id" element={<SolveProblemPage />} />
+                <Route
+                  path="/dsa/curriculum/:problemId"
+                  element={<CurriculumSolveProblemPage />}
+                />
                 <Route path="/interview" element={<InterviewPage />} />
                 <Route
                   path="/interview/live/:interviewId"
@@ -104,6 +111,14 @@ const App = () => {
                   element={<InviteStudentsPage />}
                 />
                 <Route path="/admin/dsa/catalog" element={<AdminCatalogPage />} />
+                <Route
+                  path="/admin/dsa/curriculum"
+                  element={<AdminCurriculumTopicsPage />}
+                />
+                <Route
+                  path="/admin/dsa/curriculum/:topicId"
+                  element={<AdminCurriculumProblemsPage />}
+                />
                 <Route path="/admin/dsa/languages" element={<AdminLanguagesPage />} />
                 <Route path="/admin/knowledge/blogs" element={<AdminBlogsPage />} />
                 <Route
