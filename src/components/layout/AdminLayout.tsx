@@ -18,6 +18,7 @@ import {
   Building,
   Building2,
   Code,
+  GraduationCap,
   HelpCircle,
   Languages,
   LogOut,
@@ -25,11 +26,13 @@ import {
   MonitorPlay,
   Newspaper,
   ShieldCheck,
+  UserPlus,
   Users,
   Video,
 } from "lucide-react";
 import Button from "../ui/button";
 import LogoutModal from "../LogoutModal";
+import { isSuperAdmin } from "../../utils/auth";
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -37,7 +40,19 @@ interface AdminLayoutProps {
 
 const NAV_ITEMS = [
   { to: "/admin/users", label: "Users", icon: Users, cy: "admin" },
+  {
+    to: "/admin/students/invite",
+    label: "Invite Students",
+    icon: UserPlus,
+    cy: "admin-invite-students",
+  },
   { to: "/admin/dsa/catalog", label: "DSA Catalog", icon: Code, cy: "admin-dsa-catalog" },
+  {
+    to: "/admin/dsa/curriculum",
+    label: "Curriculum",
+    icon: GraduationCap,
+    cy: "admin-dsa-curriculum",
+  },
   { to: "/admin/dsa/languages", label: "Languages", icon: Languages, cy: "admin-dsa-languages" },
   { to: "/admin/knowledge/blogs", label: "Blogs Moderation", icon: Newspaper, cy: "admin-blogs" },
   {
@@ -135,6 +150,25 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
+
+            {isSuperAdmin() && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Invite Admins">
+                  <Link
+                    to="/super-admin/invites"
+                    data-cy="sidebar-nav-super-admin-invites"
+                    className={`flex items-center gap-2 ${
+                      location.pathname.startsWith("/super-admin/invites")
+                        ? "bg-accent text-accent-foreground"
+                        : ""
+                    }`}
+                  >
+                    <ShieldCheck />
+                    {state !== "collapsed" && <span>Invite Admins</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarContent>
 

@@ -11,6 +11,7 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyOTPPage from "./pages/auth/VerifyOtp";
 import DSAPage from "./pages/dsa/DSAPage";
 import SolveProblemPage from "./pages/dsa/practice/SolveProblemPage";
+import CurriculumSolveProblemPage from "./pages/dsa/curriculum/CurriculumSolveProblemPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import InterviewPage from "./pages/interview/InterviewPage";
 import LiveInterviewPage from "./pages/interview/LiveInterviewPage";
@@ -23,8 +24,14 @@ import TechnicalInterviewPage from "./pages/technical-interview/Index";
 import QuestionBankPage from "./pages/question-bank/QuestionBankPage";
 import RedirectIfAuth from "./components/RedirectIfAuth";
 import AdminRoute from "./components/AdminRoute";
+import SuperAdminRoute from "./components/SuperAdminRoute";
+import AcceptInvitePage from "./pages/auth/AcceptInvitePage";
+import InviteAdminsPage from "./pages/superadmin/InviteAdminsPage";
+import InviteStudentsPage from "./pages/admin/students/InviteStudentsPage";
 import AdminUsersPage from "./pages/admin/users/AdminUsersPage";
 import AdminCatalogPage from "./pages/admin/dsa/AdminCatalogPage";
+import AdminCurriculumTopicsPage from "./pages/admin/dsa/AdminCurriculumTopicsPage";
+import AdminCurriculumProblemsPage from "./pages/admin/dsa/AdminCurriculumProblemsPage";
 import AdminLanguagesPage from "./pages/admin/dsa/AdminLanguagesPage";
 import AdminBlogsPage from "./pages/admin/knowledge/AdminBlogsPage";
 import AdminMaterialsPage from "./pages/admin/questionBank/AdminMaterialsPage";
@@ -65,11 +72,19 @@ const App = () => {
                 path="/auth/reset-password"
                 element={<ResetPasswordPage />}
               />
+              {/* Path is fixed by auth-service's inviteService.js::buildActivationLink, which
+                  hardcodes `${FRONTEND_BASE_URL}/activate-account?token=...` in every invite
+                  email — not a route naming choice made here. */}
+              <Route path="/activate-account" element={<AcceptInvitePage />} />
 
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/dsa" element={<DSAPage />} />
                 <Route path="/dsa/practice/:id" element={<SolveProblemPage />} />
+                <Route
+                  path="/dsa/curriculum/:problemId"
+                  element={<CurriculumSolveProblemPage />}
+                />
                 <Route path="/interview" element={<InterviewPage />} />
                 <Route
                   path="/interview/live/:interviewId"
@@ -91,7 +106,19 @@ const App = () => {
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
+                <Route
+                  path="/admin/students/invite"
+                  element={<InviteStudentsPage />}
+                />
                 <Route path="/admin/dsa/catalog" element={<AdminCatalogPage />} />
+                <Route
+                  path="/admin/dsa/curriculum"
+                  element={<AdminCurriculumTopicsPage />}
+                />
+                <Route
+                  path="/admin/dsa/curriculum/:topicId"
+                  element={<AdminCurriculumProblemsPage />}
+                />
                 <Route path="/admin/dsa/languages" element={<AdminLanguagesPage />} />
                 <Route path="/admin/knowledge/blogs" element={<AdminBlogsPage />} />
                 <Route
@@ -123,6 +150,11 @@ const App = () => {
                   path="/admin/interview-sessions/:id"
                   element={<AdminInterviewSessionDetailPage />}
                 />
+              </Route>
+
+              {/* Super-admin routes */}
+              <Route element={<SuperAdminRoute />}>
+                <Route path="/super-admin/invites" element={<InviteAdminsPage />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />

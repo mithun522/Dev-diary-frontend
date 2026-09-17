@@ -40,6 +40,19 @@ export const LOGIN = `${AUTH_API_URL}/login`;
 export const SEND_OTP = `${AUTH_API_URL}/auth/otp`;
 export const VERIFY_OTP = `${AUTH_API_URL}/auth/verifyotp`;
 export const RESET_PASSWORD = `${AUTH_API_URL}/auth/reset-password`;
+// Super-admin -> admin (with a fixed seat_limit) -> student invite hierarchy. Every invite/accept
+// endpoint's auth is checked inside auth-service's Lambda, not by API Gateway.
+export const INVITE_ADMIN = `${AUTH_API_URL}/admin/invites`;
+export const INVITE_STUDENTS = `${AUTH_API_URL}/admin/students/invites`;
+export const ACCEPT_INVITE = `${AUTH_API_URL}/invites/accept`;
+// Lists/resends only ever touch invites the caller themselves sent — same endpoints serve both
+// a super admin managing admin invites and an admin managing student invites.
+export const LIST_INVITES = `${AUTH_API_URL}/invites`;
+export const RESEND_INVITE = (id: string) => `${AUTH_API_URL}/invites/${id}/resend`;
+export const ADMIN_SEAT_USAGE = `${AUTH_API_URL}/admin/seats`;
+export const SUPER_ADMIN_ADMINS = `${AUTH_API_URL}/super-admin/admins`;
+export const SUPER_ADMIN_ADMIN_SEAT_LIMIT = (id: string) =>
+  `${SUPER_ADMIN_ADMINS}/${id}/seat-limit`;
 
 // ---- user-service ----
 export const SINGLE_USER = `${USER_API_URL}/user`;
@@ -65,6 +78,20 @@ export const CATALOG_RUN = (id: string) => `${CATALOG}/${id}/run`;
 // Admin-only: regenerate a catalog problem's test cases.
 export const CATALOG_GENERATE_TEST_CASES = (id: string) =>
   `${CATALOG}/${id}/generate-test-cases`;
+
+// ---- dsa-service: curriculum (topic-based beginner exercises, separate from the catalog
+// above — one row per topic/problem/language, fractional `position` for O(1) insert-between) ----
+export const CURRICULUM_TOPICS = `${DSA_API_URL}/curriculum/topics`;
+export const CURRICULUM_TOPIC_BY_ID = (id: string) => `${CURRICULUM_TOPICS}/${id}`;
+export const CURRICULUM_TOPIC_PROBLEMS = (topicId: string) =>
+  `${CURRICULUM_TOPIC_BY_ID(topicId)}/problems`;
+export const CURRICULUM_PROBLEMS = `${DSA_API_URL}/curriculum/problems`;
+export const CURRICULUM_PROBLEM_BY_ID = (id: string) => `${CURRICULUM_PROBLEMS}/${id}`;
+export const CURRICULUM_PROBLEM_TEST_CASES = (id: string) =>
+  `${CURRICULUM_PROBLEM_BY_ID(id)}/test-cases`;
+export const CURRICULUM_PROBLEM_RUN = (id: string) => `${CURRICULUM_PROBLEM_BY_ID(id)}/run`;
+export const CURRICULUM_PROBLEM_SUBMISSIONS = (id: string) =>
+  `${CURRICULUM_PROBLEM_BY_ID(id)}/submissions`;
 
 // ---- tech-interview-service ----
 export const TECHNICAL_INTERVIEW = `${TECH_INTERVIEW_API_URL}/techinterview`;

@@ -35,6 +35,7 @@ import WeeklyActivity from "./progress/WeeklyActivity";
 import { FolderSearch } from "lucide-react";
 import Todo from "./todo/Todo";
 import PracticeTab from "./practice/PracticeTab";
+import CurriculumTab from "./curriculum/CurriculumTab";
 
 const DSAPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -131,9 +132,12 @@ const DSAPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="problems">
-        <TabsList className="grid grid-cols-4 md:w-[500px]">
+        <TabsList className="grid grid-cols-5 md:w-[620px]">
           <TabsTrigger value="problems" data-cy="dsa-tab-problems">
             Problems
+          </TabsTrigger>
+          <TabsTrigger value="curriculum" data-cy="dsa-tab-curriculum">
+            Basics
           </TabsTrigger>
           <TabsTrigger value="practice" data-cy="dsa-tab-practice">
             Practice
@@ -145,6 +149,10 @@ const DSAPage: React.FC = () => {
             Todo
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="curriculum" className="pt-4">
+          <CurriculumTab />
+        </TabsContent>
 
         <TabsContent value="problems" className="space-y-6 pt-4">
           <div className="flex flex-col md:flex-row gap-4 justify-between">
