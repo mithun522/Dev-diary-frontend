@@ -57,3 +57,17 @@ export const loggedInUserRole = () => {
 };
 
 export const isAdmin = () => loggedInUserRole() === "admin";
+
+// Separate from role — a super admin's JWT still carries role:"admin" (see auth-service's
+// seedSuperAdmin.js), plus this additional claim for the platform-level tier above it.
+export const isSuperAdmin = () => {
+  const token = getAccessToken();
+  if (!token) return false;
+  try {
+    const decoded: DecodedToken = jwtDecode(token);
+    return Boolean(decoded.isSuperAdmin);
+  } catch (error: any) {
+    logger.error(error);
+    return false;
+  }
+};

@@ -23,6 +23,10 @@ import TechnicalInterviewPage from "./pages/technical-interview/Index";
 import QuestionBankPage from "./pages/question-bank/QuestionBankPage";
 import RedirectIfAuth from "./components/RedirectIfAuth";
 import AdminRoute from "./components/AdminRoute";
+import SuperAdminRoute from "./components/SuperAdminRoute";
+import AcceptInvitePage from "./pages/auth/AcceptInvitePage";
+import InviteAdminsPage from "./pages/superadmin/InviteAdminsPage";
+import InviteStudentsPage from "./pages/admin/students/InviteStudentsPage";
 import AdminUsersPage from "./pages/admin/users/AdminUsersPage";
 import AdminCatalogPage from "./pages/admin/dsa/AdminCatalogPage";
 import AdminLanguagesPage from "./pages/admin/dsa/AdminLanguagesPage";
@@ -65,6 +69,10 @@ const App = () => {
                 path="/auth/reset-password"
                 element={<ResetPasswordPage />}
               />
+              {/* Path is fixed by auth-service's inviteService.js::buildActivationLink, which
+                  hardcodes `${FRONTEND_BASE_URL}/activate-account?token=...` in every invite
+                  email — not a route naming choice made here. */}
+              <Route path="/activate-account" element={<AcceptInvitePage />} />
 
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
@@ -91,6 +99,10 @@ const App = () => {
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
+                <Route
+                  path="/admin/students/invite"
+                  element={<InviteStudentsPage />}
+                />
                 <Route path="/admin/dsa/catalog" element={<AdminCatalogPage />} />
                 <Route path="/admin/dsa/languages" element={<AdminLanguagesPage />} />
                 <Route path="/admin/knowledge/blogs" element={<AdminBlogsPage />} />
@@ -123,6 +135,11 @@ const App = () => {
                   path="/admin/interview-sessions/:id"
                   element={<AdminInterviewSessionDetailPage />}
                 />
+              </Route>
+
+              {/* Super-admin routes */}
+              <Route element={<SuperAdminRoute />}>
+                <Route path="/super-admin/invites" element={<InviteAdminsPage />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />

@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import AuthLayout from "../../components/layout/AuthLayout";
 import axios, { AxiosError } from "axios";
 import { LOGIN } from "../../constants/Api";
-import { isAdmin, setAccessToken } from "../../utils/auth";
+import { isAdmin, isSuperAdmin, setAccessToken } from "../../utils/auth";
 import { useAuthStore } from "../../store/AuthStore";
 import {
   ENTER_EMAIL_AND_PASSWORD,
@@ -54,7 +54,10 @@ const LoginPage = () => {
       if (response.data.token) {
         setAccessToken(response.data.token);
         useAuthStore.getState().setAuth(response.data.token);
-        navigate(isAdmin() ? "/admin" : "/dsa");
+        // A super admin's JWT still carries role:"admin" (see auth-service's seedSuperAdmin.js),
+        // so isSuperAdmin has to be checked first — otherwise they'd land on the org-admin
+        // dashboard instead of the invite-admins screen.
+        navigate(isSuperAdmin() ? "/super-admin/invites" : isAdmin() ? "/admin" : "/dsa");
         toast.success(LOGIN_SUCCESSFUL);
       }
     } catch (error) {
