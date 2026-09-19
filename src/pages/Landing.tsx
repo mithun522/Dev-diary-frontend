@@ -13,16 +13,14 @@ import {
   Instagram,
   Linkedin,
   Sparkle,
-  Star,
   Twitter,
-  X,
 } from "lucide-react";
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Seo
-        title="Track DSA, Ace Interviews, Master System Design"
+        title="Placement-Ready DSA & Interview Prep for Training Institutes"
         path="/"
       />
       {/* Header */}
@@ -63,13 +61,13 @@ const LandingPage = () => {
               href="#testimonials"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Testimonials
+              For Institutes
             </a>
             <a
               href="#pricing"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Pricing
+              Pilot Program
             </a>
           </nav>
           <ThemeToggle />
@@ -87,21 +85,26 @@ const LandingPage = () => {
       {/* Hero */}
       <section className="flex-1 flex flex-col justify-center px-6 md:px-12 py-16 md:py-28 bg-gradient-to-b from-background to-muted/30">
         <div className="max-w-5xl mx-auto text-center space-y-6">
+          <div className="inline-block mx-auto bg-primary/10 text-primary text-sm font-medium px-4 py-1.5 rounded-full">
+            Now onboarding a limited number of training institutes for a free pilot
+          </div>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-            Master Your Tech Interview Journey with{" "}
-            <span className="text-primary">Dev Diary</span>
+            Placement-Ready DSA &amp; Interview Prep for{" "}
+            <span className="text-primary">Your Students</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-            The all-in-one platform for developers preparing for top-tier tech
-            interviews. Track progress, practice coding, master system design,
-            and more.
+            Give your students structured coding practice, mock interviews, and
+            progress tracking under your institute's own admin console &mdash;
+            free during our pilot phase.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
             <Button size="lg">
-              <Link to="/auth/signup">Get Started Free</Link>
+              <a href="mailto:edusphere@eduspheresolutions.com?subject=Free%20Pilot%20Request%20-%20Dev%20Diary">
+                Request Free Pilot Access
+              </a>
             </Button>
             <Button size="lg" variant="outlinePrimary">
-              <a href="#features">Learn More</a>
+              <a href="#features">See What's Included</a>
             </Button>
           </div>
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
@@ -110,12 +113,12 @@ const LandingPage = () => {
               <div className="text-muted-foreground">Coding Problems</div>
             </div>
             <div className="p-4">
-              <div className="text-3xl font-bold text-primary">200+</div>
-              <div className="text-muted-foreground">System Design Cases</div>
+              <div className="text-3xl font-bold text-primary">50+</div>
+              <div className="text-muted-foreground">Company-Tagged Interview Sets</div>
             </div>
             <div className="p-4">
-              <div className="text-3xl font-bold text-primary">50+</div>
-              <div className="text-muted-foreground">Top Companies Covered</div>
+              <div className="text-3xl font-bold text-primary">Free</div>
+              <div className="text-muted-foreground">For Pilot Institutes</div>
             </div>
           </div>
         </div>
@@ -126,11 +129,12 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">
-              Complete Interview Prep Suite
+              Everything Your Placement Cell Needs
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to ace your next tech interview, all in one
-              place.
+              A single platform your faculty can manage and your students can
+              practice on &mdash; from first-year fundamentals to final-round
+              mock interviews.
             </p>
           </div>
 
@@ -142,8 +146,9 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">DSA Prep</h3>
               <p className="text-muted-foreground">
-                Learn the basics, practice 500+ coding problems organized by
-                topic and difficulty, and track your progress.
+                500+ coding problems organized by topic and difficulty, with a
+                built-in code editor so students can practice without leaving
+                the platform.
               </p>
             </div>
 
@@ -154,8 +159,8 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Interview Simulator</h3>
               <p className="text-muted-foreground">
-                Practice behavioral and technical interviews with our
-                timer-based mock interview simulator.
+                Company-tagged behavioral and technical mock interviews with
+                recording, so students can review and improve their delivery.
               </p>
             </div>
 
@@ -164,10 +169,15 @@ const LandingPage = () => {
               <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full text-primary">
                 <Building2 />
               </div>
-              <h3 className="text-xl font-bold mb-2">System Design Studio</h3>
+              <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                Admin Console
+                <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  For Faculty
+                </span>
+              </h3>
               <p className="text-muted-foreground">
-                Create, save, and study system design diagrams with our
-                interactive design studio.
+                Invite your students, curate what content they see, and manage
+                everything from a dedicated institute admin dashboard.
               </p>
             </div>
 
@@ -178,8 +188,8 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Knowledge Base</h3>
               <p className="text-muted-foreground">
-                Your personal space for notes, blog posts, and interview
-                preparation materials.
+                A shared space for notes, blog posts, and reference material
+                your faculty can curate for the whole batch.
               </p>
             </div>
 
@@ -190,8 +200,8 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Progress Analytics</h3>
               <p className="text-muted-foreground">
-                Track your improvement with detailed analytics, streaks, and
-                personal insights.
+                See exactly where each student stands &mdash; problems solved,
+                streaks, and mock interview activity.
               </p>
             </div>
 
@@ -200,250 +210,104 @@ const LandingPage = () => {
               <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full text-primary">
                 <Sparkle />
               </div>
-              <h3 className="text-xl font-bold mb-2">Smart Recommendations</h3>
+              <h3 className="text-xl font-bold mb-2">Topic Recommendations</h3>
               <p className="text-muted-foreground">
-                Get AI-powered recommendations on what to study next based on
-                your progress.
+                Highlights weak topics and what to practice next, based on each
+                student's own activity.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* For Institutes */}
       <section id="testimonials" className="py-20 px-6 md:px-12 bg-muted/50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Success Stories</h2>
+            <h2 className="text-3xl font-bold mb-4">Why Institutes Are Partnering With Us</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              See how Dev Diary has helped developers land their dream jobs.
+              We're currently working closely with a small number of pilot
+              institutes to build this around real classroom and placement
+              needs &mdash; not guesswork.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Testimonial 1 */}
             <div className="bg-card border rounded-lg p-6">
-              <div className="flex gap-3">
-                {" "}
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 text-amber-500 mb-4"
-                  >
-                    <Star fill="#f59e0b" color="#f59e0b" />
-                  </div>
-                ))}
+              <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full text-primary">
+                <Sparkle />
               </div>
-              <p className="mb-4">
-                "I was struggling with system design interviews until I started
-                using Dev Diary. After just 6 weeks, I landed a senior role at
-                Amazon."
+              <h3 className="text-lg font-semibold mb-2">Free During the Pilot</h3>
+              <p className="text-muted-foreground">
+                No cost, no commitment. We're onboarding a handful of institutes
+                to test this with real students before it's a paid product.
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="font-semibold">MJ</span>
-                </div>
-                <div>
-                  <div className="font-medium">Michael Johnson</div>
-                  <div className="text-sm text-muted-foreground">
-                    Senior SDE @ Amazon
-                  </div>
-                </div>
-              </div>
             </div>
-
-            {/* Testimonial 2 */}
             <div className="bg-card border rounded-lg p-6">
-              <div className="flex gap-3">
-                {" "}
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 text-amber-500 mb-4"
-                  >
-                    <Star fill="#f59e0b" color="#f59e0b" />
-                  </div>
-                ))}
+              <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full text-primary">
+                <Building2 />
               </div>
-              <p className="mb-4">
-                "The DSA tracker helped me systematically work through hundreds
-                of problems and track my progress. Perfect for busy
-                professionals!"
+              <h3 className="text-lg font-semibold mb-2">Your Faculty Stays in Control</h3>
+              <p className="text-muted-foreground">
+                Admins invite students and see progress across the batch, while
+                each student practices on their own account.
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="font-semibold">SP</span>
-                </div>
-                <div>
-                  <div className="font-medium">Sarah Patel</div>
-                  <div className="text-sm text-muted-foreground">
-                    Frontend Engineer @ Google
-                  </div>
-                </div>
-              </div>
             </div>
-
-            {/* Testimonial 3 */}
             <div className="bg-card border rounded-lg p-6">
-              <div className="flex gap-3">
-                {" "}
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 text-amber-500 mb-4"
-                  >
-                    <Star fill="#f59e0b" color="#f59e0b" />
-                  </div>
-                ))}
+              <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full text-primary">
+                <ChartNoAxesCombined />
               </div>
-              <p className="mb-4">
-                "The mock interview simulator with voice recording helped me
-                improve my communication. The feedback was invaluable!"
+              <h3 className="text-lg font-semibold mb-2">Built From Your Feedback</h3>
+              <p className="text-muted-foreground">
+                Features like bulk roster upload, batch cohorts, and
+                certificates are being built next, driven directly by what
+                pilot institutes ask for.
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="font-semibold">DL</span>
-                </div>
-                <div>
-                  <div className="font-medium">David Lee</div>
-                  <div className="text-sm text-muted-foreground">
-                    Software Engineer @ Microsoft
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pilot Program */}
       <section id="pricing" className="py-20 px-6 md:px-12">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Choose Your Plan</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Whether you're a student or a professional, we have a plan that
-              fits your needs.
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-card border-2 border-primary rounded-lg p-8 md:p-12 text-center">
+            <div className="inline-block bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium mb-6">
+              Free Pilot Program
+            </div>
+            <h2 className="text-3xl font-bold mb-4">
+              Free for Your First Batch of Students
+            </h2>
+            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+              We're onboarding a small number of training institutes and
+              colleges at no cost. In exchange, we ask for honest feedback from
+              your students and faculty as we build out the next set of
+              features &mdash; bulk roster upload, batch/cohort management,
+              certificates, and placement tracking.
             </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Basic Plan */}
-            <div className="bg-card border rounded-lg p-6">
-              <div className="text-center mb-6">
-                <h3 className="text-lg font-medium mb-2">Basic</h3>
-                <div className="text-3xl font-bold mb-2">Free</div>
-                <p className="text-muted-foreground">Perfect for beginners</p>
-              </div>
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Access to 100+ DSA problems</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Basic progress tracking</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Knowledge base (limited)</span>
-                </li>
-                <li className="flex items-center gap-2 text-muted-foreground">
-                  <X color="#FF5733" width={30} height={30} />
-                  <span>Mock interviews</span>
-                </li>
-                <li className="flex items-center gap-2 text-muted-foreground">
-                  <X color="#FF5733" width={30} height={30} />
-                  <span>System design tools</span>
-                </li>
-              </ul>
-              <Button className="w-full" variant="outlinePrimary">
-                <Link to="/auth/signup">Sign Up Free</Link>
-              </Button>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="bg-card border-2 border-primary rounded-lg p-6 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
-                Most Popular
-              </div>
-              <div className="text-center mb-6">
-                <h3 className="text-lg font-medium mb-2">Pro</h3>
-                <div className="text-3xl font-bold mb-2">
-                  $19
-                  <span className="text-lg font-normal text-muted-foreground">
-                    /month
-                  </span>
-                </div>
-                <p className="text-muted-foreground">For serious candidates</p>
-              </div>
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Access to all DSA problems</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Advanced progress analytics</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Unlimited knowledge base</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>10 mock interviews per month</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>System design tools</span>
-                </li>
-              </ul>
-              <Button className="w-full">
-                <Link to="/auth/signup">Get Started</Link>
-              </Button>
-            </div>
-
-            {/* Enterprise Plan */}
-            <div className="bg-card border rounded-lg p-6">
-              <div className="text-center mb-6">
-                <h3 className="text-lg font-medium mb-2">Enterprise</h3>
-                <div className="text-3xl font-bold mb-2">
-                  $49
-                  <span className="text-lg font-normal text-muted-foreground">
-                    /month
-                  </span>
-                </div>
-                <p className="text-muted-foreground">
-                  For teams & professionals
-                </p>
-              </div>
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Everything in Pro plan</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Unlimited mock interviews</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Private team dashboard</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Priority support</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check color="#50C878" width={30} height={30} />
-                  <span>Custom integrations</span>
-                </li>
-              </ul>
-              <Button className="w-full" variant="outlinePrimary">
-                <Link to="/auth/signup">Contact Sales</Link>
-              </Button>
-            </div>
+            <ul className="text-left max-w-md mx-auto space-y-3 mb-8">
+              <li className="flex items-center gap-2">
+                <Check color="#50C878" width={24} height={24} />
+                <span>Full access to DSA prep, interview simulator &amp; analytics</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check color="#50C878" width={24} height={24} />
+                <span>A dedicated admin account for your institute</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check color="#50C878" width={24} height={24} />
+                <span>No cost, no card required</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check color="#50C878" width={24} height={24} />
+                <span>Direct input into what we build next</span>
+              </li>
+            </ul>
+            <Button size="lg" className="min-w-[240px]">
+              <a href="mailto:edusphere@eduspheresolutions.com?subject=Free%20Pilot%20Request%20-%20Dev%20Diary">
+                Request Free Pilot Access
+              </a>
+            </Button>
           </div>
         </div>
       </section>
@@ -452,14 +316,16 @@ const LandingPage = () => {
       <section className="py-20 px-6 md:px-12 bg-gray-100 text-primary-foreground">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Ready to Ace Your Next Interview?
+            Bring Placement-Ready Prep to Your Campus
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Join thousands of developers who have landed their dream jobs with
-            Dev Diary.
+            Free for pilot institutes &mdash; help us shape the product your
+            students actually need.
           </p>
           <Button size="lg" variant="success" className="min-w-[200px]">
-            <Link to="/auth/signup">Start Your Journey</Link>
+            <a href="mailto:edusphere@eduspheresolutions.com?subject=Free%20Pilot%20Request%20-%20Dev%20Diary">
+              Request Free Pilot Access
+            </a>
           </Button>
         </div>
       </section>
@@ -494,7 +360,8 @@ const LandingPage = () => {
                 <span className="font-bold">Dev Diary</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Your all-in-one platform for tech interview preparation.
+                Placement-ready DSA and interview prep for training institutes
+                and colleges.
               </p>
             </div>
             <div>
