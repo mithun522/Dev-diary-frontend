@@ -11,6 +11,7 @@ import {
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
 import Button from "../../../components/ui/button";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { getDifficultyColor } from "../../../utils/colorVariations";
 import {
   convertToPascalCase,
@@ -57,7 +58,7 @@ const AdminCatalogTable: React.FC<AdminCatalogTableProps> = ({
                 <TableRow key={index}>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <TableCell key={i}>
-                      <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                      <Skeleton className="h-8 w-full" />
                     </TableCell>
                   ))}
                 </TableRow>

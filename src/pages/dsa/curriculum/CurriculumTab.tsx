@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../../components/ui/card";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { Badge } from "../../../components/ui/badge";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import {
@@ -52,7 +53,15 @@ const CurriculumTopicSection: React.FC<{
       {expanded && (
         <CardContent className="pt-0 space-y-2">
           {isLoading ? (
-            <div className="h-16 w-full bg-gray-300 animate-pulse rounded" />
+            Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-md border p-3"
+              >
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+            ))
           ) : problems && problems.length > 0 ? (
             problems.map((problem) => (
               <div
@@ -112,7 +121,15 @@ const CurriculumTab: React.FC = () => {
       <div className="space-y-3">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-16 w-full bg-gray-300 animate-pulse rounded" />
+            <Card key={index}>
+              <div className="flex items-center justify-between p-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-64" />
+                </div>
+                <Skeleton className="h-5 w-5 rounded-full" />
+              </div>
+            </Card>
           ))
         ) : topics && topics.length > 0 ? (
           topics.map((topic) => (

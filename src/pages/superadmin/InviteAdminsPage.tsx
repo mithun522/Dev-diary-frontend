@@ -13,6 +13,7 @@ import {
 import { Input } from "../../components/ui/input";
 import Button from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import { Skeleton } from "../../components/ui/skeleton";
 import AskForConfirmationModal from "../../components/AskForConfirmationModal";
 import {
   useInviteAdmin,
@@ -199,7 +200,7 @@ const InviteAdminsPage: React.FC = () => {
                   <TableRow key={index}>
                     {Array.from({ length: 6 }).map((_, i) => (
                       <TableCell key={i}>
-                        <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                        <Skeleton className="h-8 w-full" />
                       </TableCell>
                     ))}
                   </TableRow>
@@ -279,11 +280,15 @@ const InviteAdminsPage: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {isLoadingInvites ? (
-                  <TableRow>
-                    <TableCell colSpan={4}>
-                      <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
-                    </TableCell>
-                  </TableRow>
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <TableRow key={index}>
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <TableCell key={i}>
+                          <Skeleton className="h-8 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
                 ) : pendingAdminInvites.length > 0 ? (
                   pendingAdminInvites.map((invite) => (
                     <TableRow key={invite.id} data-cy="pending-admin-invite-row">

@@ -14,6 +14,7 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import Button from "../../../components/ui/button";
+import { Skeleton } from "../../../components/ui/skeleton";
 import AskForConfirmationModal from "../../../components/AskForConfirmationModal";
 import {
   useCurriculumTopics,
@@ -203,7 +204,7 @@ const AdminCurriculumTopicsPage: React.FC = () => {
                   <TableRow key={index}>
                     {Array.from({ length: 4 }).map((_, i) => (
                       <TableCell key={i}>
-                        <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                        <Skeleton className="h-8 w-full" />
                       </TableCell>
                     ))}
                   </TableRow>

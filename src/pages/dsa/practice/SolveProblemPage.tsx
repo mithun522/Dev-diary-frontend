@@ -6,6 +6,7 @@ import MarkdownPreview from "@uiw/react-markdown-preview";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import Button from "../../../components/ui/button";
+import { Skeleton } from "../../../components/ui/skeleton";
 import {
   Tabs,
   TabsContent,
@@ -66,7 +67,12 @@ const errorMessage = (err: unknown, fallback: string) => {
 const SolveProblemPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: problem, isLoading, error } = useFetchCatalogProblemDetail(id);
+  const {
+    data: problem,
+    isLoading,
+    isFetching,
+    error,
+  } = useFetchCatalogProblemDetail(id);
   const [codeByLanguage, setCodeByLanguage] = useState<
     Partial<Record<CodeExecutionLanguage, string>>
   >({});
@@ -153,7 +159,7 @@ const SolveProblemPage: React.FC = () => {
   }
 
   if (isLoading || !problem) {
-    return <div className="h-40 w-full bg-gray-300 animate-pulse rounded" />;
+    return <SolveProblemSkeleton />;
   }
 
   return (
@@ -183,7 +189,11 @@ const SolveProblemPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 min-w-0">
+      <div
+        className={`flex flex-col lg:flex-row gap-4 flex-1 min-h-0 min-w-0 transition-opacity duration-200 ${
+          isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
+        }`}
+      >
         <div className="lg:w-2/5 flex flex-col min-h-0 min-w-0">
           <Tabs defaultValue="description" className="flex flex-col flex-1 min-h-0">
             <TabsList>
@@ -283,5 +293,50 @@ const SolveProblemPage: React.FC = () => {
     </div>
   );
 };
+
+const SolveProblemSkeleton: React.FC = () => (
+  <div
+    className="h-full flex flex-col gap-4 animate-in fade-in duration-300"
+    data-cy="solve-problem-skeleton"
+  >
+    <div className="flex items-center gap-3 flex-wrap">
+      <Skeleton className="h-8 w-8 shrink-0" />
+      <Skeleton className="h-7 w-56" />
+      <Skeleton className="h-5 w-16 rounded-full" />
+      <Skeleton className="h-5 w-14 rounded-full" />
+    </div>
+
+    <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 min-w-0">
+      <div className="lg:w-2/5 flex flex-col min-h-0 min-w-0">
+        <div className="flex gap-2 border-b pb-2">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-28" />
+        </div>
+        <div className="pt-4 space-y-3">
+          <Skeleton className="h-5 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-11/12" />
+          <Skeleton className="h-4 w-3/4" />
+          <div className="pt-4 space-y-2">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+          </div>
+        </div>
+      </div>
+
+      <div className="lg:w-3/5 flex flex-col min-h-0 min-w-0 gap-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-32" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+        <Skeleton className="flex-1 min-h-[300px] w-full rounded-md" />
+      </div>
+    </div>
+  </div>
+);
 
 export default SolveProblemPage;

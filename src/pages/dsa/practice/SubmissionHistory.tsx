@@ -1,4 +1,5 @@
 import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { formatDate } from "../../../utils/formatDate";
 import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
 import { useFetchSubmissions } from "../../../api/hooks/useFetchCatalog";
@@ -30,7 +31,15 @@ const SubmissionHistory: React.FC<SubmissionHistoryProps> = ({ problemId, onSele
     return (
       <div className="space-y-2">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-12 w-full bg-gray-300 animate-pulse rounded" />
+          <div
+            key={i}
+            className="w-full flex items-center justify-between rounded-md border p-3"
+          >
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-4 w-14" />
+            <Skeleton className="h-4 w-10" />
+            <Skeleton className="h-4 w-24" />
+          </div>
         ))}
       </div>
     );

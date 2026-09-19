@@ -13,6 +13,7 @@ import {
 import { Input } from "../../../components/ui/input";
 import Button from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -122,7 +123,7 @@ const AdminUsersPage: React.FC = () => {
                   <TableRow key={index}>
                     {Array.from({ length: 5 }).map((_, i) => (
                       <TableCell key={i}>
-                        <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                        <Skeleton className="h-8 w-full" />
                       </TableCell>
                     ))}
                   </TableRow>

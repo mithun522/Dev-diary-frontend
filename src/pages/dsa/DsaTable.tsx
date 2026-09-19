@@ -1,4 +1,5 @@
 import { Card, CardContent } from "../../components/ui/card";
+import { Skeleton } from "../../components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -85,7 +86,7 @@ const DsaTable: React.FC<DsaTableProps> = ({
                 <TableRow key={index}>
                   {Array.from({ length: 6 }).map((_, i) => (
                     <TableCell key={i}>
-                      <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                      <Skeleton className="h-8 w-full" />
                     </TableCell>
                   ))}
                 </TableRow>

@@ -1,6 +1,7 @@
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { useCatalogQuestion } from "../../../api/hooks/useTechInterviewCatalog";
 import { CATALOG_DIFFICULTY_COLORS, type CatalogDifficulty } from "../../../data/techInterviewCatalogData";
 import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
@@ -49,7 +50,11 @@ const CatalogQuestionRow: React.FC<CatalogQuestionRowProps> = ({
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t space-y-4" data-cy="tech-interview-catalog-answer">
           {isLoading || !detail ? (
-            <div className="h-20 w-full bg-gray-300 animate-pulse rounded mt-3" />
+            <div className="space-y-2 mt-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-11/12" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
           ) : (
             <>
               <div className="bg-muted/50 p-4 rounded-lg prose dark:prose-invert max-w-none">

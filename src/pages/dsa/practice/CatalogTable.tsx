@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../../components/ui/card";
+import { Skeleton } from "../../../components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -50,7 +51,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                 <TableRow key={index}>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <TableCell key={i}>
-                      <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                      <Skeleton className="h-8 w-full" />
                     </TableCell>
                   ))}
                 </TableRow>

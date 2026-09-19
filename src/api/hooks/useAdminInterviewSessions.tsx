@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   fetchAdminInterviewSessions,
   fetchAdminInterviewSessionDetail,
@@ -46,5 +46,8 @@ export const useFetchAdminInterviewSessionDetail = (id?: string) => {
       const status = query.state.data?.recording.videoStatus;
       return status === "ready" || status === "failed" ? false : 5000;
     },
+    // Keeps the previously viewed session on screen if a reviewer navigates straight from one
+    // session's detail view to another's (id change while mounted), instead of flashing blank.
+    placeholderData: keepPreviousData,
   });
 };

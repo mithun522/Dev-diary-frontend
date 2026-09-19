@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { Pencil, Trash2 } from "lucide-react";
 import Button from "../../../components/ui/button";
 import type { ScalabilityPatternRecord } from "../../../api/services/adminSystemDesign.service";
@@ -42,7 +43,7 @@ const PatternsTable: React.FC<PatternsTableProps> = ({
                 <TableRow key={index}>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <TableCell key={i}>
-                      <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                      <Skeleton className="h-8 w-full" />
                     </TableCell>
                   ))}
                 </TableRow>

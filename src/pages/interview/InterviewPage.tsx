@@ -22,6 +22,7 @@ import {
 } from "../../components/ui/select";
 import { Badge } from "../../components/ui/badge";
 import Button from "../../components/ui/button";
+import { Skeleton } from "../../components/ui/skeleton";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Clock, FileText, MicOff, Mic, Search } from "lucide-react";
@@ -171,9 +172,42 @@ const InterviewPage = () => {
           </div>
 
           {isLoadingCompanyProblems ? (
-            <p className="text-center text-muted-foreground py-12">
-              Loading company questions...
-            </p>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40%]">Title</TableHead>
+                    <TableHead>Difficulty</TableHead>
+                    <TableHead>Topics</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Skeleton className="h-4 w-3/4" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Skeleton className="h-5 w-12 rounded-full" />
+                          <Skeleton className="h-5 w-12 rounded-full" />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Skeleton className="h-8 w-16" />
+                          <Skeleton className="h-8 w-8" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : filteredProblems.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">
               No company questions yet.
@@ -250,9 +284,25 @@ const InterviewPage = () => {
         {/* Behavioral Questions tab */}
         <TabsContent value="behavioral" className="space-y-4">
           {isLoadingBehavioralQuestions ? (
-            <p className="text-center text-muted-foreground py-12">
-              Loading behavioral questions...
-            </p>
+            <div className="grid gap-6">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <div className="flex justify-between">
+                      <Skeleton className="h-5 w-64" />
+                      <Skeleton className="h-8 w-32" />
+                    </div>
+                    <Skeleton className="h-4 w-24 mt-2" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-[150px] w-full" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           ) : behavioralQuestions.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">
               No behavioral questions yet.
@@ -365,9 +415,26 @@ const InterviewPage = () => {
           </div>
 
           {isLoadingMockInterviews ? (
-            <p className="text-center text-muted-foreground py-12">
-              Loading mock interviews...
-            </p>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-full mt-2" />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Skeleton className="h-4 w-1/2" />
+                    <div className="flex gap-1">
+                      <Skeleton className="h-5 w-14 rounded-full" />
+                      <Skeleton className="h-5 w-14 rounded-full" />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Skeleton className="h-8 w-24" />
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
           ) : filteredMockInterviews.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">
               No mock interviews yet.

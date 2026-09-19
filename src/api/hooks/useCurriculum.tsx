@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   fetchCurriculumTopics,
   createCurriculumTopic,
@@ -78,6 +83,10 @@ export const useCurriculumProblemDetail = (id: string) => {
     queryKey: ["curriculum-problem", id],
     queryFn: () => fetchCurriculumProblemDetail(id),
     enabled: !!id,
+    // Keeps the previous problem on screen while the next one loads, so
+    // next/prev navigation can crossfade instead of flashing a skeleton —
+    // matters more here since the judge/execution backend is serverless and slow.
+    placeholderData: keepPreviousData,
   });
 };
 

@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { Pencil, Trash2 } from "lucide-react";
 import Button from "../../../components/ui/button";
 import type { SystemDesignCaseRecord } from "../../../api/services/adminSystemDesign.service";
@@ -38,7 +39,7 @@ const CasesTable: React.FC<CasesTableProps> = ({ isLoading, cases, onEdit, onDel
                 <TableRow key={index}>
                   {Array.from({ length: 4 }).map((_, i) => (
                     <TableCell key={i}>
-                      <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                      <Skeleton className="h-8 w-full" />
                     </TableCell>
                   ))}
                 </TableRow>

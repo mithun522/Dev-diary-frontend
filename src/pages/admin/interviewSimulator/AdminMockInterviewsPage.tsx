@@ -12,6 +12,7 @@ import {
 } from "../../../components/ui/table";
 import Button from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { Pencil, Trash2, ListChecks } from "lucide-react";
 import { getDifficultyColor } from "../../../utils/colorVariations";
 import { logger } from "../../../utils/logger";
@@ -121,11 +122,31 @@ const AdminMockInterviewsPage: React.FC = () => {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <TableCell key={i}>
-                        <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
+                    <TableCell>
+                      <Skeleton className="h-5 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-10" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        <Skeleton className="h-5 w-14 rounded-full" />
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-8 w-24" />
+                        <Skeleton className="h-6 w-6" />
+                        <Skeleton className="h-6 w-6" />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : interviews.length > 0 ? (

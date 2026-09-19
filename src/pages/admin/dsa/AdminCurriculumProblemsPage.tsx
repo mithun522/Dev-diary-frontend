@@ -15,6 +15,7 @@ import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import Button from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
 import AskForConfirmationModal from "../../../components/AskForConfirmationModal";
 import {
   CODE_EXECUTION_LANGUAGE_OPTIONS,
@@ -82,7 +83,8 @@ const AdminCurriculumProblemsPage: React.FC = () => {
 
   // A problem's single expected-stdout test case is loaded lazily (via the detail endpoint) only
   // once the admin actually opens it for editing, rather than fetching every row's detail up front.
-  const { data: editingDetail } = useCurriculumProblemDetail(editingProblemId ?? "");
+  const { data: editingDetail, isFetching: isFetchingEditingDetail } =
+    useCurriculumProblemDetail(editingProblemId ?? "");
 
   useEffect(() => {
     if (editingProblemId && editingDetail) {
@@ -191,7 +193,13 @@ const AdminCurriculumProblemsPage: React.FC = () => {
       </div>
 
       {isFormOpen && (
-        <Card>
+        <Card
+          className={`transition-opacity duration-200 ${
+            editingProblemId && isFetchingEditingDetail
+              ? "opacity-50 pointer-events-none"
+              : "opacity-100"
+          }`}
+        >
           <CardContent className="pt-6 space-y-3">
             <div className="grid md:grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -336,7 +344,7 @@ const AdminCurriculumProblemsPage: React.FC = () => {
                   <TableRow key={index}>
                     {Array.from({ length: 4 }).map((_, i) => (
                       <TableCell key={i}>
-                        <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                        <Skeleton className="h-8 w-full" />
                       </TableCell>
                     ))}
                   </TableRow>

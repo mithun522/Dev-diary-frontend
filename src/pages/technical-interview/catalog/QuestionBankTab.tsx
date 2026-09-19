@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search, ChevronDown, ChevronRight, ArrowLeft } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Card, CardContent } from "../../../components/ui/card";
+import { Skeleton } from "../../../components/ui/skeleton";
 import Button from "../../../components/ui/button";
 import { useDebounce } from "../../../api/hooks/use-debounce";
 import {
@@ -61,7 +62,15 @@ const QuestionBankTab: React.FC = () => {
       {isSearching ? (
         <div className="space-y-2">
           {isLoadingSearch ? (
-            <div className="h-24 w-full bg-gray-300 animate-pulse rounded" />
+            Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="rounded-md border p-3 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+            ))
           ) : searchResults.length > 0 ? (
             <>
               {searchResults.map((result) => (
@@ -110,7 +119,17 @@ const QuestionBankTab: React.FC = () => {
           </Button>
 
           {isLoadingTree ? (
-            <div className="h-40 w-full bg-gray-300 animate-pulse rounded" />
+            Array.from({ length: 3 }).map((_, index) => (
+              <Card key={index}>
+                <div className="flex items-center justify-between p-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-56" />
+                  </div>
+                  <Skeleton className="h-5 w-5 rounded-full" />
+                </div>
+              </Card>
+            ))
           ) : (
             languageTree?.topics.map((topic) => (
               <Card key={topic.slug} data-cy="tech-interview-catalog-topic">
@@ -160,7 +179,12 @@ const QuestionBankTab: React.FC = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {isLoadingLanguages ? (
             Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="h-24 w-full bg-gray-300 animate-pulse rounded" />
+              <Card key={index}>
+                <CardContent className="pt-6 space-y-2">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-3 w-3/4" />
+                </CardContent>
+              </Card>
             ))
           ) : languages && languages.length > 0 ? (
             languages.map((language) => (

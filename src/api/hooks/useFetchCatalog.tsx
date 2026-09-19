@@ -1,4 +1,10 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   fetchCatalogProblemDetail,
   fetchCatalogProblems,
@@ -48,6 +54,9 @@ export const useFetchCatalogProblemDetail = (id?: string) => {
     queryKey: ["catalog", "problem", id],
     queryFn: () => fetchCatalogProblemDetail(id as string),
     enabled: !!id,
+    // Keeps the previously loaded problem on screen while the next one loads (e.g. switching
+    // which catalog problem the admin edit modal is open on), instead of flashing blank.
+    placeholderData: keepPreviousData,
   });
 };
 

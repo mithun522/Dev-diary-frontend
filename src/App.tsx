@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { TooltipProvider } from "./components/ui/tooltip";
+import GlobalLoadingBar from "./components/GlobalLoadingBar";
 import LandingPage from "./pages/Landing";
 import LoginPage from "./pages/auth/LoginPage";
 import { ToastContainer } from "react-toastify";
@@ -50,6 +51,7 @@ const App = () => {
       <ThemeProvider defaultTheme="system">
         <TooltipProvider>
           <BrowserRouter>
+            <GlobalLoadingBar />
             <ToastContainer />
             <Routes>
               <Route element={<RedirectIfAuth />}>

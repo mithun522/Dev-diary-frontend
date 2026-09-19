@@ -10,6 +10,7 @@ import {
 } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Progress } from "../../../components/ui/progress";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { useFetchAdminInterviewSessionDetail } from "../../../api/hooks/useAdminInterviewSessions";
 import type { AdminSessionQuestionReview } from "../../../api/services/adminInterviewSessions.service";
 import { formatDate } from "../../../utils/formatDate";
@@ -81,12 +82,7 @@ const AdminInterviewSessionDetailPage: React.FC = () => {
   if (error) return <ErrorPage message="Failed to fetch this interview session" />;
 
   if (isLoading || !session) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 mt-24">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Loading session...</p>
-      </div>
-    );
+    return <AdminInterviewSessionDetailSkeleton />;
   }
 
   const { recording } = session;
@@ -315,5 +311,69 @@ const AdminInterviewSessionDetailPage: React.FC = () => {
     </div>
   );
 };
+
+// Mirrors the real layout's shape — back button, the candidate/recording card grid, and a couple
+// of per-question review cards — so the real content doesn't reflow in once it lands.
+const AdminInterviewSessionDetailSkeleton: React.FC = () => (
+  <div
+    className="space-y-6 animate-in fade-in duration-300"
+    data-cy="admin-interview-session-detail-skeleton"
+  >
+    <Skeleton className="h-8 w-40" />
+
+    <div className="grid gap-6 md:grid-cols-3">
+      <Card className="md:col-span-1">
+        <CardHeader>
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-40" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <div className="border-t pt-3 space-y-3">
+            <div className="flex flex-col items-center gap-2">
+              <Skeleton className="h-9 w-16" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+            <Skeleton className="h-2 w-full rounded-full" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-4 w-56" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-40 w-full rounded-md" />
+            <Skeleton className="h-40 w-full rounded-md" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <div className="space-y-4">
+      <Skeleton className="h-6 w-28" />
+      {Array.from({ length: 3 }).map((_, index) => (
+        <Card key={index}>
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
 
 export default AdminInterviewSessionDetailPage;

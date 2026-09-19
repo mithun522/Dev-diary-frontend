@@ -12,6 +12,7 @@ import {
 } from "../../../components/ui/table";
 import Button from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
 import { Pencil, Trash2 } from "lucide-react";
 import { getDifficultyColor } from "../../../utils/colorVariations";
 import { logger } from "../../../utils/logger";
@@ -111,11 +112,27 @@ const AdminCompanyProblemsPage: React.FC = () => {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <TableCell key={i}>
-                        <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
+                    <TableCell>
+                      <Skeleton className="h-5 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        <Skeleton className="h-5 w-14 rounded-full" />
+                        <Skeleton className="h-5 w-12 rounded-full" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-6 w-6" />
+                        <Skeleton className="h-6 w-6" />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : problems.length > 0 ? (

@@ -13,6 +13,7 @@ import {
 import { Textarea } from "../../../components/ui/textarea";
 import Button from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
 import AskForConfirmationModal from "../../../components/AskForConfirmationModal";
 import type { Invite, InviteStudentsResult } from "../../../api/services/invites.service";
 import {
@@ -118,7 +119,7 @@ const InviteStudentsPage: React.FC = () => {
       <Card>
         <CardContent className="pt-6">
           {isLoadingSeatUsage ? (
-            <div className="h-6 w-40 bg-gray-300 animate-pulse rounded" />
+            <Skeleton className="h-6 w-40" />
           ) : (
             <p className="text-sm" data-cy="seat-usage-banner">
               Seat usage:{" "}
@@ -189,11 +190,15 @@ const InviteStudentsPage: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {isLoadingInvites ? (
-                  <TableRow>
-                    <TableCell colSpan={4}>
-                      <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
-                    </TableCell>
-                  </TableRow>
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <TableRow key={index}>
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <TableCell key={i}>
+                          <Skeleton className="h-8 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
                 ) : pendingStudentInvites.length > 0 ? (
                   pendingStudentInvites.map((invite) => (
                     <TableRow key={invite.id} data-cy="pending-student-invite-row">

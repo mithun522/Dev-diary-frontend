@@ -123,3 +123,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes indeterminate-bar {
+  0% {
+    transform: translateX(-100%);
+    width: 40%;
+  }
+  50% {
+    transform: translateX(60%);
+    width: 55%;
+  }
+  100% {
+    transform: translateX(220%);
+    width: 40%;
+  }
+}
+
+.animate-indeterminate-bar {
+  animation: indeterminate-bar 1.1s ease-in-out infinite;
+}

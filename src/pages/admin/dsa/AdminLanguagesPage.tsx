@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
+import { Skeleton } from "../../../components/ui/skeleton";
 import AskForConfirmationModal from "../../../components/AskForConfirmationModal";
 import { logger } from "../../../utils/logger";
 import {
@@ -102,7 +103,7 @@ const AdminLanguagesPage: React.FC = () => {
                   <TableRow key={index}>
                     {Array.from({ length: 2 }).map((_, i) => (
                       <TableCell key={i}>
-                        <div className="h-8 w-full bg-gray-300 animate-pulse rounded" />
+                        <Skeleton className="h-8 w-full" />
                       </TableCell>
                     ))}
                   </TableRow>

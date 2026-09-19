@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import MarkdownPreview from "@uiw/react-markdown-preview";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import Button from "../../../components/ui/button";
+import { Skeleton } from "../../../components/ui/skeleton";
 import ErrorPage from "../../ErrorPage";
 import {
   useCurriculumProblemDetail,
+  useCurriculumProblems,
+  useCurriculumTopics,
   useRunCurriculumSolution,
   useSubmitCurriculumSolution,
 } from "../../../api/hooks/useCurriculum";
@@ -29,9 +32,21 @@ const errorMessage = (err: unknown, fallback: string) => {
 const CurriculumSolveProblemPage: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
   const navigate = useNavigate();
-  const { data: problem, isLoading, error } = useCurriculumProblemDetail(problemId ?? "");
+  const {
+    data: problem,
+    isLoading,
+    isFetching,
+    error,
+  } = useCurriculumProblemDetail(problemId ?? "");
   const [sourceCode, setSourceCode] = useState("");
   const [activeResult, setActiveResult] = useState<CurriculumRunResult | null>(null);
+  const [pendingDirection, setPendingDirection] = useState<
+    "previous" | "next" | null
+  >(null);
+
+  useEffect(() => {
+    if (!isFetching) setPendingDirection(null);
+  }, [isFetching]);
 
   // Seed the draft from localStorage (if the candidate left mid-solve) or the problem's starter
   // code, the first time the problem loads — same per-problem persistence idea as the catalog's
@@ -48,8 +63,65 @@ const CurriculumSolveProblemPage: React.FC = () => {
     localStorage.setItem(draftKey(problem.id), sourceCode);
   }, [problem, sourceCode]);
 
+  useEffect(() => {
+    setActiveResult(null);
+  }, [problem?.id]);
+
   const runMutation = useRunCurriculumSolution(problemId ?? "");
   const submitMutation = useSubmitCurriculumSolution(problemId ?? "");
+
+  const { data: topics } = useCurriculumTopics();
+  const { data: topicProblems } = useCurriculumProblems(
+    problem?.topicId ?? "",
+    problem?.language
+  );
+
+  const topicIndex = useMemo(
+    () => topics?.findIndex((topic) => topic.id === problem?.topicId) ?? -1,
+    [topics, problem?.topicId]
+  );
+  const previousTopic =
+    topicIndex > 0 ? topics?.[topicIndex - 1] : undefined;
+  const nextTopic =
+    topicIndex >= 0 && topics && topicIndex < topics.length - 1
+      ? topics[topicIndex + 1]
+      : undefined;
+
+  const problemIndex = useMemo(
+    () => topicProblems?.findIndex((item) => item.id === problem?.id) ?? -1,
+    [topicProblems, problem?.id]
+  );
+  const isFirstInTopic = problemIndex === 0;
+  const isLastInTopic =
+    !!topicProblems && problemIndex === topicProblems.length - 1;
+
+  const { data: previousTopicProblems } = useCurriculumProblems(
+    isFirstInTopic && previousTopic ? previousTopic.id : "",
+    problem?.language
+  );
+  const { data: nextTopicProblems } = useCurriculumProblems(
+    isLastInTopic && nextTopic ? nextTopic.id : "",
+    problem?.language
+  );
+
+  const previousProblemId = !isFirstInTopic
+    ? topicProblems?.[problemIndex - 1]?.id
+    : previousTopicProblems?.[previousTopicProblems.length - 1]?.id;
+  const previousLabel = isFirstInTopic ? "Prev topic" : "Previous";
+  const isPreviousDisabled =
+    isFirstInTopic && !previousTopic ? true : !previousProblemId;
+
+  const nextProblemId = !isLastInTopic
+    ? topicProblems?.[problemIndex + 1]?.id
+    : nextTopicProblems?.[0]?.id;
+  const nextLabel = isLastInTopic ? "Next topic" : "Next";
+  const isNextDisabled = isLastInTopic && !nextTopic ? true : !nextProblemId;
+
+  const goToProblem = (id: string | undefined, direction: "previous" | "next") => {
+    if (!id) return;
+    setPendingDirection(direction);
+    navigate(`/dsa/curriculum/${id}`);
+  };
 
   const handleRun = () => {
     runMutation.mutate(sourceCode, {
@@ -95,7 +167,7 @@ const CurriculumSolveProblemPage: React.FC = () => {
   }
 
   if (isLoading || !problem) {
-    return <div className="h-40 w-full bg-gray-300 animate-pulse rounded" />;
+    return <CurriculumSolveProblemSkeleton />;
   }
 
   return (
@@ -115,9 +187,46 @@ const CurriculumSolveProblemPage: React.FC = () => {
         <Badge className={CURRICULUM_LEVEL_COLORS[problem.level]}>
           {pascalizeUnderscore(problem.level)}
         </Badge>
+
+        <div className="flex items-center gap-2 ml-auto">
+          <Button
+            variant="outlinePrimary"
+            size="sm"
+            onClick={() => goToProblem(previousProblemId, "previous")}
+            disabled={isPreviousDisabled || isFetching}
+            className="flex items-center gap-1"
+            data-cy="curriculum-solve-previous"
+          >
+            {pendingDirection === "previous" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+            {previousLabel}
+          </Button>
+          <Button
+            variant="outlinePrimary"
+            size="sm"
+            onClick={() => goToProblem(nextProblemId, "next")}
+            disabled={isNextDisabled || isFetching}
+            className="flex items-center gap-1"
+            data-cy="curriculum-solve-next"
+          >
+            {nextLabel}
+            {pendingDirection === "next" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 min-w-0">
+      <div
+        className={`flex flex-col lg:flex-row gap-4 flex-1 min-h-0 min-w-0 transition-opacity duration-200 ${
+          isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
+        }`}
+      >
         <div className="lg:w-2/5 flex flex-col min-h-0 min-w-0 overflow-y-auto pt-2 space-y-4">
           <MarkdownPreview source={problem.description} />
           <div>
@@ -173,5 +282,46 @@ const CurriculumSolveProblemPage: React.FC = () => {
     </div>
   );
 };
+
+const CurriculumSolveProblemSkeleton: React.FC = () => (
+  <div
+    className="h-full flex flex-col gap-4 animate-in fade-in duration-300"
+    data-cy="curriculum-solve-skeleton"
+  >
+    <div className="flex items-center gap-3 flex-wrap">
+      <Skeleton className="h-8 w-8 shrink-0" />
+      <Skeleton className="h-7 w-56" />
+      <Skeleton className="h-5 w-16 rounded-full" />
+      <div className="flex items-center gap-2 ml-auto">
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-8 w-16" />
+      </div>
+    </div>
+
+    <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 min-w-0">
+      <div className="lg:w-2/5 flex flex-col min-h-0 min-w-0 pt-2 space-y-3">
+        <Skeleton className="h-5 w-4/5" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-11/12" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+        <div className="pt-4 space-y-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-12 w-full rounded-md" />
+          <Skeleton className="h-12 w-full rounded-md" />
+        </div>
+      </div>
+
+      <div className="lg:w-3/5 flex flex-col min-h-0 min-w-0 gap-3">
+        <div className="flex items-center justify-end gap-2">
+          <Skeleton className="h-8 w-16" />
+          <Skeleton className="h-8 w-16" />
+        </div>
+        <Skeleton className="flex-1 min-h-[300px] w-full rounded-md" />
+      </div>
+    </div>
+  </div>
+);
 
 export default CurriculumSolveProblemPage;
