@@ -96,6 +96,15 @@ export const CURRICULUM_PROBLEM_SUBMISSIONS = (id: string) =>
 
 // ---- tech-interview-service ----
 export const TECHNICAL_INTERVIEW = `${TECH_INTERVIEW_API_URL}/techinterview`;
+// Shared, curated Q&A catalog (tech_interview.catalog_languages/topics/questions) — read-only,
+// seeded from markdown via tech-interview-service's scripts/seedCatalog.js. Distinct from
+// TECHNICAL_INTERVIEW above, which is each candidate's own personal Q&A bank.
+export const TECH_INTERVIEW_CATALOG_LANGUAGES = `${TECHNICAL_INTERVIEW}/catalog/languages`;
+export const TECH_INTERVIEW_CATALOG_LANGUAGE_BY_ID = (language: string) =>
+  `${TECH_INTERVIEW_CATALOG_LANGUAGES}/${language}`;
+export const TECH_INTERVIEW_CATALOG_QUESTION_BY_SLUG = (slug: string) =>
+  `${TECHNICAL_INTERVIEW}/catalog/questions/${slug}`;
+export const TECH_INTERVIEW_CATALOG_SEARCH = `${TECHNICAL_INTERVIEW}/catalog/search`;
 
 // ---- knowledge-service ----
 export const BLOGS = `${KNOWLEDGE_API_URL}/blogs`;
