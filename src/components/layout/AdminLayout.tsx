@@ -38,7 +38,12 @@ interface AdminLayoutProps {
   children?: React.ReactNode;
 }
 
-const NAV_ITEMS = [
+// A plain org admin's whole toolkit for now: invite students, monitor/manage users, review
+// interview sessions. Everything else below (EXTENDED_NAV_ITEMS) is fully built and functional,
+// just not exposed to a plain admin yet — routed behind SuperAdminRoute in App.tsx until each
+// piece gets its own real access story, per the current product decision to keep the features
+// dormant rather than delete them.
+const BASE_NAV_ITEMS = [
   { to: "/admin/users", label: "Users", icon: Users, cy: "admin" },
   {
     to: "/admin/students/invite",
@@ -46,6 +51,16 @@ const NAV_ITEMS = [
     icon: UserPlus,
     cy: "admin-invite-students",
   },
+  {
+    to: "/admin/interview-sessions",
+    label: "Interview Sessions",
+    icon: MonitorPlay,
+    cy: "admin-interview-sessions",
+  },
+];
+
+// Super-admin-only for now — see the comment on BASE_NAV_ITEMS above.
+const EXTENDED_NAV_ITEMS = [
   { to: "/admin/dsa/catalog", label: "DSA Catalog", icon: Code, cy: "admin-dsa-catalog" },
   {
     to: "/admin/dsa/curriculum",
@@ -91,12 +106,6 @@ const NAV_ITEMS = [
     icon: HelpCircle,
     cy: "admin-behavioral-questions",
   },
-  {
-    to: "/admin/interview-sessions",
-    label: "Interview Sessions",
-    icon: MonitorPlay,
-    cy: "admin-interview-sessions",
-  },
 ];
 
 const AdminLayout: React.FC<AdminLayoutProps> = () => {
@@ -132,7 +141,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            {NAV_ITEMS.map(({ to, label, icon: Icon, cy }) => (
+            {BASE_NAV_ITEMS.map(({ to, label, icon: Icon, cy }) => (
               <SidebarMenuItem key={to}>
                 <SidebarMenuButton asChild tooltip={label}>
                   <Link
@@ -150,6 +159,26 @@ const AdminLayout: React.FC<AdminLayoutProps> = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
+
+            {isSuperAdmin() &&
+              EXTENDED_NAV_ITEMS.map(({ to, label, icon: Icon, cy }) => (
+                <SidebarMenuItem key={to}>
+                  <SidebarMenuButton asChild tooltip={label}>
+                    <Link
+                      to={to}
+                      data-cy={`sidebar-nav-${cy}`}
+                      className={`flex items-center gap-2 ${
+                        location.pathname.startsWith(to)
+                          ? "bg-accent text-accent-foreground"
+                          : ""
+                      }`}
+                    >
+                      <Icon />
+                      {state !== "collapsed" && <span>{label}</span>}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
 
             {isSuperAdmin() && (
               <SidebarMenuItem>

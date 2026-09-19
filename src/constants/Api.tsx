@@ -49,6 +49,7 @@ export const ACCEPT_INVITE = `${AUTH_API_URL}/invites/accept`;
 // a super admin managing admin invites and an admin managing student invites.
 export const LIST_INVITES = `${AUTH_API_URL}/invites`;
 export const RESEND_INVITE = (id: string) => `${AUTH_API_URL}/invites/${id}/resend`;
+export const REVOKE_INVITE = (id: string) => `${AUTH_API_URL}/invites/${id}`;
 export const ADMIN_SEAT_USAGE = `${AUTH_API_URL}/admin/seats`;
 export const SUPER_ADMIN_ADMINS = `${AUTH_API_URL}/super-admin/admins`;
 export const SUPER_ADMIN_ADMIN_SEAT_LIMIT = (id: string) =>

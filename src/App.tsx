@@ -15,7 +15,6 @@ import CurriculumSolveProblemPage from "./pages/dsa/curriculum/CurriculumSolvePr
 import ProtectedRoute from "./components/ProtectedRoute";
 import InterviewPage from "./pages/interview/InterviewPage";
 import LiveInterviewPage from "./pages/interview/LiveInterviewPage";
-import SystemDesignPage from "./pages/system-design/SystemDesign";
 import KnowledgePage from "./pages/knowledge/KnowledgePage";
 import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import MyProfilePage from "./pages/my-profile/MyProfilePage";
@@ -90,7 +89,10 @@ const App = () => {
                   path="/interview/live/:interviewId"
                   element={<LiveInterviewPage />}
                 />
-                <Route path="/system-design" element={<SystemDesignPage />} />
+                {/* System Design is gated for now — not ready to show to users yet, per current
+                    product decision. Its page component and admin CRUD stay fully intact in the
+                    codebase for when it is; a stray link here just falls through to the
+                    catch-all "*" route below. */}
                 <Route path="/knowledge" element={<KnowledgePage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/profile" element={<MyProfilePage />} />
@@ -102,7 +104,10 @@ const App = () => {
                 <Route path="/question-bank" element={<QuestionBankPage />} />
               </Route>
 
-              {/* Admin routes */}
+              {/* Admin routes — a plain org admin's whole toolkit for now: invite students,
+                  monitor/manage users, review interview sessions. See AdminLayout.tsx's
+                  BASE_NAV_ITEMS/EXTENDED_NAV_ITEMS comment for why the rest lives under
+                  SuperAdminRoute below instead of here, fully built but not yet exposed. */}
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
@@ -110,6 +115,23 @@ const App = () => {
                   path="/admin/students/invite"
                   element={<InviteStudentsPage />}
                 />
+                <Route
+                  path="/admin/interview-sessions"
+                  element={<AdminInterviewSessionsPage />}
+                />
+                <Route
+                  path="/admin/interview-sessions/:id"
+                  element={<AdminInterviewSessionDetailPage />}
+                />
+              </Route>
+
+              {/* Super-admin routes */}
+              <Route element={<SuperAdminRoute />}>
+                <Route path="/super-admin/invites" element={<InviteAdminsPage />} />
+
+                {/* Dormant for a plain org admin — fully implemented, just not exposed yet (per
+                    current product decision), so reachable only via the super admin's nav for
+                    now until each of these gets its own real access story. */}
                 <Route path="/admin/dsa/catalog" element={<AdminCatalogPage />} />
                 <Route
                   path="/admin/dsa/curriculum"
@@ -142,19 +164,6 @@ const App = () => {
                   path="/admin/interview-simulator/behavioral-questions"
                   element={<AdminBehavioralQuestionsPage />}
                 />
-                <Route
-                  path="/admin/interview-sessions"
-                  element={<AdminInterviewSessionsPage />}
-                />
-                <Route
-                  path="/admin/interview-sessions/:id"
-                  element={<AdminInterviewSessionDetailPage />}
-                />
-              </Route>
-
-              {/* Super-admin routes */}
-              <Route element={<SuperAdminRoute />}>
-                <Route path="/super-admin/invites" element={<InviteAdminsPage />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />

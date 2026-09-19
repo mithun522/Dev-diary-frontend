@@ -5,6 +5,7 @@ import {
   ACCEPT_INVITE,
   LIST_INVITES,
   RESEND_INVITE,
+  REVOKE_INVITE,
   ADMIN_SEAT_USAGE,
   SUPER_ADMIN_ADMINS,
   SUPER_ADMIN_ADMIN_SEAT_LIMIT,
@@ -83,6 +84,13 @@ export const listInvites = async (): Promise<Invite[]> => {
 
 export const resendInvite = async (id: string): Promise<{ message: string }> => {
   const response = await AxiosInstance.post(RESEND_INVITE(id));
+  return response.data;
+};
+
+// Deletes the pending placeholder user row outright (not just the invite), so the email becomes
+// immediately re-invitable — see auth-service's inviteService.js::revokeInvite.
+export const revokeInvite = async (id: string): Promise<{ message: string }> => {
+  const response = await AxiosInstance.delete(REVOKE_INVITE(id));
   return response.data;
 };
 

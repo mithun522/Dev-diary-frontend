@@ -5,6 +5,7 @@ import {
   acceptInvite,
   listInvites,
   resendInvite,
+  revokeInvite,
   getSeatUsage,
   listAdmins,
   updateAdminSeatLimit,
@@ -61,6 +62,20 @@ export const useResendInvite = () => {
     mutationFn: (id: string) => resendInvite(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invites"] });
+    },
+  });
+};
+
+export const useRevokeInvite = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => revokeInvite(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invites"] });
+      // Revoking deletes the pending placeholder user row outright (not just the invite), so an
+      // admin invite's row in the super admin's admins table needs to disappear too, not just its
+      // entry in the pending-invites list.
+      queryClient.invalidateQueries({ queryKey: ["super-admin-admins"] });
     },
   });
 };

@@ -15,7 +15,6 @@ import {
 import {
   Archive,
   Book,
-  Building,
   Code,
   Laptop,
   LogOut,
@@ -71,7 +70,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
         <SidebarContent>
           <SidebarMenu className="gap-3">
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="DSA Tracker">
+              <SidebarMenuButton asChild tooltip="DSA Prep">
                 <Link
                   to="/dsa"
                   data-cy="sidebar-nav-dsa"
@@ -82,7 +81,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
                   }`}
                 >
                   <Code />
-                  {state !== "collapsed" && <span>DSA Tracker</span>}
+                  {state !== "collapsed" && <span>DSA Prep</span>}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -104,22 +103,8 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="System Design">
-                <Link
-                  to="/system-design"
-                  data-cy="sidebar-nav-system-design"
-                  className={`flex items-center gap-2 ${
-                    location.pathname.startsWith("/system-design")
-                      ? "bg-accent text-accent-foreground"
-                      : ""
-                  }`}
-                >
-                  <Building />
-                  {state !== "collapsed" && <span>System Design</span>}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {/* System Design is gated for now — not ready to show to users yet, per current
+                product decision. The page/route/admin CRUD stay fully intact for when it is. */}
 
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Knowledge Base">
