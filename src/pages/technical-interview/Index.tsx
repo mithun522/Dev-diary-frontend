@@ -7,6 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
 import AddTechnicalQuestionForm from "./AddTechInterview";
 import { TECHNICAL_INTERVIEW } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
@@ -31,6 +37,7 @@ import Button from "../../components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import Languages from "./Languages";
 import MarkdownPreview from "@uiw/react-markdown-preview";
+import QuestionBankTab from "./catalog/QuestionBankTab";
 
 export interface TechnicalQuestion {
   id: string;
@@ -105,83 +112,102 @@ const TechnicalInterviewPage = () => {
     }
   };
 
-  if (error) {
-    return <ErrorPage message="Failed to load questions. Please try again." />;
-  }
-
   return (
     <div className="space-y-6 max-h-[80vh] overflow-auto ">
-      <div className="flex justify-between items-start">
-        <div data-cy="tech-interview">
-          <h1 className="text-3xl font-bold">Technical Interview Q&A</h1>
-          <p className="text-muted-foreground">
-            Manage your technical interview questions and answers with
-            auto-numbered points.
-          </p>
-        </div>
-        <AddTechnicalQuestionForm
-          isEdit={false}
-          row={selectedQuestion ? selectedQuestion : undefined}
-        />
+      <div data-cy="tech-interview">
+        <h1 className="text-3xl font-bold">Technical Interview Q&A</h1>
+        <p className="text-muted-foreground">
+          Browse the shared question bank, or manage your own questions and answers.
+        </p>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search questions, answers, or tags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Languages
-          selectedLanguage={selectedLanguage}
-          setSelectedLanguage={setSelectedLanguage}
-        />
-      </div>
+      <Tabs defaultValue="question-bank">
+        <TabsList className="grid grid-cols-2 md:w-[360px]">
+          <TabsTrigger value="question-bank" data-cy="tech-interview-tab-question-bank">
+            Question Bank
+          </TabsTrigger>
+          <TabsTrigger value="my-questions" data-cy="tech-interview-tab-my-questions">
+            My Questions
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-4">
-        {displayedQuestions.map((question: TechnicalQuestion, index) => (
-          <div key={question.id} data-cy="questions-card">
-            <QuestionsCard
-              index={index}
-              key={question.id}
-              question={question}
-              onEdit={() => setSelectedQuestion(question)}
-              onDelete={() => handleDeleteOpen(question.id)}
-            />
-          </div>
-        ))}
-        {(isLoading || isFetching) && (
-          <QuestionsShimmer data-cy="questions-shimmer" />
-        )}
-        {!isSearching && hasNextPage && (
-          <div className="flex justify-center mt-4">
-            <Button
-              variant="outlinePrimary"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="px-4 py-2 text-sm rounded-lg disabled:opacity-50"
-            >
-              {isFetchingNextPage ? "Loading..." : "Load More"}
-            </Button>
-          </div>
-        )}
-      </div>
+        <TabsContent value="question-bank" className="pt-4">
+          <QuestionBankTab />
+        </TabsContent>
 
-      {!isLoading && !isFetching && displayedQuestions.length === 0 && (
-        <div className="text-center py-12">
-          <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No questions found</h3>
-          <p className="text-muted-foreground mb-4">
-            {searchQuery || selectedLanguage !== "all"
-              ? "No matching questions found."
-              : "No questions added yet."}
-          </p>
-        </div>
-      )}
+        <TabsContent value="my-questions" className="pt-4 space-y-6">
+          {error ? (
+            <ErrorPage message="Failed to load questions. Please try again." />
+          ) : (
+            <>
+              <div className="flex justify-end">
+                <AddTechnicalQuestionForm
+                  isEdit={false}
+                  row={selectedQuestion ? selectedQuestion : undefined}
+                />
+              </div>
+
+              {/* Filters */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search questions, answers, or tags..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Languages
+                  selectedLanguage={selectedLanguage}
+                  setSelectedLanguage={setSelectedLanguage}
+                />
+              </div>
+
+              <div className="grid gap-4">
+                {displayedQuestions.map((question: TechnicalQuestion, index) => (
+                  <div key={question.id} data-cy="questions-card">
+                    <QuestionsCard
+                      index={index}
+                      key={question.id}
+                      question={question}
+                      onEdit={() => setSelectedQuestion(question)}
+                      onDelete={() => handleDeleteOpen(question.id)}
+                    />
+                  </div>
+                ))}
+                {(isLoading || isFetching) && (
+                  <QuestionsShimmer data-cy="questions-shimmer" />
+                )}
+                {!isSearching && hasNextPage && (
+                  <div className="flex justify-center mt-4">
+                    <Button
+                      variant="outlinePrimary"
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                      className="px-4 py-2 text-sm rounded-lg disabled:opacity-50"
+                    >
+                      {isFetchingNextPage ? "Loading..." : "Load More"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {!isLoading && !isFetching && displayedQuestions.length === 0 && (
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No questions found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {searchQuery || selectedLanguage !== "all"
+                      ? "No matching questions found."
+                      : "No questions added yet."}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
 
       <Dialog
         open={!!selectedQuestion}
