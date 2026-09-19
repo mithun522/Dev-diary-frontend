@@ -13,13 +13,16 @@ import {
 import { Input } from "../../components/ui/input";
 import Button from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import AskForConfirmationModal from "../../components/AskForConfirmationModal";
 import {
   useInviteAdmin,
   useListAdmins,
   useListInvites,
   useResendInvite,
+  useRevokeInvite,
   useUpdateAdminSeatLimit,
 } from "../../api/hooks/useInvites";
+import type { Invite } from "../../api/services/invites.service";
 import { formatDate } from "../../utils/formatDate";
 import { logger } from "../../utils/logger";
 import ErrorPage from "../ErrorPage";
@@ -37,8 +40,10 @@ const InviteAdminsPage: React.FC = () => {
   const inviteAdminMutation = useInviteAdmin();
   const updateSeatLimitMutation = useUpdateAdminSeatLimit();
   const resendInviteMutation = useResendInvite();
+  const revokeInviteMutation = useRevokeInvite();
   const { data: admins, isLoading: isLoadingAdmins, error: adminsError } = useListAdmins();
   const { data: invites, isLoading: isLoadingInvites } = useListInvites();
+  const [inviteToRevoke, setInviteToRevoke] = useState<Invite | null>(null);
 
   const pendingAdminInvites = (invites ?? []).filter(
     (invite) => invite.role === "admin" && invite.status !== "accepted"
@@ -105,6 +110,21 @@ const InviteAdminsPage: React.FC = () => {
       onError: (err) => {
         toast.error(errorMessage(err, "Failed to resend invite"));
         logger.error("Error resending invite:", err);
+      },
+    });
+  };
+
+  const handleRevoke = () => {
+    if (!inviteToRevoke) return;
+    revokeInviteMutation.mutate(inviteToRevoke.id, {
+      onSuccess: () => {
+        toast.success("Invite revoked");
+        setInviteToRevoke(null);
+      },
+      onError: (err) => {
+        toast.error(errorMessage(err, "Failed to revoke invite"));
+        logger.error("Error revoking invite:", err);
+        setInviteToRevoke(null);
       },
     });
   };
@@ -274,7 +294,7 @@ const InviteAdminsPage: React.FC = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>{formatDate(invite.expiresAt)}</TableCell>
-                      <TableCell>
+                      <TableCell className="flex gap-2 justify-end">
                         <Button
                           variant="outlinePrimary"
                           size="sm"
@@ -283,6 +303,15 @@ const InviteAdminsPage: React.FC = () => {
                           data-cy="resend-invite-button"
                         >
                           Resend
+                        </Button>
+                        <Button
+                          variant="outlineDanger"
+                          size="sm"
+                          disabled={revokeInviteMutation.isPending}
+                          onClick={() => setInviteToRevoke(invite)}
+                          data-cy="revoke-invite-button"
+                        >
+                          Revoke
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -299,6 +328,17 @@ const InviteAdminsPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {inviteToRevoke && (
+        <AskForConfirmationModal
+          showDelete
+          title="Revoke Invite"
+          message={`Are you sure you want to revoke the invite sent to "${inviteToRevoke.email}"? Its link will stop working immediately, and this email can be invited again right away.`}
+          onCancel={() => setInviteToRevoke(null)}
+          onDelete={handleRevoke}
+          isDeleting={revokeInviteMutation.isPending}
+        />
+      )}
     </div>
   );
 };

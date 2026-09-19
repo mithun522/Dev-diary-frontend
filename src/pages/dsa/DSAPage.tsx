@@ -1,141 +1,28 @@
-import { useState } from "react";
-import Button from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import type { DSAProblem } from "../../data/dsaProblemsData";
-import DsaFormModal from "./AddDsaModel";
-import AxiosInstance from "../../utils/AxiosInstance";
-import { DSA } from "../../constants/Api";
-import AskForConfirmationModal from "../../components/AskForConfirmationModal";
-import { logger } from "../../utils/logger";
-import { toast } from "react-toastify";
-import { AxiosError } from "axios";
-import SolutionModal from "./SolutionModal";
-import { useFetchDsaProblemByUser } from "../../api/hooks/useFetchDsa";
-import DsaTable from "./DsaTable";
-import ErrorPage from "../ErrorPage";
-import { useDebounce } from "../../api/hooks/use-debounce";
-import { useQueryClient } from "@tanstack/react-query";
 import OverallProgress from "./progress/OverallProgress";
 import TopicCoverage from "./progress/TopicCoverage";
 import WeeklyActivity from "./progress/WeeklyActivity";
-import { FolderSearch } from "lucide-react";
 import Todo from "./todo/Todo";
 import PracticeTab from "./practice/PracticeTab";
 import CurriculumTab from "./curriculum/CurriculumTab";
 
 const DSAPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [difficultyFilter, setDifficultyFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [selectedProblem, setSelectedProblem] = useState<DSAProblem | null>(
-    null
-  );
-  const [isAddModelOpen, setIsAddModelOpen] = useState<boolean>(false);
-  const [isOpenConfirmationModal, setIsOpenConfirmationModal] = useState(false);
-  const [isSolutionModalOpen, setIsSolutionModalOpen] = useState(false);
-  const [isDeletingProblem, setIsDeletingProblem] = useState(false);
-  const debouncedSearch = useDebounce(searchQuery, 1000);
-
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading: isLoadingFetch,
-    isFetching: isFetchingFetch,
-    error: errorFetch,
-  } = useFetchDsaProblemByUser({
-    search: debouncedSearch,
-    difficulty: difficultyFilter,
-  });
-  const queryClient = useQueryClient();
-  const dsa = data?.pages?.flatMap((page) => page.dsa) ?? [];
-
-  // Chart colors
-
-  const deleteDsaProblem = async () => {
-    setIsDeletingProblem(true);
-    const deletedProblemId = selectedProblem?.id;
-
-    await AxiosInstance.delete(`${DSA}/${deletedProblemId}`)
-      .then((res) => {
-        setSelectedProblem(null);
-
-        if (res.status === 204) {
-          toast.success("DSA problem deleted successfully");
-
-          queryClient.setQueriesData(
-            { queryKey: ["dsa"], exact: false },
-            (oldData: unknown) => {
-              const infiniteData = oldData as
-                | {
-                    pages: { dsa: DSAProblem[]; totalLength: number }[];
-                    pageParams: unknown[];
-                  }
-                | undefined;
-
-              if (!infiniteData?.pages) return oldData;
-
-              return {
-                ...infiniteData,
-                pages: infiniteData.pages.map((page) => ({
-                  ...page,
-                  dsa: page.dsa.filter(
-                    (problem) => problem.id !== deletedProblemId
-                  ),
-                  totalLength: Math.max(page.totalLength - 1, 0),
-                })),
-              };
-            }
-          );
-          queryClient.invalidateQueries({ queryKey: ["dsa"] });
-        }
-      })
-      .catch((error) => {
-        const err = error as AxiosError;
-
-        toast.error(
-          (err.response?.data as { message: string }).message ||
-            "Failed to Delete DSA problem"
-        );
-        logger.error("Error deleting DSA problem:", error);
-      })
-      .finally(() => {
-        setIsOpenConfirmationModal(false);
-        setIsDeletingProblem(false);
-      });
-  };
-
-  if (errorFetch) return <ErrorPage message="Failed to fetch DSA problems" />;
-
   return (
     <div className="space-y-6" data-cy="dsa-page">
       <div>
-        <h1 className="text-3xl font-bold">DSA Tracker</h1>
+        <h1 className="text-3xl font-bold">DSA Prep</h1>
         <p className="text-muted-foreground">
-          Track and manage your DSA practice problems.
+          Learn the basics, practice problems, and track your progress.
         </p>
       </div>
 
-      <Tabs defaultValue="problems">
-        <TabsList className="grid grid-cols-5 md:w-[620px]">
-          <TabsTrigger value="problems" data-cy="dsa-tab-problems">
-            Problems
-          </TabsTrigger>
+      <Tabs defaultValue="curriculum">
+        <TabsList className="grid grid-cols-4 md:w-[500px]">
           <TabsTrigger value="curriculum" data-cy="dsa-tab-curriculum">
             Basics
           </TabsTrigger>
@@ -154,99 +41,6 @@ const DSAPage: React.FC = () => {
           <CurriculumTab />
         </TabsContent>
 
-        <TabsContent value="problems" className="space-y-6 pt-4">
-          <div className="flex flex-col md:flex-row gap-4 justify-between">
-            <div className="flex-1">
-              <Input
-                placeholder="Search problems by title or tag..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-md"
-                data-cy="dsa-search"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2 md:gap-4">
-              <Select
-                value={difficultyFilter}
-                onValueChange={setDifficultyFilter}
-              >
-                <SelectTrigger
-                  className="w-[120px]"
-                  data-cy="dsa-difficulty-filter-trigger"
-                >
-                  <SelectValue placeholder="Difficulty" />
-                </SelectTrigger>
-                <SelectContent data-cy="dsa-difficulty-filter-content">
-                  <SelectGroup>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="easy">Easy</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger
-                  className="w-[120px]"
-                  data-cy="dsa-status-filter-trigger"
-                >
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent data-cy="dsa-status-filter-content">
-                  <SelectGroup>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="solved">Solved</SelectItem>
-                    <SelectItem value="attempted">Attempted</SelectItem>
-                    <SelectItem value="unsolved">Unsolved</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setIsAddModelOpen(true);
-                  setSelectedProblem(null);
-                }}
-                data-cy="dsa-add-problem-button"
-              >
-                Add DSA Problem
-              </Button>
-            </div>
-          </div>
-          {isLoadingFetch || (dsa && dsa.length > 0) ? (
-            <DsaTable
-              isLoadingFetch={isLoadingFetch}
-              isFetching={isFetchingFetch}
-              fetchedProblems={dsa}
-              setIsOpenConfirmationModal={setIsOpenConfirmationModal}
-              setSelectedProblem={setSelectedProblem}
-              setIsSolutionModalOpen={setIsSolutionModalOpen}
-              errorFetch={errorFetch}
-              isFormModalOpen={isAddModelOpen}
-              setIsFormModalOpen={setIsAddModelOpen}
-              setProblemData={setSelectedProblem}
-              fetchNextPage={fetchNextPage}
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-            />
-          ) : (
-            <div
-              className="flex flex-col gap-3 justify-center items-center h-[40vh] text-muted-foreground"
-              data-cy="dsa-no-data"
-            >
-              <FolderSearch size={48} strokeWidth={1.5} />
-              <p className="text-lg font-medium">No problems found</p>
-              <p className="text-sm">
-                {searchQuery || difficultyFilter || statusFilter
-                  ? "Try adjusting your search or filters."
-                  : "Add a new DSA problem to get started."}
-              </p>
-            </div>
-          )}
-        </TabsContent>
-
         <TabsContent value="practice" className="pt-4">
           <PracticeTab />
         </TabsContent>
@@ -262,29 +56,6 @@ const DSAPage: React.FC = () => {
           <Todo />
         </TabsContent>
       </Tabs>
-      {isAddModelOpen && (
-        <DsaFormModal
-          open={isAddModelOpen}
-          setOpen={setIsAddModelOpen}
-          problemData={selectedProblem}
-        />
-      )}
-      {isOpenConfirmationModal && (
-        <AskForConfirmationModal
-          showDelete
-          onCancel={() => setIsOpenConfirmationModal(false)}
-          onDelete={deleteDsaProblem}
-          isDeleting={isDeletingProblem}
-        />
-      )}
-      {isSolutionModalOpen && selectedProblem && (
-        <SolutionModal
-          selectedProblem={selectedProblem}
-          setSelectedProblem={setSelectedProblem}
-          open={isSolutionModalOpen}
-          setOpen={setIsSolutionModalOpen}
-        />
-      )}
     </div>
   );
 };

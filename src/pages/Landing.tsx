@@ -140,10 +140,10 @@ const LandingPage = () => {
               <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full text-primary">
                 <Code />
               </div>
-              <h3 className="text-xl font-bold mb-2">DSA Tracker</h3>
+              <h3 className="text-xl font-bold mb-2">DSA Prep</h3>
               <p className="text-muted-foreground">
-                Track your progress on 500+ coding problems organized by topic,
-                difficulty, and company.
+                Learn the basics, practice 500+ coding problems organized by
+                topic and difficulty, and track your progress.
               </p>
             </div>
 
