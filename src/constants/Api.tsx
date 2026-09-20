@@ -96,15 +96,17 @@ export const CURRICULUM_PROBLEM_SUBMISSIONS = (id: string) =>
 
 // ---- tech-interview-service ----
 export const TECHNICAL_INTERVIEW = `${TECH_INTERVIEW_API_URL}/techinterview`;
-// Shared, curated Q&A catalog (tech_interview.catalog_languages/topics/questions) — read-only,
-// seeded from markdown via tech-interview-service's scripts/seedCatalog.js. Distinct from
-// TECHNICAL_INTERVIEW above, which is each candidate's own personal Q&A bank.
-export const TECH_INTERVIEW_CATALOG_LANGUAGES = `${TECHNICAL_INTERVIEW}/catalog/languages`;
-export const TECH_INTERVIEW_CATALOG_LANGUAGE_BY_ID = (language: string) =>
-  `${TECH_INTERVIEW_CATALOG_LANGUAGES}/${language}`;
+// Shared, curated Q&A catalog — read-only, seeded from markdown in the backend repo. Four-tier
+// taxonomy: category -> stack -> topic -> question (e.g. cloud -> aws -> lambda -> "cold start
+// causes"). Distinct from TECHNICAL_INTERVIEW above, which is each candidate's own personal Q&A
+// bank. Replaces the old two-tier language/topic/question shape (category and stack are new).
+export const TECH_INTERVIEW_CATALOG = `${TECHNICAL_INTERVIEW}/catalog`;
+export const TECH_INTERVIEW_CATALOG_CATEGORIES = `${TECH_INTERVIEW_CATALOG}/categories`;
+export const TECH_INTERVIEW_CATALOG_STACK_BY_ID = (stack: string) =>
+  `${TECH_INTERVIEW_CATALOG}/stacks/${stack}`;
 export const TECH_INTERVIEW_CATALOG_QUESTION_BY_SLUG = (slug: string) =>
-  `${TECHNICAL_INTERVIEW}/catalog/questions/${slug}`;
-export const TECH_INTERVIEW_CATALOG_SEARCH = `${TECHNICAL_INTERVIEW}/catalog/search`;
+  `${TECH_INTERVIEW_CATALOG}/questions/${slug}`;
+export const TECH_INTERVIEW_CATALOG_SEARCH = `${TECH_INTERVIEW_CATALOG}/search`;
 
 // ---- knowledge-service ----
 export const BLOGS = `${KNOWLEDGE_API_URL}/blogs`;

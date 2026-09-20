@@ -1,9 +1,13 @@
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 import { Badge } from "../../../components/ui/badge";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { useCatalogQuestion } from "../../../api/hooks/useTechInterviewCatalog";
-import { CATALOG_DIFFICULTY_COLORS, type CatalogDifficulty } from "../../../data/techInterviewCatalogData";
+import {
+  CATALOG_DIFFICULTY_COLORS,
+  type CatalogDifficulty,
+} from "../../../data/techInterviewCatalogData";
 import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
 
 interface CatalogQuestionRowProps {
@@ -11,28 +15,27 @@ interface CatalogQuestionRowProps {
   question: string;
   difficulty: CatalogDifficulty;
   subtitle?: string;
-  expanded: boolean;
-  onToggle: () => void;
 }
 
-// Answer/notes are fetched lazily (only once expanded) and cached by react-query, so collapsing
-// and re-expanding the same question is instant on the second open — no popup, everything renders
-// inline right below the question it belongs to.
+// Expands in place — no navigation, no page, no overlay. Each row owns its own expanded state
+// independently of every other row, so opening one never collapses another and never reflows
+// content above it: nothing above the click point ever changes size, so the page never jumps.
+// The answer is fetched lazily (only once expanded) and cached by react-query, so collapsing and
+// re-expanding the same question is instant on the second open.
 const CatalogQuestionRow: React.FC<CatalogQuestionRowProps> = ({
   slug,
   question,
   difficulty,
   subtitle,
-  expanded,
-  onToggle,
 }) => {
+  const [expanded, setExpanded] = useState(false);
   const { data: detail, isLoading } = useCatalogQuestion(expanded ? slug : "");
 
   return (
     <div className="rounded-md border" data-cy="tech-interview-catalog-question-row">
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => setExpanded((prev) => !prev)}
         className="w-full flex items-center justify-between gap-3 p-3 text-left"
       >
         <div className="min-w-0">
