@@ -11,12 +11,12 @@
 
 ## 1. Test viewport matrix
 
-Run the **per-route checklist** (§3) at each of these widths. Cypress equivalents in brackets.
+Run the **per-route checklist** (§3) at each of these widths.
 
 | # | Width × Height | Represents | Notes |
 |---|----------------|-----------|-------|
 | V1 | 320 × 568 | iPhone SE (1st gen), smallest supported | Hardest case; nothing may clip |
-| V2 | 375 × 667 | iPhone SE 2/3, iPhone 8 [`cy.viewport("iphone-8")`] | |
+| V2 | 375 × 667 | iPhone SE 2/3, iPhone 8 | |
 | V3 | 390 × 844 | iPhone 14/15 | Notch/safe-area check |
 | V4 | 414 × 896 | iPhone 11 Pro Max / large Android | |
 | V5 | 768 × 1024 | iPad portrait [`cy.viewport("ipad-2")`] | Exactly the `md` + `useIsMobile` boundary |
@@ -128,7 +128,7 @@ Legend: **S** = stacks to one column · **T** = table scrolls in card · **M** =
 
 | ID | P | Scenario / steps | Expected result |
 |----|---|------------------|-----------------|
-| TC-RSP-080 | P1 | Add a Cypress helper that visits all 22 routes at V1, V5 and V9 and asserts no horizontal overflow | Suite passes; failures point at the offending route |
+| TC-RSP-080 | P1 | Manually visit all 22 routes at V1, V5 and V9 and check for horizontal overflow | No route overflows at any of the three widths |
 | TC-RSP-081 | P2 | Percy/Playwright screenshot baselines at V2/V5/V9 in light **and** dark theme | Baselines committed; diffs reviewed per release (catches the dark-theme defects in doc 21) |
 | TC-RSP-082 | P2 | Lighthouse mobile audit on `/` | No "Content wider than screen" or "Tap targets not sized appropriately" findings ⚠ DEF-236 |
 

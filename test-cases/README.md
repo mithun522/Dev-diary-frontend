@@ -55,7 +55,7 @@ validation messages and endpoints below are literal, not illustrative.
 | 26 | [26-security.md](26-security.md) | AuthN/AuthZ, JWT storage & expiry, admin gating, XSS (markdown/HTML injection), IDOR, upload safety, transport & headers, secrets |
 | 27 | [27-seo-metadata.md](27-seo-metadata.md) | `index.html` meta, `Seo` component per route, robots/sitemap, canonical, JSON-LD, SPA rewrites, social previews |
 | 28 | [28-compatibility-matrix.md](28-compatibility-matrix.md) | Browser/OS/device matrix, dark mode, storage disabled, offline & throttled network, timezone/locale |
-| 29 | [29-suites-and-traceability.md](29-suites-and-traceability.md) | Smoke / sanity / regression suite composition, mapping to existing Cypress specs, coverage gaps, release checklist |
+| 29 | [29-suites-and-traceability.md](29-suites-and-traceability.md) | Smoke / sanity / regression suite composition, manual coverage status, coverage gaps, release checklist |
 | 30 | [30-defect-watchlist.md](30-defect-watchlist.md) | Consolidated list of implementation issues surfaced while writing these cases, each linked to the failing test ID |
 
 ---
@@ -101,9 +101,8 @@ in that section unless a case overrides them.
 
 ### 2.5 Automation status
 
-The `29-suites-and-traceability.md` matrix is the single source of truth for what is already automated.
-Existing specs live in `cypress/e2e/` (`01-Landing` … `13-Settings`). Where a module document knows a
-case is already automated, it appends `[auto: 07-DSA]` to the expected result.
+All testing is currently manual; no automated e2e suite exists. The `29-suites-and-traceability.md`
+matrix is the single source of truth for coverage status and gaps per module.
 
 ### 2.6 Marking a defect
 
@@ -119,8 +118,6 @@ behaviour and the case is annotated `⚠ known defect — see DEF-nn` (catalogue
 |------|-------|
 | Dev server | `npm run dev` → `http://localhost:5173` |
 | Prod build | `npm run build && npm run preview` |
-| E2E runner | `npm run cypress:open` (interactive) · `npm run e2e` (headed Chrome) |
-| Cypress baseUrl | `http://localhost:5173` (`cypress.config.cjs`) |
 | Backend | 9 independent API Gateway stages; URLs in `.env.development` / defaults in `src/constants/Api.tsx` |
 | Auth token | `localStorage.accessToken` (JWT, `sub` = user id, `role` = `user` \| `admin`) |
 | Zustand persistence | `localStorage["auth-storage"]`, `localStorage["user-profile-store"]` |
@@ -135,9 +132,6 @@ behaviour and the case is annotated `⚠ known defect — see DEF-nn` (catalogue
 | `user.admin@…` | Admin panel (`/admin/**`) | JWT `role: "admin"` — role is granted via `PUT /admin/users/{id}/role` by an existing admin |
 | `user.empty@…` | Empty-state coverage | No DSA problems, notes, blogs, todos, files |
 | `user.bulk@…` | Pagination / performance | ≥ 3 pages of DSA problems, notes, blogs, catalog submissions |
-
-`cypress/support/commands.js` provides `cy.ensureTestUser()`, `cy.login()`, `cy.register()` against the
-live dev backend; reuse them rather than re-implementing login in new specs.
 
 ### 3.2 Test data conventions
 
@@ -171,8 +165,8 @@ live dev backend; reuse them rather than re-implementing login in new specs.
 | Suites defined | doc 29 | 5 (smoke, sanity, full regression, security, post-deploy) |
 | Implementation issues catalogued | doc 30 | **302** (11 P0 · 80 P1 · 165 P2 · 46 P3) |
 
-Automation today covers roughly a quarter of the P0/P1 cases (13 Cypress specs); doc 29 §2.1 lists the
-seven specs that would close the biggest gaps — DSA practice, question bank, admin authorisation, todo
-CRUD, admin catalog validation, the XSS guard, and a responsive-overflow sweep.
+All testing is currently manual; no automated e2e suite exists. Doc 29 §2.1 lists the seven areas that
+would close the biggest gaps if automation is introduced — DSA practice, question bank, admin
+authorisation, todo CRUD, admin catalog validation, the XSS guard, and a responsive-overflow sweep.
 
 Last full review: **2026-09-08** against `main` @ `97f63d6` (32 documents).

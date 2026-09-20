@@ -8,7 +8,7 @@
 | **APIs (dsa-service)** | `GET /catalog?searchString=&difficulty=&pageNumber=`, `GET /catalog/{id}`, `POST /catalog/{id}/run`, `POST /catalog/{id}/submissions`, `GET /catalog/{id}/submissions` |
 | **Query keys** | `["catalog", search, difficulty]` (infinite), `["catalog","problem",id]`, `["catalog","submissions",id]` |
 | **Local state** | `localStorage["dsa-practice-draft-<problemId>"]` |
-| **Existing automation** | none — this module is **not** covered by any Cypress spec ⚠ gap G-01 (doc 29) |
+| **Existing automation** | None (manual only) ⚠ gap G-01 (doc 29) |
 | **See also** | doc 03 (Tracker), doc 24 (contracts), doc 25 (editor/judge performance), doc 26 (code execution boundary) |
 
 ### Judge verdicts

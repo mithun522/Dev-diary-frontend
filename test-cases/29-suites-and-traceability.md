@@ -3,10 +3,8 @@
 | | |
 |---|---|
 | **Purpose** | Which cases run when, what is already automated, where the gaps are, and the checklist that gates a release |
-| **Existing automation** | 13 Cypress e2e specs in `cypress/e2e/`, run with `npm run cypress:open` / `npm run e2e` |
-| **Runner config** | `cypress.config.cjs` — `baseUrl http://localhost:5173`, `defaultCommandTimeout 10000` (15 000 in `run` mode), `retries: {runMode: 2, openMode: 0}`, `numTestsKeptInMemory: 1` |
-| **Custom commands** | `cy.ensureTestUser()`, `cy.login()`, `cy.register()` (`cypress/support/commands.js`) |
-| **Important** | The existing specs hit the **live dev backend**, which is why retries are enabled. New specs for error paths must use `cy.intercept` instead |
+| **Existing automation** | None — all suites below are executed manually against the live dev backend |
+| **Important** | Manual runs hit the **live dev backend** directly; error-path cases (400/401/403/404/409/422/500) are exercised by stubbing responses via DevTools network overrides rather than against live data |
 
 ---
 
@@ -80,38 +78,43 @@ Everything in docs 01–20 at P0–P2, plus:
 
 ## 2. Automation status by module
 
-| Module | Spec | Automated cases (approx.) | Coverage | Gap |
-|--------|------|---------------------------|----------|-----|
-| Landing entry points | `01-Landing.cy.jsx` | 2 | Login/Signup navigation only | — |
-| Signup | `02-Register.cy.jsx` | 4 | Happy path, duplicate email, first-name validation | Strength meter, other field validations, error codes |
-| Login | `03-Login.cy.jsx` | 6 | Happy path, wrong password, unknown email, empty fields, links | Admin routing, prefill/disabled email, network errors, double submit |
-| Recovery chain | `05-ForgotResetPassword.cy.jsx` | 17 | Forgot → OTP → reset, incl. several error paths | The success-panel-on-error defect (DEF-13), network-error crash (DEF-14) |
-| Guards & logout | `06-RouteGuardsAndLogout.cy.jsx` | 7 | Unauthenticated redirects, expired token, redirect-if-auth, sidebar nav, logout | Admin-route role checks (all 10 admin routes), storage cleanup after logout |
-| DSA tracker | `07-DSA.cy.jsx` | 9 | Tabs, validation, add with all solutions, row/solution modal, edit, delete (cancel + confirm) | Filters (incl. DEF-34/DEF-35), pagination, search debounce, error states |
-| Knowledge (notes + blogs) | `08-KnowledgeBase.cy.jsx` | 13 | Notes CRUD + pin/favourite; blog create with cover, publish/unpublish, delete | XSS (DEF-82), stale detail (DEF-78), silent failures, filters |
-| Profile | `09-MyProfile.cy.jsx` | 8 | View/edit/cancel, validation, persistence, skills modal flows | Silent save failure (DEF-170), lost edits (DEF-176), email behaviour |
-| Interview simulator | `10-InterviewSimulator.cy.jsx` | 5 | Tabs, filters, start modal, attempt + history | Empty-question crash (DEF-126), timer/auto-submit, scoring rules |
-| System design | `11-SystemDesign.cy.jsx` | 6 | Navigation, search, detail, save toggle, patterns, metrics | Save persistence (DEF-147), inert controls (DEF-150/152) |
-| Analytics | `12-Analytics.cy.jsx` | 5 | Summary cards, timeframe, category filter, tabs | Timeframe filter defect (DEF-159), empty-data states |
-| Settings | `13-Settings.cy.jsx` | 7 | Single layout, tabs, theme select, a switch, export, delete-account dialog | Persistence (DEF-180), theme inertness (DEF-181), false delete (DEF-190) |
-| Technical interview | `04-TechnInterview.cy.jsx` | 3 | Navigation, add a question, verify it | Edit/delete, language CRUD, search encoding (DEF-107), numbered textarea |
-| **DSA practice** | — | 0 | — | ⚠ **G-01** entire module (catalog, judge, drafts, submissions) |
-| **DSA todo** | — | 0 (tab switch only) | — | ⚠ **G-02** CRUD + optimistic rollback |
-| **DSA progress** | — | 0 (tab switch only) | — | ⚠ **G-03** all three charts, partial-payload crash (DEF-63) |
-| **Question bank** | — | 0 | — | ⚠ **G-04** upload chain + 5 preview kinds |
-| **All 7 admin pages** | — | 0 | — | ⚠ **G-05** every admin CRUD + authorisation |
+All testing is currently manual; no automated e2e suite exists. Every module below is executed by hand
+each cycle.
 
-### 2.1 Automation priorities (next sprint)
+| Module | Manual coverage focus | Gap |
+|--------|------------------------|-----|
+| Landing entry points | Login/Signup navigation | — |
+| Signup | Happy path, duplicate email, first-name validation, strength meter, error codes | — |
+| Login | Happy path, wrong password, unknown email, empty fields, links, admin routing, prefill/disabled email, network errors, double submit | — |
+| Recovery chain | Forgot → OTP → reset, incl. several error paths | The success-panel-on-error defect (DEF-13), network-error crash (DEF-14) |
+| Guards & logout | Unauthenticated redirects, expired token, redirect-if-auth, sidebar nav, logout | Admin-route role checks (all 10 admin routes), storage cleanup after logout |
+| DSA tracker | Tabs, validation, add with all solutions, row/solution modal, edit, delete (cancel + confirm) | Filters (incl. DEF-34/DEF-35), pagination, search debounce, error states |
+| Knowledge (notes + blogs) | Notes CRUD + pin/favourite; blog create with cover, publish/unpublish, delete | XSS (DEF-82), stale detail (DEF-78), silent failures, filters |
+| Profile | View/edit/cancel, validation, persistence, skills modal flows | Silent save failure (DEF-170), lost edits (DEF-176), email behaviour |
+| Interview simulator | Tabs, filters, start modal, attempt + history | Empty-question crash (DEF-126), timer/auto-submit, scoring rules |
+| System design | Navigation, search, detail, save toggle, patterns, metrics | Save persistence (DEF-147), inert controls (DEF-150/152) |
+| Analytics | Summary cards, timeframe, category filter, tabs | Timeframe filter defect (DEF-159), empty-data states |
+| Settings | Single layout, tabs, theme select, a switch, export, delete-account dialog | Persistence (DEF-180), theme inertness (DEF-181), false delete (DEF-190) |
+| Technical interview | Navigation, add a question, verify it | Edit/delete, language CRUD, search encoding (DEF-107), numbered textarea |
+| **DSA practice** | — | ⚠ **G-01** entire module (catalog, judge, drafts, submissions) covered only by ad-hoc manual passes |
+| **DSA todo** | Tab switch only | ⚠ **G-02** CRUD + optimistic rollback |
+| **DSA progress** | Tab switch only | ⚠ **G-03** all three charts, partial-payload crash (DEF-63) |
+| **Question bank** | — | ⚠ **G-04** upload chain + 5 preview kinds |
+| **All 7 admin pages** | — | ⚠ **G-05** every admin CRUD + authorisation |
 
-| Rank | New spec | Covers | Why |
-|------|----------|--------|-----|
-| 1 | `14-AdminGuards.cy.jsx` (intercepted) | TC-NAV-020…031, TC-SEC-020/021 | Authorisation is the highest-risk untested area |
-| 2 | `15-Practice.cy.jsx` (intercepted judge) | TC-PRAC-001…006, 090…095, 110…112 | Core learning loop, zero coverage |
-| 3 | `16-QuestionBank.cy.jsx` (intercepted S3) | TC-QB-001…005, 053, 058 | Catches DEF-86 (silent upload failure) |
-| 4 | `17-Todo.cy.jsx` | TC-TODO-001…005, 090…092 | Cheap; covers optimistic rollback |
-| 5 | `18-AdminCatalog.cy.jsx` | TC-ADCAT-001…005, 030…037 | Test-case JSON validation is easy to break |
-| 6 | `19-Xss.cy.jsx` | TC-SEC-040…045 | Permanent guard once DEF-82 is fixed |
-| 7 | `20-Responsive.cy.jsx` | TC-RSP-006/010 across all routes | One assertion, broad protection |
+### 2.1 Automation candidates (next sprint)
+
+No e2e automation exists today. If automation is (re)introduced, these areas give the best return:
+
+| Rank | Candidate coverage | Covers | Why |
+|------|---------------------|--------|-----|
+| 1 | Admin route guards (stubbed responses) | TC-NAV-020…031, TC-SEC-020/021 | Authorisation is the highest-risk untested area |
+| 2 | DSA practice / judge flow (stubbed judge) | TC-PRAC-001…006, 090…095, 110…112 | Core learning loop, zero coverage |
+| 3 | Question bank upload chain (stubbed S3) | TC-QB-001…005, 053, 058 | Catches DEF-86 (silent upload failure) |
+| 4 | DSA todo CRUD | TC-TODO-001…005, 090…092 | Cheap; covers optimistic rollback |
+| 5 | Admin catalog validation | TC-ADCAT-001…005, 030…037 | Test-case JSON validation is easy to break |
+| 6 | XSS regression guard | TC-SEC-040…045 | Permanent guard once DEF-82 is fixed |
+| 7 | Responsive-overflow sweep | TC-RSP-006/010 across all routes | One assertion, broad protection |
 
 ---
 
@@ -150,36 +153,37 @@ Pure functions, cheap to cover, currently guarded only through the UI:
 | `blogs.service.mapBlog` (imageUrl → coverImage/image_url) | TC-API-080 | P2 |
 | `adminSystemDesign.normalizeList` envelope handling | TC-ADSD-016 | P1 |
 
-Recommended tooling: **Vitest** + React Testing Library (Vite-native, no extra build config).
-`@cypress/react` + `@cypress/vite-dev-server` are already installed but unused — an alternative for
+Recommended tooling: **Vitest** + React Testing Library (Vite-native, no extra build config), also for
 component tests of `MultiSelect`, `TagsInput`, `NumberedTextarea` and `AskForConfirmationModal`.
 
 ---
 
-## 5. Traceability: requirement → module doc → automation
+## 5. Traceability: requirement → module doc → manual effort
 
-| App capability | Module doc | Automated spec | Residual manual effort |
-|----------------|-----------|----------------|------------------------|
-| Register / log in / recover password | 01 | 02, 03, 05 | Strength meter, error codes, session edge cases |
-| Route protection & roles | 02 | 06 (partial) | All admin-route checks |
-| Track personal DSA problems | 03 | 07 | Filters, pagination, error states |
-| Solve catalog problems (judge) | 04 | — | Entire module |
-| Plan work (todo) | 05 | — | Entire CRUD |
-| See progress charts | 06 | — | Entire module |
-| Keep notes | 07 | 08 | XSS, stale detail, silent failures |
-| Write blogs | 08 | 08 | Upload failure, edit gap, confirmation |
-| Curate Q&A by language | 09 | 04 (partial) | Edit/delete, languages, search encoding |
-| Store study materials | 10 | — | Entire module |
-| Practice interviews | 11 | 10 | Crash case, timer, scoring |
-| Study system design | 12 | 11 | Persistence, inert controls |
-| Review analytics | 13 | 12 | Static-data caveats |
-| Manage profile | 14 | 09 | Silent failures, lost edits |
-| Configure settings | 15 | 13 | Persistence, theme, destructive actions |
-| Administer users | 16 | — | Entire module |
-| Administer catalog & languages | 17 | — | Entire module |
-| Moderate content | 18 | — | Entire module |
-| Administer system-design content | 19 | — | Entire module |
-| Administer simulator content | 20 | — | Entire module |
+No automation exists, so every capability below relies entirely on the manual cases in its module doc.
+
+| App capability | Module doc | Manual effort required |
+|----------------|-----------|--------------------------|
+| Register / log in / recover password | 01 | All cases in module doc |
+| Route protection & roles | 02 | All cases in module doc |
+| Track personal DSA problems | 03 | All cases in module doc |
+| Solve catalog problems (judge) | 04 | All cases in module doc |
+| Plan work (todo) | 05 | All cases in module doc |
+| See progress charts | 06 | All cases in module doc |
+| Keep notes | 07 | All cases in module doc |
+| Write blogs | 08 | All cases in module doc |
+| Curate Q&A by language | 09 | All cases in module doc |
+| Store study materials | 10 | All cases in module doc |
+| Practice interviews | 11 | All cases in module doc |
+| Study system design | 12 | All cases in module doc |
+| Review analytics | 13 | All cases in module doc |
+| Manage profile | 14 | All cases in module doc |
+| Configure settings | 15 | All cases in module doc |
+| Administer users | 16 | All cases in module doc |
+| Administer catalog & languages | 17 | All cases in module doc |
+| Moderate content | 18 | All cases in module doc |
+| Administer system-design content | 19 | All cases in module doc |
+| Administer simulator content | 20 | All cases in module doc |
 
 ---
 
@@ -189,7 +193,7 @@ component tests of `MultiSelect`, `TagsInput`, `NumberedTextarea` and `AskForCon
 |----|---|------------------|-----------------|
 | TC-REG-001 | P1 | Every record created by a test run carries the `[QA-<yyyymmdd-hhmm>]` prefix | Leftovers are identifiable in the shared dev backend |
 | TC-REG-002 | P1 | After a full manual cycle, clean up | Delete QA-prefixed DSA problems, todos, notes, blogs, materials, catalog problems, languages, admin simulator/system-design records |
-| TC-REG-003 | P1 | Reset browser state between specs | Clear `accessToken`, `auth-storage`, `user-profile-store`, `theme`, `interview-history`, `dsa-practice-draft-*`, cookie `sidebar_state` |
+| TC-REG-003 | P1 | Reset browser state between test sessions | Clear `accessToken`, `auth-storage`, `user-profile-store`, `theme`, `interview-history`, `dsa-practice-draft-*`, cookie `sidebar_state` |
 | TC-REG-004 | P2 | Disposable admin-test user | Promote/demote cases use a throwaway account, never a real teammate |
 | TC-REG-005 | P2 | Never run destructive admin cases against production | Enforced by pointing `VITE_*` at the dev stage and verifying with TC-API-001 |
 
@@ -202,7 +206,6 @@ Copy into the release ticket and tick each line.
 ```
 [ ] npm run lint            → 0 errors
 [ ] npm run build           → 0 type errors; bundle sizes recorded (doc 25 §1)
-[ ] Cypress suite (13 specs) → green (≤ 10 % retry rate)
 [ ] Smoke suite (doc 29 §1.1) → green on the target environment
 [ ] Sanity suite for every module touched this release
 [ ] Zero open P0/P1 defects (doc 30) — or written sign-off per exception
@@ -227,7 +230,6 @@ Copy into the release ticket and tick each line.
 |--------|--------|
 | Cases executed / planned | ≥ 95 % of P0–P2 |
 | P0/P1 defects open at sign-off | 0 |
-| Automated share of P0+P1 cases | ≥ 70 % (currently ≈ 25 %) |
-| Cypress flake rate | < 10 % per spec |
+| Automated share of P0+P1 cases | ≥ 70 % (currently 0 % — all testing is manual, no automated e2e suite exists) |
 | Smoke-suite runtime | < 8 min |
 | Escaped defects (found post-release) | 0 P0/P1 |

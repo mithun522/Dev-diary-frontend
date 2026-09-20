@@ -7,9 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "cypress:open": "cypress open",
-    "e2e": "npx cypress run --headed --browser chrome"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",
@@ -28,8 +26,6 @@
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "cypress": "^14.5.4",
-    "cypress-real-events": "^1.14.0",
     "html-react-parser": "^5.2.10",
     "input-otp": "^1.4.2",
     "jwt-decode": "^4.0.0",
@@ -52,10 +48,7 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
-    "@cypress/react": "^9.0.1",
-    "@cypress/vite-dev-server": "^6.0.3",
     "@eslint/js": "^9.25.0",
-    "@types/cypress": "^0.1.6",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react-swc": "^3.9.0",

@@ -7,7 +7,7 @@
 | **Source** | `src/pages/knowledge/Blogs/{Blog,BlogsCard,AddBlogForm,BlogsShimmer}.tsx`, `src/pages/knowledge/LivePreview.tsx`, `src/api/hooks/useFetchBlogs.tsx`, `src/api/services/blogs.service.tsx` |
 | **APIs (knowledge-service)** | `GET /blogs`, `GET /blogs/user`, `GET /blogs/published`, `GET /blogs/draft` (all `?page=&search=`) · `POST /blogs/cover-image-upload-url` · `PUT <presigned S3 url>` · `POST /blogs` · `PUT /blogs/{id}/publish` · `DELETE /blogs/{id}` |
 | **Query key** | `["blogs", type, search]` (infinite), `staleTime`/`gcTime` 10 min |
-| **Existing automation** | `cypress/e2e/08-KnowledgeBase.cy.jsx` (Blogs describe block) |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 07 (shared page shell), doc 10 (same presigned-upload pattern), doc 18 (admin blog moderation), doc 24 (upload contract), doc 26 (upload safety) |
 
 ### Create-blog request chain
@@ -33,7 +33,7 @@ The `PUT` to S3 **is not checked for success** (`fetch` does not throw on 4xx/5x
 ### Global preconditions
 
 - Logged in; `/knowledge` → Blogs tab. Default filter is **Published**.
-- Fixture `cypress/fixtures/cover-image.png` (or any small PNG) available for uploads.
+- A small test fixture (`cover-image.png` or any small PNG) available for uploads.
 
 ---
 

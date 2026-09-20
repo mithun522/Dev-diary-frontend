@@ -8,7 +8,7 @@
 | **APIs** | tech-interview-service: `GET /techinterview?language=&page=`, `GET /techinterview/search?search=&language=`, `POST /techinterview`, `PUT /techinterview/{id}`, `DELETE /techinterview/{id}` · dsa-service: `GET /language`, `POST /language` |
 | **Query keys** | `["techInterview", language]` (infinite), `["searchTechInterview", search, language]`, `["language"]` |
 | **Search debounce** | 500 ms (search query is only enabled when non-empty) |
-| **Existing automation** | `cypress/e2e/04-TechnInterview.cy.jsx` (add + verify only) |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 17 (admin language CRUD hits the same `/language` resource), doc 21 (dialog/select), doc 26 (markdown rendering) |
 
 ### Entity (`TechnicalQuestion`)

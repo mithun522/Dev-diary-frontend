@@ -119,7 +119,7 @@
 | TC-SEC-102 | P1 | Console/log leakage in production | `logger` is gated on `import.meta.env.DEV`; a production build prints nothing (tokens, payloads, emails) |
 | TC-SEC-103 | P1 | Source maps in production | Verify whether `dist` ships `.map` files; if so, decide intentionally (they expose full source) ⚠ DEF-285 |
 | TC-SEC-104 | P1 | `npm audit --production` | No high/critical advisories; record and triage moderates |
-| TC-SEC-105 | P1 | Dependency review | `cypress` and `cypress-real-events` are listed under **`dependencies`**, not `devDependencies`, bloating and polluting the production dependency tree ⚠ **DEF-286** |
+| TC-SEC-105 | P1 | Dependency review | No test-only tooling is listed under **`dependencies`**; test/dev tooling belongs in `devDependencies` only — previously an e2e testing framework and its plugin were misplaced here ⚠ **DEF-286 (fixed — e2e testing framework removed)** |
 | TC-SEC-106 | P2 | Third-party runtime calls | Only own hosts + S3 + the `cdn-icons-png.flaticon.com` error icon (⚠ DEF-252). No analytics/tracker requests |
 | TC-SEC-107 | P2 | `rel="noopener noreferrer"` on all external links | Verified on problem links, todo links, resources, "Open in a new tab" and blog links |
 | TC-SEC-108 | P2 | `postMessage` listeners | None registered outside the interview sandbox; verify the sandbox does not accept arbitrary messages ⚠ DEF-281 |
@@ -155,7 +155,7 @@
 | DEF-283 | TC-SEC-082 | No Content-Security-Policy |
 | DEF-284 | TC-SEC-083 | No Permissions-Policy |
 | DEF-285 | TC-SEC-103 | Production source-map exposure unverified |
-| DEF-286 | TC-SEC-105 | Cypress shipped as a production dependency |
+| DEF-286 | TC-SEC-105 | E2e testing framework shipped as a production dependency (fixed — testing framework removed) |
 
 ## Exit criteria (all are release blockers)
 

@@ -7,7 +7,7 @@
 | **Source** | `src/pages/system-design/SystemDesign.tsx`, `src/data/systemDesignData.ts` |
 | **APIs** | **none** — the page renders from static fixtures (`systemDesignCases`, `scalabilityPatterns`, `metricsData`). `SYSTEM_DESIGN_CASES`, `SCALABILITY_PATTERNS` and `SYSTEM_METRICS` exist in `constants/Api.tsx` and are consumed **only** by the admin panel (doc 19) ⚠ **DEF-143 (integration gap)** |
 | **Local state** | `searchQuery`, `selectedCase`, `savedCases` (seeded to `["sdc1","sdc4"]`, not persisted) |
-| **Existing automation** | `cypress/e2e/11-SystemDesign.cy.jsx` |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 19 (admin CRUD for cases/patterns), doc 22 (responsive), doc 23 (a11y), doc 25 (chart rendering) |
 
 ### Selector inventory
