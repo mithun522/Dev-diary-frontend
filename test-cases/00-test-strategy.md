@@ -39,9 +39,8 @@ Two important consequences for testing:
 |-------|---------------|-------|---------------------|
 | Static analysis | `npm run lint` (ESLint 9 + typescript-eslint), `tsc -b` in `npm run build` | Dev | Gate in CI; doc 29 lists the required zero-error state |
 | Unit | **none present** | Dev | Doc 29 §4 lists the pure functions that must get unit tests (`formatDate`, `formatFileSize`, `getFilePreviewKind`, `computeWeeklyActivity`, `parseTags`, `convertToPascalCase`/`pascalizeUnderscore`, `formatTestCaseArgs`, `calculatePasswordStrength`, `use-toast` reducer) |
-| Component | `@cypress/react` + `@cypress/vite-dev-server` installed, unused | Dev/QA | Candidate cases flagged `component-testable` in module docs |
-| Integration (API ↔ UI) | Cypress `cy.intercept` | QA | Doc 24 + `INT` cases in module docs |
-| E2E (live backend) | Cypress specs `01`–`13` | QA | Module docs; retries `runMode: 2` because specs hit the live dev stage |
+| Integration (API ↔ UI) | Manual, using DevTools network overrides | QA | Doc 24 + `INT` cases in module docs |
+| E2E (live backend) | **none — manual only** | QA | Module docs; every run exercises the live dev stage directly |
 | Non-functional | manual + Lighthouse/axe/DevTools | QA | Docs 22, 23, 25, 26, 27, 28 |
 
 ### 2.1 Deliberate test-design split
@@ -94,7 +93,7 @@ OTPs (only the frontend contract of "OTP was requested/accepted" is tested here)
 1. Build is green: `npm run lint` and `npm run build` both succeed.
 2. Target environment reachable; all nine `VITE_*` URLs resolve and return `2xx`/`4xx` (not DNS errors).
 3. Test accounts of §3.1 in the README exist, with the admin account carrying `role: "admin"`.
-4. Test data fixtures (`cypress/fixtures/`, PDF/CSV/TXT probes) available.
+4. Test data fixtures (PDF/CSV/TXT probes) available.
 5. Release notes list the changed modules so regression scope can be selected (doc 29 §3).
 
 ## 6. Exit criteria
@@ -128,7 +127,7 @@ Steps:        1. … 2. … 3. …
 Actual:       … (include toast text, console errors, failing request + status + payload)
 Expected:     … (quote the test case)
 Severity/Priority: P0…P3 / …
-Evidence:     screenshot / screen recording / HAR / cypress artefact path
+Evidence:     screenshot / screen recording / HAR
 Notes:        first-seen build, reproducibility (n/5), workaround
 ```
 
@@ -141,8 +140,7 @@ integration failures — with nine services, the URL identifies the owning backe
 
 - Case execution: planned / executed / passed / failed / blocked, by priority and module.
 - Defect density per module; defect leakage (found in prod vs found in test).
-- Automation coverage: automated P0+P1 cases ÷ total P0+P1 cases (target ≥ 70 %).
-- Cypress flake rate per spec (retries used ÷ runs) — the live-backend specs must stay < 10 %.
+- Automation coverage: automated P0+P1 cases ÷ total P0+P1 cases (target ≥ 70 %; currently 0 % — all testing is manual, no automated e2e suite exists).
 - Mean smoke-suite runtime (target < 8 min).
 
 ---
@@ -151,9 +149,9 @@ integration failures — with nine services, the URL identifies the owning backe
 
 | Hazard | Mitigation in cases |
 |--------|--------------------|
-| E2E specs write to the **live dev backend** | Every created record carries the `[QA-…]` marker; delete-after-create cases run last; doc 29 §6 lists the cleanup script |
+| Manual runs exercise the **live dev backend** | Every created record carries the `[QA-…]` marker; delete-after-create cases run last; doc 29 §6 lists the cleanup steps |
 | `Api.tsx` falls back to hard-coded dev URLs when `VITE_*` is unset | Doc 24 TC-API-001…004 assert the resolved host per module so a "works locally, wrong stage" mistake is caught |
-| JWT expiry mid-run | Doc 02 covers expiry redirect explicitly; long suites re-login between specs (`cy.login()` in `beforeEach`) |
-| `localStorage` shared across specs | Clear `accessToken`, `auth-storage`, `user-profile-store`, `theme`, `interview-history`, `dsa-practice-draft-*` in `beforeEach` |
-| Debounced search (500 ms / 1000 ms depending on module) | Cases state the debounce; automation must wait on the request, not on a fixed timer |
+| JWT expiry mid-run | Doc 02 covers expiry redirect explicitly; long manual sessions re-login between modules |
+| `localStorage` shared across test sessions | Clear `accessToken`, `auth-storage`, `user-profile-store`, `theme`, `interview-history`, `dsa-practice-draft-*` between modules |
+| Debounced search (500 ms / 1000 ms depending on module) | Cases state the debounce; wait on the request completing, not on a fixed timer |
 | Presigned URLs expire | File-viewer cases re-fetch the list before asserting a preview |

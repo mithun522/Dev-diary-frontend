@@ -7,7 +7,7 @@
 | **Source** | `src/pages/dsa/DSAPage.tsx`, `DsaTable.tsx`, `AddDsaModel.tsx`, `SolutionModal.tsx`, `src/api/hooks/useFetchDsa.tsx`, `src/api/services/dsa.service.tsx` |
 | **APIs (dsa-service)** | `GET /dsa/user?searchString=&difficulty=&pageNumber=`, `POST /dsa`, `PUT /dsa/{id}`, `DELETE /dsa/{id}` |
 | **Query keys** | `["dsa", search, difficulty \|\| "NONE"]` (infinite), `staleTime`/`gcTime` = 10 min |
-| **Existing automation** | `cypress/e2e/07-DSA.cy.jsx` |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 04 (Practice), doc 05 (Todo), doc 06 (Progress), doc 21 (multiselect/confirm modal), doc 22 (responsive), doc 24 (contracts), doc 26 (XSS in markdown) |
 
 ### Entity (`DSAProblem`)

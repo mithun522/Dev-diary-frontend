@@ -17,7 +17,6 @@
       "Bash(rm -rf /private/tmp/claude-501/-Users-mithunjt-Develop-myprojects-Dev-diary-frontend/acb27cf1-632c-4454-aa80-d9f51c3df283/scratchpad/jsdomtest)",
       "Bash(xargs -I{} echo {})",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173 --max-time 3)",
-      "Bash(npx cypress *)",
       "Bash(python3 -m json.tool)",
       "Bash(jobs -l)",
       "Bash(kill %1)",

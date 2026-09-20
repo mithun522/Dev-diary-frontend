@@ -4,7 +4,7 @@
 |---|---|
 | **Area code** | `A11Y` |
 | **Target** | WCAG 2.1 Level AA |
-| **Tooling** | axe DevTools / `cypress-axe`, Lighthouse a11y audit, VoiceOver (macOS/iOS), NVDA (Windows), keyboard only, macOS Increase Contrast, `prefers-reduced-motion` |
+| **Tooling** | axe DevTools, Lighthouse a11y audit, VoiceOver (macOS/iOS), NVDA (Windows), keyboard only, macOS Increase Contrast, `prefers-reduced-motion` |
 | **Scope** | All 22 routes, 20+ modals, 14 tables, 10 charts, 5 auth forms |
 | **See also** | doc 21 (component-level a11y defects), doc 22 (zoom/reflow), doc 28 (assistive-tech matrix) |
 
@@ -15,7 +15,7 @@
 | TC-A11Y-001 | P0 | Run axe on each of the 22 routes (logged in as user, then as admin) | **Zero** critical and serious violations. Record moderate/minor findings with owners |
 | TC-A11Y-002 | P0 | Run axe with each modal open (20+ dialogs) | Zero critical/serious violations, including the ad-hoc overlays (`AskForConfirmationModal`, `SolutionModal`) ⚠ DEF-243/DEF-48 |
 | TC-A11Y-003 | P1 | Lighthouse accessibility audit on `/`, `/auth/login`, `/dsa`, `/analytics` | Score ≥ 95 on each |
-| TC-A11Y-004 | P1 | Add `cypress-axe` to the smoke suite | `cy.checkA11y()` after each route visit; failures block the build |
+| TC-A11Y-004 | P1 | Add an automated axe check to the smoke suite | Route visits are checked against axe rules; failures block the build |
 
 ---
 

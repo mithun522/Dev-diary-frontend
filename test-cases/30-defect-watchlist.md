@@ -553,7 +553,7 @@ authoritative, complete index.
 | DEF-283 | P1 | No Content-Security-Policy | TC-SEC-082 |
 | DEF-284 | P3 | No Permissions-Policy | TC-SEC-083 |
 | DEF-285 | P2 | Production source-map exposure unverified | TC-SEC-103 |
-| DEF-286 | P2 | Cypress shipped as a production dependency | TC-SEC-105 |
+| DEF-286 | P2 | E2e testing framework shipped as a production dependency (fixed — testing framework removed) | TC-SEC-105 |
 | DEF-287 | P1 | `og-image.png` missing → broken social previews | TC-SEO-001 |
 | DEF-288 | P2 | `apple-touch-icon.png` and android-chrome icons missing | TC-SEO-002/003 |
 | DEF-289 | P2 | Missing assets/unknown paths return 200 HTML (soft 404) | TC-SEO-005 |

@@ -7,7 +7,7 @@
 | **Source** | `src/App.tsx`, `src/components/{ProtectedRoute,AdminRoute,RedirectIfAuth,LogoutModal,ThemeToggle}.tsx`, `src/components/layout/{MainLayout,AdminLayout,AuthLayout,TopNav}.tsx`, `src/components/ui/sidebar.tsx`, `src/api/hooks/use-mobile.tsx` |
 | **APIs** | `GET {USER}/user/{id}` (TopNav avatar/name) |
 | **Client state** | `localStorage.accessToken`, cookie `sidebar_state`, `localStorage.theme` |
-| **Existing automation** | `cypress/e2e/06-RouteGuardsAndLogout.cy.jsx`, `13-Settings.cy.jsx` (single-layout assertion) |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 01 (auth), doc 21 (shared components), doc 22 (responsive), doc 23 (a11y), doc 26 (authorisation), doc 27 (SPA rewrites) |
 
 ### Route map

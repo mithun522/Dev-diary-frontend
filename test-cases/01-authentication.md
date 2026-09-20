@@ -8,7 +8,7 @@
 | **APIs (auth-service)** | `POST /register`, `POST /login`, `POST /auth/otp`, `POST /auth/verifyotp`, `POST /auth/reset-password` |
 | **HTTP client** | bare `axios` (no `Authorization` header — correct for unauthenticated endpoints) |
 | **Client state** | `localStorage.accessToken`, `localStorage["auth-storage"]` (Zustand persist) |
-| **Existing automation** | `cypress/e2e/01-Landing.cy.jsx`, `02-Register.cy.jsx`, `03-Login.cy.jsx`, `05-ForgotResetPassword.cy.jsx` |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 02 (guards & redirects), doc 22 (responsive), doc 23 (a11y), doc 26 (security), doc 27 (SEO/noindex) |
 
 ### Selector inventory
@@ -47,8 +47,8 @@ Submission is blocked while strength `< 50`.
 
 - Browser starts with no `accessToken` (otherwise `RedirectIfAuth` sends the user to `/dsa`).
 - auth-service reachable at the resolved `VITE_AUTH_API_URL`.
-- A known-good account (`CORRECT_EMAIL` / `CORRECT_PASSWORD` in `cypress/constants/Dummy-data.tsx`)
-  and a known-unregistered address are available.
+- A known-good account (`CORRECT_EMAIL` / `CORRECT_PASSWORD`) and a known-unregistered address are
+  available.
 
 ---
 

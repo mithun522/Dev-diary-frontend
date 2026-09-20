@@ -8,7 +8,7 @@
 | **APIs** | **none** — the page renders entirely from static fixtures. `MOCK_INTERVIEWS`, `COMPANY_PROBLEMS`, `BEHAVIORAL_QUESTIONS` and `INTERVIEW_ATTEMPTS` exist in `constants/Api.tsx` and are used only by the admin panel (doc 20) ⚠ **DEF-124 (integration gap)** |
 | **Local state** | `localStorage["interview-history"]` (array of attempts) |
 | **Toasts** | via the Radix `useToast` hook — but `<Toaster />` is **never mounted** in `App.tsx`, so none of this module's toasts are visible ⚠ **DEF-125** |
-| **Existing automation** | `cypress/e2e/10-InterviewSimulator.cy.jsx` |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 20 (admin CRUD for the same entities), doc 21 (toast systems), doc 25 (timer/render cost), doc 22 (responsive) |
 
 ### Static fixture facts that drive several cases

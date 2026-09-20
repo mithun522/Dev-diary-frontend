@@ -7,7 +7,7 @@
 | **Source** | `src/pages/SettingsPage.tsx` (+ `components/ui/{switch,select,alert-dialog,seperator}.tsx`) |
 | **APIs** | **none** — every setting lives in local component state; nothing is persisted or sent anywhere ⚠ **DEF-180** |
 | **Theme** | uses `useTheme` from **next-themes**, but the app mounts its own custom `ThemeProvider` (`src/providers/ThemeProvider.tsx`) and **no `next-themes` provider at all** ⚠ **DEF-181** |
-| **Existing automation** | `cypress/e2e/13-Settings.cy.jsx` |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 02 (top-nav theme toggle — the working theme control), doc 21 (theme + toast systems), doc 23 (a11y of switches) |
 
 ### Tabs & controls

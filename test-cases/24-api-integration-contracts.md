@@ -5,7 +5,7 @@
 | **Area code** | `API` |
 | **Scope** | The frontend's contract with nine independently deployed backend services: URL resolution, auth headers, request/response shapes, status-code handling, presigned uploads, query-cache invalidation, and failure behaviour |
 | **Source** | `src/constants/Api.tsx`, `src/utils/AxiosInstance.tsx`, `src/api/services/*` (14 files), `src/api/hooks/*` (18 files) |
-| **Tooling** | Cypress `cy.intercept`, DevTools network panel, `.env.development` overrides |
+| **Tooling** | DevTools network panel, `.env.development` overrides |
 | **See also** | every module doc's `INT` cases, doc 26 (authorisation), doc 25 (request volume) |
 
 ---
@@ -203,7 +203,7 @@ Run per module with `cy.intercept`. The **expected** column is the user-visible 
 
 | ID | P | Scenario / steps | Expected result |
 |----|---|------------------|-----------------|
-| TC-API-200 | P1 | Freeze fixtures for every list/detail response used by the app | Committed under `cypress/fixtures/api/**` and used by intercepted specs, so a backend shape change fails a test rather than the UI |
+| TC-API-200 | P1 | Freeze fixtures for every list/detail response used by the app | Committed under a shared fixtures directory and used in manual regression checks, so a backend shape change is caught before it reaches the UI |
 | TC-API-201 | P1 | Compare each frontend payload against the backend OpenAPI schema | No unknown properties (backends use `additionalProperties: false`); no missing required fields |
 | TC-API-202 | P1 | Enum-value audit | `difficulty` (`EASY/MEDIUM/HARD` vs `easy/medium/hard` vs `Easy/Medium/Hard` in the simulator), `status`, `priority`, `role`, judge verdicts and question `type` values match the backend exactly ⚠ **DEF-195** |
 | TC-API-203 | P2 | Pagination-contract audit | Every paginated endpoint returns `totalLength`; the client's `getNextPageParam` never loops when a page returns zero items ⚠ TC-DSA-089 |

@@ -6,7 +6,7 @@
 | **Route** | `/analytics` |
 | **Source** | `src/pages/analytics/AnalyticsPage.tsx`, `src/data/analyticsData.ts` |
 | **APIs** | **none** — the page renders from static fixtures (`analyticsData`, `skillsData`, `practiceLog`, `monthlyData`, `topicData`). `ANALYTICS_SUMMARY`, `ANALYTICS_ACTIVITY`, `ANALYTICS_SKILLS`, `ANALYTICS_PRACTICE_LOG` are declared in `constants/Api.tsx` but never called ⚠ **DEF-156 (integration gap)** |
-| **Existing automation** | `cypress/e2e/12-Analytics.cy.jsx` |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 06 (real DSA progress charts), doc 22 (responsive charts), doc 23 (chart a11y), doc 25 (chart performance) |
 
 ### Page structure

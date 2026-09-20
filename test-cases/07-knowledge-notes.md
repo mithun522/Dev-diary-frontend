@@ -8,7 +8,7 @@
 | **APIs (knowledge-service)** | `GET /notes?page=&search=`, `POST /notes`, `PUT /notes/{id}`, `DELETE /notes/{id}` |
 | **Query key** | `["notes", search]` (infinite), `staleTime` 5 min / `gcTime` 10 min |
 | **Search debounce** | 500 ms |
-| **Existing automation** | `cypress/e2e/08-KnowledgeBase.cy.jsx` (Notes describe block) |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 08 (Blogs share this page), doc 21 (dropdown/confirm modal), doc 26 (**note content is rendered with `dangerouslySetInnerHTML`** — highest-risk XSS surface in the app) |
 
 ### Entity (`KnowledgeNote`)

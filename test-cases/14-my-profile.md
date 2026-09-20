@@ -8,7 +8,7 @@
 | **APIs (user-service)** | `GET /user/{id}`, `PUT /user/{id}` |
 | **Query key** | `["profile"]`, `staleTime`/`gcTime` 10 min |
 | **Update payload** | `{firstName, lastName, bio, professionalDetails, socialLinks}` — the backend rejects unknown properties, so `id`, `email` and `createdAt` are deliberately excluded |
-| **Existing automation** | `cypress/e2e/09-MyProfile.cy.jsx` |
+| **Existing automation** | None (manual only) |
 | **See also** | doc 02 (top-nav avatar uses the same query), doc 21 (dialog), doc 22 (responsive), doc 23 (a11y) |
 
 ### Form fields
