@@ -21,6 +21,9 @@ import AnalyticsPage from "./pages/analytics/AnalyticsPage";
 import MyProfilePage from "./pages/my-profile/MyProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import TechnicalInterviewPage from "./pages/technical-interview/Index";
+import CatalogBrowsePage from "./pages/technical-interview/catalog/CatalogBrowsePage";
+import CatalogStackPage from "./pages/technical-interview/catalog/CatalogStackPage";
+import CatalogSearchPage from "./pages/technical-interview/catalog/CatalogSearchPage";
 import QuestionBankPage from "./pages/question-bank/QuestionBankPage";
 import RedirectIfAuth from "./components/RedirectIfAuth";
 import AdminRoute from "./components/AdminRoute";
@@ -102,6 +105,20 @@ const App = () => {
                 <Route
                   path="/technical-interview"
                   element={<TechnicalInterviewPage />}
+                />
+                {/* Dedicated, shareable catalog pages — the in-tab browsing UI in
+                    TechnicalInterviewPage's Question Bank tab just links out to these. */}
+                <Route
+                  path="/technical-interview/catalog"
+                  element={<CatalogBrowsePage />}
+                />
+                <Route
+                  path="/technical-interview/catalog/search"
+                  element={<CatalogSearchPage />}
+                />
+                <Route
+                  path="/technical-interview/catalog/:stack"
+                  element={<CatalogStackPage />}
                 />
                 <Route path="/question-bank" element={<QuestionBankPage />} />
               </Route>
