@@ -5,7 +5,7 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
+  // CardFooter, // unused while the sign-up link below is commented out (invite-only beta)
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
@@ -198,7 +198,8 @@ const LoginPage = () => {
             </div>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t pt-6">
+        {/* Registration disabled for now — invite-only beta. Not deleted, just off. */}
+        {/* <CardFooter className="flex justify-center border-t pt-6">
           <p className="text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link
@@ -209,7 +210,7 @@ const LoginPage = () => {
               Sign up
             </Link>
           </p>
-        </CardFooter>
+        </CardFooter> */}
       </Card>
     </AuthLayout>
   );

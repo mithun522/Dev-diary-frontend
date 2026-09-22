@@ -6,7 +6,9 @@ import GlobalLoadingBar from "./components/GlobalLoadingBar";
 import LandingPage from "./pages/Landing";
 import LoginPage from "./pages/auth/LoginPage";
 import { ToastContainer } from "react-toastify";
-import SignupPage from "./pages/auth/SignupPage";
+// Registration is disabled for now — the app is invite-only during beta. Route below is
+// commented out, not deleted, so it can be switched back on later.
+// import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyOTPPage from "./pages/auth/VerifyOtp";
@@ -60,7 +62,8 @@ const App = () => {
               <Route element={<RedirectIfAuth />}>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/auth/login" element={<LoginPage />} />
-                <Route path="/auth/signup" element={<SignupPage />} />
+                {/* Registration disabled for now — invite-only beta. Not deleted, just off. */}
+                {/* <Route path="/auth/signup" element={<SignupPage />} /> */}
                 <Route
                   path="/auth/forgot-password"
                   element={<ForgotPasswordPage />}

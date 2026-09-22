@@ -75,9 +75,10 @@ const LandingPage = () => {
             <Button variant="light" data-cy="login">
               <Link to="/auth/login">Login</Link>
             </Button>
-            <Button data-cy="signup">
+            {/* Registration disabled for now — invite-only beta. Not deleted, just off. */}
+            {/* <Button data-cy="signup">
               <Link to="/auth/signup">Sign Up</Link>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </header>
@@ -86,7 +87,8 @@ const LandingPage = () => {
       <section className="flex-1 flex flex-col justify-center px-6 md:px-12 py-16 md:py-28 bg-gradient-to-b from-background to-muted/30">
         <div className="max-w-5xl mx-auto text-center space-y-6">
           <div className="inline-block mx-auto bg-primary/10 text-primary text-sm font-medium px-4 py-1.5 rounded-full">
-            Now onboarding a limited number of training institutes for a free pilot
+            In beta &amp; invite-only for now &mdash; onboarding a limited number of training
+            institutes for a free pilot
           </div>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight">
             Placement-Ready DSA &amp; Interview Prep for{" "}
