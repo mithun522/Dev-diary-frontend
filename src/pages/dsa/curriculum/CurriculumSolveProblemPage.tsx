@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import MarkdownPreview from "@uiw/react-markdown-preview";
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import Button from "../../../components/ui/button";
 import { Skeleton } from "../../../components/ui/skeleton";
@@ -187,6 +187,14 @@ const CurriculumSolveProblemPage: React.FC = () => {
         <Badge className={CURRICULUM_LEVEL_COLORS[problem.level]}>
           {pascalizeUnderscore(problem.level)}
         </Badge>
+        {problem.solved && (
+          <Badge
+            className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 flex items-center gap-1"
+            data-cy="curriculum-solve-solved-badge"
+          >
+            <CheckCircle2 size={12} /> Solved
+          </Badge>
+        )}
 
         <div className="flex items-center gap-2 ml-auto">
           <Button

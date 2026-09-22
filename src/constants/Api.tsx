@@ -93,6 +93,9 @@ export const CURRICULUM_PROBLEM_TEST_CASES = (id: string) =>
 export const CURRICULUM_PROBLEM_RUN = (id: string) => `${CURRICULUM_PROBLEM_BY_ID(id)}/run`;
 export const CURRICULUM_PROBLEM_SUBMISSIONS = (id: string) =>
   `${CURRICULUM_PROBLEM_BY_ID(id)}/submissions`;
+// The caller's progress across the whole curriculum — totals, solved problem ids, and per-topic
+// counts, in one request instead of one listCurriculumProblems call per topic.
+export const CURRICULUM_PROGRESS = `${DSA_API_URL}/curriculum/progress`;
 
 // ---- tech-interview-service ----
 export const TECHNICAL_INTERVIEW = `${TECH_INTERVIEW_API_URL}/techinterview`;
