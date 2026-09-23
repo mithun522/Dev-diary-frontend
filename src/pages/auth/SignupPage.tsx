@@ -22,6 +22,7 @@ import {
 } from "../../constants/ToastMessage";
 import { FIRST_NAME_REQUIRED } from "../../constants/ErrorMessage";
 import Seo from "../../components/Seo";
+import { calculatePasswordStrength } from "../../utils/calculatePasswordStrength";
 
 interface FormData {
   firstName: string;
@@ -49,18 +50,6 @@ const SignupPage = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  const calculatePasswordStrength = (password: string): number => {
-    if (!password) return 0;
-
-    let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[a-z]/.test(password)) strength += 25;
-    if (/[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) strength += 25;
-
-    return strength;
-  };
 
   // Handle form field changes
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
