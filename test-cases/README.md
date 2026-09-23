@@ -42,6 +42,7 @@ validation messages and endpoints below are literal, not illustrative.
 | 18 | [18-admin-moderation.md](18-admin-moderation.md) | Admin — blog & material moderation | `/admin/knowledge/blogs`, `/admin/question-bank/materials` | `src/pages/admin/knowledge/*`, `admin/questionBank/*` |
 | 19 | [19-admin-system-design.md](19-admin-system-design.md) | Admin — cases + scalability patterns | `/admin/system-design/cases`, `/admin/system-design/patterns` | `src/pages/admin/systemDesign/*` |
 | 20 | [20-admin-interview-simulator.md](20-admin-interview-simulator.md) | Admin — mock interviews, questions, company problems, behavioral | `/admin/interview-simulator/*` | `src/pages/admin/interviewSimulator/*` |
+| 31 | [31-dsa-service-deep-dive.md](31-dsa-service-deep-dive.md) | DSA Service deep dive — 6-language judge matrix, catalog/curriculum filters, submissions | `/dsa` (Practice + Basics tabs), `/dsa/practice/:id`, `/dsa/curriculum/:problemId` | `src/pages/dsa/{practice,curriculum}/*` |
 
 ### Cross-cutting documents
 
@@ -161,12 +162,14 @@ behaviour and the case is annotated `⚠ known defect — see DEF-nn` (catalogue
 | Functional / CRUD / validation / integration per module | docs 01–20 | **1 910** |
 | Cross-cutting non-functional (UI, responsive, a11y, API, perf, security, SEO, compatibility) | docs 21–28 | **612** |
 | Test-data hygiene (`TC-REG-*`) | doc 29 | 5 |
-| **Total unique case IDs** | | **2 527** |
+| DSA Service deep dive (6-language judge, filters, submissions) | doc 31 | **87** |
+| **Total unique case IDs** | | **2 614** |
 | Suites defined | doc 29 | 5 (smoke, sanity, full regression, security, post-deploy) |
-| Implementation issues catalogued | doc 30 | **302** (11 P0 · 80 P1 · 165 P2 · 46 P3) |
+| Implementation issues catalogued | doc 30 + doc 31 | **304** (11 P0 · 80 P1 · 166 P2 · 47 P3) |
 
 All testing is currently manual; no automated e2e suite exists. Doc 29 §2.1 lists the seven areas that
 would close the biggest gaps if automation is introduced — DSA practice, question bank, admin
 authorisation, todo CRUD, admin catalog validation, the XSS guard, and a responsive-overflow sweep.
 
-Last full review: **2026-09-08** against `main` @ `97f63d6` (32 documents).
+Last full review: **2026-09-23** against `main`, following the dsa-service catalog migration
+(400-problem curated set, 6-language judge, curriculum solved-status) — 33 documents.
