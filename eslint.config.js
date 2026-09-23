@@ -25,5 +25,16 @@ export default tseslint.config(
       ],
       "no-console": "error",
     },
+  },
+  {
+    // `jest.mock` factories are hoisted above the import block, so a factory that needs to build a
+    // stub component has to reach for `require` — an ESM import would not be initialised yet.
+    files: ["unit-tests/**/*.{ts,tsx}"],
+    languageOptions: {
+      globals: globals.jest,
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
   }
 );
