@@ -68,12 +68,19 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
                     {problem.title}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={`${getDifficultyColor(problem.difficulty)} text-white`}
-                    >
-                      {convertToPascalCase(problem.difficulty)}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Badge
+                        variant="outline"
+                        className={`${getDifficultyColor(problem.difficulty)} text-white`}
+                      >
+                        {convertToPascalCase(problem.difficulty)}
+                      </Badge>
+                      {typeof problem.score === "number" && (
+                        <Badge variant="secondary" className="text-xs">
+                          {problem.score} pts
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
