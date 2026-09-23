@@ -18,6 +18,7 @@ import {
   runCurriculumSolution,
   submitCurriculumSolution,
   fetchCurriculumSubmissions,
+  fetchCurriculumProgress,
 } from "../services/curriculum.service";
 import type {
   CurriculumProblemInput,
@@ -131,8 +132,17 @@ export const useSubmitCurriculumSolution = (id: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (sourceCode: string) => submitCurriculumSolution(id, sourceCode),
-    onSuccess: () => {
+    onSuccess: (submission) => {
       queryClient.invalidateQueries({ queryKey: ["curriculum-submissions", id] });
+      // Only an ACCEPTED submission can flip this problem's (and its topic's) solved status —
+      // refetch everything that shows it: this problem's own detail, every topic's problem list
+      // (partial key match, regardless of topicId/language), and the progress rollup's per-topic
+      // counters. A rejected submission changes none of that, so skip the extra refetches.
+      if (submission.status === "ACCEPTED") {
+        queryClient.invalidateQueries({ queryKey: ["curriculum-problem", id] });
+        queryClient.invalidateQueries({ queryKey: ["curriculum-problems"] });
+        queryClient.invalidateQueries({ queryKey: ["curriculum-progress"] });
+      }
     },
   });
 };
@@ -142,5 +152,12 @@ export const useCurriculumSubmissions = (id: string) => {
     queryKey: ["curriculum-submissions", id],
     queryFn: () => fetchCurriculumSubmissions(id),
     enabled: !!id,
+  });
+};
+
+export const useCurriculumProgress = (language?: CodeExecutionLanguage) => {
+  return useQuery({
+    queryKey: ["curriculum-progress", language ?? ""],
+    queryFn: () => fetchCurriculumProgress(language),
   });
 };

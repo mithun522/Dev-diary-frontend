@@ -6,6 +6,7 @@ import {
   CURRICULUM_PROBLEM_TEST_CASES,
   CURRICULUM_PROBLEM_RUN,
   CURRICULUM_PROBLEM_SUBMISSIONS,
+  CURRICULUM_PROGRESS,
 } from "../../constants/Api";
 import AxiosInstance from "../../utils/AxiosInstance";
 import type {
@@ -18,6 +19,7 @@ import type {
   CurriculumTestCaseInput,
   CurriculumRunResult,
   CurriculumSubmission,
+  CurriculumProgress,
 } from "../../data/curriculumData";
 import type { CodeExecutionLanguage } from "../../constants/Languages";
 
@@ -112,5 +114,13 @@ export const fetchCurriculumSubmissions = async (
   id: string
 ): Promise<CurriculumSubmission[]> => {
   const response = await AxiosInstance.get(CURRICULUM_PROBLEM_SUBMISSIONS(id));
+  return response.data;
+};
+
+export const fetchCurriculumProgress = async (
+  language?: CodeExecutionLanguage
+): Promise<CurriculumProgress> => {
+  const url = language ? `${CURRICULUM_PROGRESS}?language=${language}` : CURRICULUM_PROGRESS;
+  const response = await AxiosInstance.get(url);
   return response.data;
 };

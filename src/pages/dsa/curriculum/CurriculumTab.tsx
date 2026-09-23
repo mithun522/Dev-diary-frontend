@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { Badge } from "../../../components/ui/badge";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
 import {
   CODE_EXECUTION_LANGUAGE_OPTIONS,
   CodeExecutionLanguages,
@@ -13,6 +13,7 @@ import { CURRICULUM_LEVEL_COLORS } from "../../../data/curriculumData";
 import {
   useCurriculumTopics,
   useCurriculumProblems,
+  useCurriculumProgress,
 } from "../../../api/hooks/useCurriculum";
 import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
 import ErrorPage from "../../ErrorPage";
@@ -26,7 +27,18 @@ const CurriculumTopicSection: React.FC<{
   language: CodeExecutionLanguage;
   expanded: boolean;
   onToggle: () => void;
-}> = ({ topicId, title, description, language, expanded, onToggle }) => {
+  solvedCount?: number;
+  totalCount?: number;
+}> = ({
+  topicId,
+  title,
+  description,
+  language,
+  expanded,
+  onToggle,
+  solvedCount,
+  totalCount,
+}) => {
   const navigate = useNavigate();
   const { data: problems, isLoading } = useCurriculumProblems(
     expanded ? topicId : "",
@@ -47,7 +59,17 @@ const CurriculumTopicSection: React.FC<{
             <p className="text-sm text-muted-foreground">{description}</p>
           )}
         </div>
-        {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+        <div className="flex items-center gap-3 shrink-0">
+          {totalCount !== undefined && totalCount > 0 && (
+            <span
+              className="text-xs text-muted-foreground whitespace-nowrap"
+              data-cy="curriculum-topic-progress"
+            >
+              {solvedCount}/{totalCount} solved
+            </span>
+          )}
+          {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+        </div>
       </button>
 
       {expanded && (
@@ -70,7 +92,16 @@ const CurriculumTopicSection: React.FC<{
                 className="flex items-center justify-between rounded-md border p-3 cursor-pointer hover:bg-accent"
                 data-cy="curriculum-problem-row"
               >
-                <span className="font-medium">{problem.title}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  {problem.solved && (
+                    <CheckCircle2
+                      size={16}
+                      className="text-emerald-600 dark:text-emerald-400 shrink-0"
+                      data-cy="curriculum-problem-solved-icon"
+                    />
+                  )}
+                  <span className="font-medium truncate">{problem.title}</span>
+                </div>
                 <Badge className={CURRICULUM_LEVEL_COLORS[problem.level]}>
                   {pascalizeUnderscore(problem.level)}
                 </Badge>
@@ -94,6 +125,12 @@ const CurriculumTab: React.FC = () => {
   const [expandedTopicId, setExpandedTopicId] = useState<string | null>(null);
 
   const { data: topics, isLoading, error } = useCurriculumTopics();
+  // Scoped to the selected language so a topic's "X/Y solved" always matches the problems that
+  // topic's own (language-filtered) list is about to show once expanded.
+  const { data: progress } = useCurriculumProgress(language);
+  const progressByTopic = new Map(
+    progress?.byTopic.map((topicProgress) => [topicProgress.topicId, topicProgress])
+  );
 
   if (error) return <ErrorPage message="Failed to fetch curriculum topics" />;
 
@@ -132,19 +169,24 @@ const CurriculumTab: React.FC = () => {
             </Card>
           ))
         ) : topics && topics.length > 0 ? (
-          topics.map((topic) => (
-            <CurriculumTopicSection
-              key={topic.id}
-              topicId={topic.id}
-              title={topic.title}
-              description={topic.description}
-              language={language}
-              expanded={expandedTopicId === topic.id}
-              onToggle={() =>
-                setExpandedTopicId((prev) => (prev === topic.id ? null : topic.id))
-              }
-            />
-          ))
+          topics.map((topic) => {
+            const topicProgress = progressByTopic.get(topic.id);
+            return (
+              <CurriculumTopicSection
+                key={topic.id}
+                topicId={topic.id}
+                title={topic.title}
+                description={topic.description}
+                language={language}
+                expanded={expandedTopicId === topic.id}
+                onToggle={() =>
+                  setExpandedTopicId((prev) => (prev === topic.id ? null : topic.id))
+                }
+                solvedCount={topicProgress?.solved}
+                totalCount={topicProgress?.total}
+              />
+            );
+          })
         ) : (
           <p className="text-center text-muted-foreground py-6">
             No curriculum topics yet.

@@ -62,6 +62,9 @@ export type CurriculumProblem = {
   level: CurriculumLevel;
   starterCode: string;
   position: number;
+  // Whether the CALLING user has solved this problem — true once any one of their submissions
+  // against it was ACCEPTED. Derived per-request by the backend, never something the client sets.
+  solved: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -124,4 +127,22 @@ export type CurriculumSubmission = {
   results: CurriculumResultCase[];
   runtimeMs: number;
   createdAt: string;
+};
+
+// A single topic's solved/total count, in the curriculum's own topic display order. Topics with
+// no problems — or none in the requested language — still appear, as 0/0.
+export type CurriculumTopicProgress = {
+  topicId: string;
+  topicSlug: string;
+  topicTitle: string;
+  total: number;
+  solved: number;
+};
+
+// The calling user's progress across the whole curriculum, optionally scoped to one language.
+export type CurriculumProgress = {
+  totalProblems: number;
+  solvedProblems: number;
+  solvedProblemIds: string[];
+  byTopic: CurriculumTopicProgress[];
 };
