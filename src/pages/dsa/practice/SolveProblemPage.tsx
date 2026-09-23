@@ -182,6 +182,11 @@ const SolveProblemPage: React.FC = () => {
         >
           {convertToPascalCase(problem.difficulty)}
         </Badge>
+        {typeof problem.score === "number" && (
+          <Badge variant="secondary" data-cy="solve-score">
+            {problem.score} pts
+          </Badge>
+        )}
         {problem.topics.map((topic: Topic) => (
           <Badge key={topic} className={`text-xs ${TopicColors[topic]}`}>
             {pascalizeUnderscore(topic)}
