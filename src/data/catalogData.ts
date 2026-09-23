@@ -38,10 +38,21 @@ export type CatalogProblem = {
   difficulty: CatalogDifficulty;
   topics: Topic[];
   description: string;
+  problemType?: string;
+  languageLocked?: boolean;
   functionName: string;
   paramNames: string[];
   starterCode: StarterCodeByLanguage;
   returnType?: CatalogReturnType;
+  // Curriculum-path metadata: which beginner→advanced band this problem belongs to and its
+  // global sort key within that ordering. Both null for problems outside the curated path.
+  section: string | null;
+  position: number | null;
+  // Points awarded for solving (EASY=5, MEDIUM=10, HARD=20). Server-derived — never editable.
+  // Optional: absent until dsa-service's section/position/score rollout is deployed.
+  score?: number;
+  // Per-problem override of the judge's run budget; null uses code-execution-service's default.
+  timeLimitMs: number | null;
   createdAt?: string;
   updatedAt?: string;
 };
