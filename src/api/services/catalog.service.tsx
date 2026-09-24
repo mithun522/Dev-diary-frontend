@@ -20,13 +20,17 @@ import {
 export const fetchCatalogProblems = async (
   search: string = "",
   difficulty: string,
-  pageParam: number
+  pageParam: number,
+  section: string = ""
 ): Promise<CatalogProblemPage> => {
   const params = new URLSearchParams();
 
   if (search) params.append("searchString", search);
   if (difficulty) params.append("difficulty", difficulty);
   if (pageParam) params.append("pageNumber", String(pageParam));
+  // Exact match against one of the 18 curriculum bands (see CatalogSections.ts) - never a
+  // free-text/partial filter, so no encoding concerns beyond URLSearchParams' own.
+  if (section) params.append("section", section);
 
   const queryString = params.toString();
   const url = queryString ? `${CATALOG}?${queryString}` : CATALOG;

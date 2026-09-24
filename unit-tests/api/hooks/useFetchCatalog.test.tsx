@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
   useFetchCatalogProblems,
+  useFetchCatalogProblemsPaged,
   useFetchCatalogProblemDetail,
   useFetchSubmissions,
   useSubmitSolution,
@@ -66,7 +67,8 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-describe("useFetchCatalogProblems", () => {
+// AdminCatalogTable (doc 17) still uses this "Load More" infinite-query hook, unchanged.
+describe("useFetchCatalogProblems (infinite-query / Load More - AdminCatalogTable)", () => {
   test("registers the queryKey with the search/difficulty normalized via ?? defaults", async () => {
     mockedFetchCatalogProblems.mockResolvedValue(page([], 0));
     const { queryClient, Wrapper } = createWrapper();
@@ -168,6 +170,126 @@ describe("useFetchCatalogProblems", () => {
 
     // Exactly 3 of 3 loaded now -> the boundary -> no further page param.
     await waitFor(() => expect(result.current.hasNextPage).toBe(false));
+  });
+});
+
+// PracticeTab (candidate-facing catalog browse) uses this numbered-pagination hook instead.
+describe("useFetchCatalogProblemsPaged (numbered pagination - PracticeTab)", () => {
+  test("registers the queryKey with search/difficulty/section normalized via ?? defaults, plus the page number", async () => {
+    mockedFetchCatalogProblems.mockResolvedValue(page([], 0));
+    const { queryClient, Wrapper } = createWrapper();
+
+    renderHook(
+      () => useFetchCatalogProblemsPaged({ search: "two sum", difficulty: "EASY", page: 1 }),
+      { wrapper: Wrapper }
+    );
+
+    await waitFor(() => {
+      expect(
+        queryClient.getQueryCache().findAll().map((q) => q.queryKey)
+      ).toContainEqual(["catalog", "two sum", "EASY", "NONE", 1]);
+    });
+  });
+
+  test("an empty-string difficulty/section is embedded as-is (?? only guards null/undefined, not '')", async () => {
+    mockedFetchCatalogProblems.mockResolvedValue(page([], 0));
+    const { queryClient, Wrapper } = createWrapper();
+
+    renderHook(
+      () => useFetchCatalogProblemsPaged({ search: "", difficulty: "", section: "", page: 1 }),
+      { wrapper: Wrapper }
+    );
+
+    await waitFor(() => {
+      expect(
+        queryClient.getQueryCache().findAll().map((q) => q.queryKey)
+      ).toContainEqual(["catalog", "", "", "", 1]);
+    });
+  });
+
+  test("normalizes a nullish difficulty/section to the literal 'NONE' in the queryKey", async () => {
+    mockedFetchCatalogProblems.mockResolvedValue(page([], 0));
+    const { queryClient, Wrapper } = createWrapper();
+
+    renderHook(
+      () =>
+        useFetchCatalogProblemsPaged({
+          search: "",
+          difficulty: undefined as unknown as string,
+          page: 1,
+        }),
+      { wrapper: Wrapper }
+    );
+
+    await waitFor(() => {
+      expect(
+        queryClient.getQueryCache().findAll().map((q) => q.queryKey)
+      ).toContainEqual(["catalog", "", "NONE", "NONE", 1]);
+    });
+  });
+
+  test("calls the service with search, difficulty, page number, and section", async () => {
+    mockedFetchCatalogProblems.mockResolvedValue(page([problem("p1")], 1));
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(
+      () =>
+        useFetchCatalogProblemsPaged({
+          search: "sum",
+          difficulty: "HARD",
+          section: "Arrays",
+          page: 1,
+        }),
+      { wrapper: Wrapper }
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedFetchCatalogProblems).toHaveBeenCalledWith("sum", "HARD", 1, "Arrays");
+  });
+
+  test("changing `page` triggers a new fetch for that page number", async () => {
+    mockedFetchCatalogProblems.mockResolvedValueOnce(page([problem("p1")], 25));
+    const { Wrapper } = createWrapper();
+
+    const { result, rerender } = renderHook(
+      ({ page }) => useFetchCatalogProblemsPaged({ search: "", difficulty: "", page }),
+      { wrapper: Wrapper, initialProps: { page: 1 } }
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    mockedFetchCatalogProblems.mockResolvedValueOnce(page([problem("p11")], 25));
+    rerender({ page: 2 });
+
+    await waitFor(() =>
+      expect(mockedFetchCatalogProblems).toHaveBeenLastCalledWith("", "", 2, "")
+    );
+  });
+
+  test("totalPages is ceil(totalLength / CATALOG_PAGE_SIZE), e.g. 25 problems at 10/page -> 3 pages", async () => {
+    mockedFetchCatalogProblems.mockResolvedValue(page([problem("p1")], 25));
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(
+      () => useFetchCatalogProblemsPaged({ search: "", difficulty: "", page: 1 }),
+      { wrapper: Wrapper }
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.totalPages).toBe(3);
+  });
+
+  test("totalPages is 0 when there are no results (Pagination renders nothing)", async () => {
+    mockedFetchCatalogProblems.mockResolvedValue(page([], 0));
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(
+      () => useFetchCatalogProblemsPaged({ search: "", difficulty: "", page: 1 }),
+      { wrapper: Wrapper }
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.totalPages).toBe(0);
   });
 });
 

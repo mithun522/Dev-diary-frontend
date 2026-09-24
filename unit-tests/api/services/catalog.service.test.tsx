@@ -50,11 +50,33 @@ describe("fetchCatalogProblems", () => {
     expect(mockedAxios.get).toHaveBeenCalledWith(CATALOG);
   });
 
-  test("combines all three params in a single query string", async () => {
+  test("combines all three original params in a single query string", async () => {
     mockedAxios.get.mockResolvedValue({ data: { problems: [], totalLength: 0 } });
     await fetchCatalogProblems("sum", "HARD", 3);
     expect(mockedAxios.get).toHaveBeenCalledWith(
       `${CATALOG}?searchString=sum&difficulty=HARD&pageNumber=3`
+    );
+  });
+
+  test("appends section as an exact-match query param when given", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { problems: [], totalLength: 0 } });
+    await fetchCatalogProblems("", "", 0, "Dynamic Programming");
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      `${CATALOG}?section=Dynamic+Programming`
+    );
+  });
+
+  test("omits section entirely (not even as an empty param) when not given", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { problems: [], totalLength: 0 } });
+    await fetchCatalogProblems("", "", 0);
+    expect(mockedAxios.get).toHaveBeenCalledWith(CATALOG);
+  });
+
+  test("combines search, difficulty, page, and section all together", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { problems: [], totalLength: 0 } });
+    await fetchCatalogProblems("sum", "HARD", 3, "Arrays");
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      `${CATALOG}?searchString=sum&difficulty=HARD&pageNumber=3&section=Arrays`
     );
   });
 
