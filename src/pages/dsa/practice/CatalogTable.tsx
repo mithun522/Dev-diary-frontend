@@ -11,6 +11,7 @@ import {
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
 import Button from "../../../components/ui/button";
+import Pagination from "../../../components/ui/pagination";
 import type { CatalogProblem } from "../../../data/catalogData";
 import { getDifficultyColor } from "../../../utils/colorVariations";
 import { convertToPascalCase, pascalizeUnderscore } from "../../../utils/convertToPascalCase";
@@ -19,17 +20,17 @@ import { TopicColors, type Topic } from "../../../constants/Topics";
 interface CatalogTableProps {
   isLoadingFetch: boolean;
   fetchedProblems: CatalogProblem[];
-  fetchNextPage: () => void;
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 const CatalogTable: React.FC<CatalogTableProps> = ({
   isLoadingFetch,
   fetchedProblems,
-  fetchNextPage,
-  hasNextPage,
-  isFetchingNextPage,
+  currentPage,
+  totalPages,
+  onPageChange,
 }) => {
   const navigate = useNavigate();
 
@@ -119,18 +120,11 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
             )}
           </TableBody>
         </Table>
-        {hasNextPage && (
-          <div className="flex justify-center mt-4 mb-4">
-            <Button
-              variant="outlinePrimary"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="px-4 py-2 text-sm rounded-lg disabled:opacity-50"
-            >
-              {isFetchingNextPage ? "Loading..." : "Load More"}
-            </Button>
-          </div>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+        />
       </CardContent>
     </Card>
   );

@@ -1,12 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import PracticeTab from "../../../../src/pages/dsa/practice/PracticeTab";
-import { useFetchCatalogProblems } from "../../../../src/api/hooks/useFetchCatalog";
+import { useFetchCatalogProblemsPaged } from "../../../../src/api/hooks/useFetchCatalog";
 import { useDebounce } from "../../../../src/api/hooks/use-debounce";
 import type { CatalogProblem } from "../../../../src/data/catalogData";
 
 jest.mock("../../../../src/api/hooks/useFetchCatalog", () => ({
-  useFetchCatalogProblems: jest.fn(),
+  useFetchCatalogProblemsPaged: jest.fn(),
 }));
 
 // The real hook waits 1000ms before committing a search value; mocked as an identity pass-through
@@ -15,7 +15,7 @@ jest.mock("../../../../src/api/hooks/use-debounce", () => ({
   useDebounce: jest.fn((value: unknown) => value),
 }));
 
-const mockedUseFetchCatalogProblems = useFetchCatalogProblems as jest.Mock;
+const mockedUseFetchCatalogProblems = useFetchCatalogProblemsPaged as jest.Mock;
 const mockedUseDebounce = useDebounce as jest.Mock;
 
 const buildProblem = (overrides: Partial<CatalogProblem> = {}): CatalogProblem => ({
@@ -35,10 +35,8 @@ const buildProblem = (overrides: Partial<CatalogProblem> = {}): CatalogProblem =
 });
 
 const defaultQueryResult = (overrides: Record<string, unknown> = {}) => ({
-  data: { pages: [{ problems: [buildProblem()], totalLength: 1 }] },
-  fetchNextPage: jest.fn(),
-  hasNextPage: false,
-  isFetchingNextPage: false,
+  data: { problems: [buildProblem()], totalLength: 1 },
+  totalPages: 1,
   isLoading: false,
   error: null,
   ...overrides,
@@ -72,11 +70,13 @@ describe("PracticeTab", () => {
     }
   });
 
-  test("fetches with empty search/difficulty on first render", () => {
+  test("fetches page 1 with empty search/difficulty/section on first render", () => {
     renderPracticeTab();
     expect(mockedUseFetchCatalogProblems).toHaveBeenLastCalledWith({
       search: "",
       difficulty: "",
+      section: "",
+      page: 1,
     });
   });
 
@@ -88,7 +88,7 @@ describe("PracticeTab", () => {
 
   test("renders CatalogTable's empty state when there are no problems", () => {
     mockedUseFetchCatalogProblems.mockReturnValue(
-      defaultQueryResult({ data: { pages: [{ problems: [], totalLength: 0 }] } })
+      defaultQueryResult({ data: { problems: [], totalLength: 0 }, totalPages: 0 })
     );
     renderPracticeTab();
     expect(
@@ -113,29 +113,76 @@ describe("PracticeTab", () => {
     expect(mockedUseFetchCatalogProblems).toHaveBeenLastCalledWith({
       search: "two sum",
       difficulty: "",
+      section: "",
+      page: 1,
     });
   });
 
+  // Render order in PracticeTab is Topic (section) select, then Difficulty select - so
+  // getAllByRole("combobox") is [sectionTrigger, difficultyTrigger] in that order.
   test("selecting a difficulty from the filter re-queries with that difficulty", async () => {
     renderPracticeTab();
 
-    const trigger = screen.getByRole("combobox");
-    expect(trigger).toHaveTextContent("All");
+    const [, difficultyTrigger] = screen.getAllByRole("combobox");
+    expect(difficultyTrigger).toHaveTextContent("All");
 
-    fireEvent.click(trigger);
+    fireEvent.click(difficultyTrigger);
     const easyOption = await screen.findByRole("option", { name: "Easy" });
     fireEvent.click(easyOption);
 
     expect(mockedUseFetchCatalogProblems).toHaveBeenLastCalledWith({
       search: "",
       difficulty: "EASY",
+      section: "",
+      page: 1,
+    });
+  });
+
+  test("selecting a topic from the section filter re-queries with that section", async () => {
+    renderPracticeTab();
+
+    const [sectionTrigger] = screen.getAllByRole("combobox");
+    expect(sectionTrigger).toHaveTextContent("Topic");
+
+    fireEvent.click(sectionTrigger);
+    const graphsOption = await screen.findByRole("option", { name: "Graphs" });
+    fireEvent.click(graphsOption);
+
+    expect(mockedUseFetchCatalogProblems).toHaveBeenLastCalledWith({
+      search: "",
+      difficulty: "",
+      section: "Graphs",
+      page: 1,
+    });
+  });
+
+  test("navigating to page 2 then changing the difficulty filter resets back to page 1", async () => {
+    // totalPages: 3 so Pagination actually renders a page-2 button to click.
+    mockedUseFetchCatalogProblems.mockReturnValue(defaultQueryResult({ totalPages: 3 }));
+    renderPracticeTab();
+
+    fireEvent.click(screen.getByRole("button", { name: "Go to page 2" }));
+    expect(mockedUseFetchCatalogProblems).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 2 })
+    );
+
+    const [, difficultyTrigger] = screen.getAllByRole("combobox");
+    fireEvent.click(difficultyTrigger);
+    const hardOption = await screen.findByRole("option", { name: "Hard" });
+    fireEvent.click(hardOption);
+
+    expect(mockedUseFetchCatalogProblems).toHaveBeenLastCalledWith({
+      search: "",
+      difficulty: "HARD",
+      section: "",
+      page: 1,
     });
   });
 
   test("passes the fetched problems through to CatalogTable for rendering", () => {
     mockedUseFetchCatalogProblems.mockReturnValue(
       defaultQueryResult({
-        data: { pages: [{ problems: [buildProblem({ title: "Valid Parentheses" })], totalLength: 1 }] },
+        data: { problems: [buildProblem({ title: "Valid Parentheses" })], totalLength: 1 },
       })
     );
     renderPracticeTab();
