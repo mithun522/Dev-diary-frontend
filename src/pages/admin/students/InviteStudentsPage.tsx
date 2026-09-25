@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { AxiosError } from "axios";
 import { toast } from "react-toastify";
+import Papa from "papaparse";
+import { Upload } from "lucide-react";
 import { Card, CardContent } from "../../../components/ui/card";
 import {
   Table,
@@ -11,6 +13,7 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Textarea } from "../../../components/ui/textarea";
+import { Input } from "../../../components/ui/input";
 import Button from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { Skeleton } from "../../../components/ui/skeleton";
@@ -37,6 +40,22 @@ const errorMessage = (err: unknown, fallback: string) => {
 const parseEmails = (raw: string): string[] =>
   Array.from(new Set(raw.split(/[\s,]+/).map((e) => e.trim()).filter(Boolean)));
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Deliberately tolerant of shape — a single email-per-line file, a one-column export, or a
+// multi-column roster (name, email, id, ...) with or without a header row. Rather than requiring
+// a specific "email" column, every cell across every row is tested against an email pattern, so
+// whichever column holds addresses is picked up and any header row/non-email columns are ignored.
+const extractEmailsFromCsvRows = (rows: string[][]): string[] =>
+  Array.from(
+    new Set(
+      rows
+        .flat()
+        .map((cell) => cell.trim())
+        .filter((cell) => EMAIL_PATTERN.test(cell))
+    )
+  );
+
 const RESULT_STATUS_LABEL: Record<InviteStudentsResult["status"], string> = {
   invited: "Invited",
   alreadyExists: "Already exists",
@@ -46,6 +65,8 @@ const RESULT_STATUS_LABEL: Record<InviteStudentsResult["status"], string> = {
 const InviteStudentsPage: React.FC = () => {
   const [emailsInput, setEmailsInput] = useState("");
   const [lastResults, setLastResults] = useState<InviteStudentsResult[]>([]);
+  const [isParsingCsv, setIsParsingCsv] = useState(false);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   const inviteStudentsMutation = useInviteStudents();
   const resendInviteMutation = useResendInvite();
@@ -75,6 +96,28 @@ const InviteStudentsPage: React.FC = () => {
       onError: (err) => {
         toast.error(errorMessage(err, "Failed to invite students"));
         logger.error("Error inviting students:", err);
+      },
+    });
+  };
+
+  const handleCsvSelect = (file: File) => {
+    setIsParsingCsv(true);
+    Papa.parse<string[]>(file, {
+      skipEmptyLines: true,
+      complete: (results) => {
+        setIsParsingCsv(false);
+        const emails = extractEmailsFromCsvRows(results.data);
+        if (emails.length === 0) {
+          toast.error("No email addresses found in that CSV");
+          return;
+        }
+        setEmailsInput((prev) => parseEmails(`${prev}\n${emails.join("\n")}`).join("\n"));
+        toast.success(`Added ${emails.length} email${emails.length === 1 ? "" : "s"} from CSV`);
+      },
+      error: (err) => {
+        setIsParsingCsv(false);
+        toast.error("Failed to parse CSV file");
+        logger.error("Error parsing student CSV:", err);
       },
     });
   };
@@ -141,6 +184,37 @@ const InviteStudentsPage: React.FC = () => {
               className="min-h-[120px]"
               data-cy="invite-students-emails"
             />
+
+            <div className="flex items-center gap-3">
+              <Input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleCsvSelect(file);
+                  e.target.value = "";
+                }}
+                data-cy="invite-students-csv-input"
+              />
+              <Button
+                type="button"
+                variant="outlinePrimary"
+                size="sm"
+                className="flex items-center gap-2"
+                disabled={isParsingCsv}
+                onClick={() => csvInputRef.current?.click()}
+                data-cy="invite-students-csv-button"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {isParsingCsv ? "Reading CSV..." : "Upload CSV"}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Any CSV with student emails — one column or a full roster, header row optional.
+              </p>
+            </div>
+
             <Button
               type="submit"
               disabled={inviteStudentsMutation.isPending}

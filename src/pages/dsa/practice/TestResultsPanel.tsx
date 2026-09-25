@@ -49,7 +49,7 @@ const TestResultsPanel: React.FC<TestResultsPanelProps> = ({ result, paramNames 
                 {testCase.passed ? "Passed" : "Failed"}
               </span>
             </div>
-            <div className="mt-1 grid gap-1 text-muted-foreground font-mono text-xs">
+            <div className="mt-1 grid gap-1 text-muted-foreground font-mono text-xs whitespace-pre-wrap break-words">
               <span>Input: {formatTestCaseArgs(paramNames, testCase.args)}</span>
               <span>Expected: {stringify(testCase.expected)}</span>
               {!testCase.passed && "actual" in testCase && (

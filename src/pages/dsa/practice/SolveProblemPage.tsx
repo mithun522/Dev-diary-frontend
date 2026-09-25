@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import MarkdownPreview from "@uiw/react-markdown-preview";
@@ -13,6 +13,11 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../../components/ui/tabs";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "../../../components/ui/resizable";
 import ErrorPage from "../../ErrorPage";
 import {
   useFetchCatalogProblemDetail,
@@ -67,6 +72,12 @@ const errorMessage = (err: unknown, fallback: string) => {
 const SolveProblemPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  // If we arrived here via an in-app navigation (a history entry exists), step back to it so the
+  // caller's state (e.g. which DSA Prep tab was active) is preserved. A direct/deep link has no
+  // such entry — location.key is "default" — so fall back to the DSA Prep hub instead.
+  const goBack = () =>
+    location.key === "default" ? navigate("/dsa") : navigate(-1);
   const {
     data: problem,
     isLoading,
@@ -168,7 +179,7 @@ const SolveProblemPage: React.FC = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate("/dsa")}
+          onClick={goBack}
           data-cy="solve-back"
         >
           <ArrowLeft size={16} />
@@ -195,105 +206,122 @@ const SolveProblemPage: React.FC = () => {
       </div>
 
       <div
-        className={`flex flex-col lg:flex-row gap-4 flex-1 min-h-0 min-w-0 transition-opacity duration-200 ${
+        className={`flex-1 min-h-0 min-w-0 transition-opacity duration-200 ${
           isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
         }`}
       >
-        <div className="lg:w-2/5 flex flex-col min-h-0 min-w-0">
-          <Tabs defaultValue="description" className="flex flex-col flex-1 min-h-0">
-            <TabsList>
-              <TabsTrigger value="description" data-cy="solve-tab-description">
-                Description
-              </TabsTrigger>
-              <TabsTrigger value="submissions" data-cy="solve-tab-submissions">
-                Submissions
-              </TabsTrigger>
-            </TabsList>
+        <ResizablePanelGroup
+          direction="horizontal"
+          className="flex-col lg:flex-row !h-full"
+        >
+          <ResizablePanel
+            defaultSize={40}
+            minSize={25}
+            className="flex flex-col min-h-0 min-w-0"
+          >
+            <Tabs defaultValue="description" className="flex flex-col flex-1 min-h-0">
+              <TabsList>
+                <TabsTrigger value="description" data-cy="solve-tab-description">
+                  Description
+                </TabsTrigger>
+                <TabsTrigger value="submissions" data-cy="solve-tab-submissions">
+                  Submissions
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent
-              value="description"
-              className="flex-1 min-h-0 overflow-y-auto pt-4 space-y-4"
-            >
-              <MarkdownPreview source={problem.description} />
-              <div>
-                <h3 className="font-semibold mb-2">Sample test cases</h3>
-                <div className="space-y-2">
-                  {problem.sampleTestCases.map((testCase, index) => (
-                    <div
-                      key={testCase.id}
-                      className="rounded-md border p-3 text-sm font-mono"
-                    >
-                      <div>Input {index + 1}: {formatTestCaseArgs(problem.paramNames, testCase.args)}</div>
-                      <div>Output: {JSON.stringify(testCase.expected)}</div>
-                    </div>
-                  ))}
+              <TabsContent
+                value="description"
+                className="flex-1 min-h-0 overflow-y-auto pt-4 pr-2 space-y-4"
+              >
+                <div className="break-words [&_pre]:whitespace-pre-wrap [&_code]:break-words">
+                  <MarkdownPreview source={problem.description} />
                 </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Sample test cases</h3>
+                  <div className="space-y-2">
+                    {problem.sampleTestCases.map((testCase, index) => (
+                      <div
+                        key={testCase.id}
+                        className="rounded-md border p-3 text-sm font-mono whitespace-pre-wrap break-words"
+                      >
+                        <div>Input {index + 1}: {formatTestCaseArgs(problem.paramNames, testCase.args)}</div>
+                        <div>Output: {JSON.stringify(testCase.expected)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent
+                value="submissions"
+                className="flex-1 min-h-0 overflow-y-auto pt-4"
+              >
+                <SubmissionHistory
+                  problemId={problem.id}
+                  onSelect={(code, submissionLanguage) => {
+                    setLanguage(submissionLanguage);
+                    setCodeByLanguage((prev) => ({ ...prev, [submissionLanguage]: code }));
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle className="mx-2" />
+
+          <ResizablePanel
+            defaultSize={60}
+            minSize={30}
+            className="flex flex-col min-h-0 min-w-0 gap-3"
+          >
+            <div className="flex items-center justify-between">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as CodeExecutionLanguage)}
+                className="text-sm text-muted-foreground bg-transparent border rounded-md px-2 py-1"
+                data-cy="solve-language-select"
+              >
+                {CODE_EXECUTION_LANGUAGE_OPTIONS.filter((option) =>
+                  problemLanguages.includes(option.value)
+                ).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outlinePrimary"
+                  size="sm"
+                  onClick={handleRun}
+                  disabled={runMutation.isPending || submitMutation.isPending}
+                  data-cy="solve-run"
+                >
+                  {runMutation.isPending ? "Running..." : "Run"}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSubmit}
+                  disabled={submitMutation.isPending || runMutation.isPending}
+                  data-cy="solve-submit"
+                >
+                  {submitMutation.isPending ? "Judging..." : "Submit"}
+                </Button>
               </div>
-            </TabsContent>
-
-            <TabsContent
-              value="submissions"
-              className="flex-1 min-h-0 overflow-y-auto pt-4"
-            >
-              <SubmissionHistory
-                problemId={problem.id}
-                onSelect={(code, submissionLanguage) => {
-                  setLanguage(submissionLanguage);
-                  setCodeByLanguage((prev) => ({ ...prev, [submissionLanguage]: code }));
-                }}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="lg:w-3/5 flex flex-col min-h-0 min-w-0 gap-3">
-          <div className="flex items-center justify-between">
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as CodeExecutionLanguage)}
-              className="text-sm text-muted-foreground bg-transparent border rounded-md px-2 py-1"
-              data-cy="solve-language-select"
-            >
-              {CODE_EXECUTION_LANGUAGE_OPTIONS.filter((option) =>
-                problemLanguages.includes(option.value)
-              ).map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outlinePrimary"
-                size="sm"
-                onClick={handleRun}
-                disabled={runMutation.isPending || submitMutation.isPending}
-                data-cy="solve-run"
-              >
-                {runMutation.isPending ? "Running..." : "Run"}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSubmit}
-                disabled={submitMutation.isPending || runMutation.isPending}
-                data-cy="solve-submit"
-              >
-                {submitMutation.isPending ? "Judging..." : "Submit"}
-              </Button>
             </div>
-          </div>
 
-          <div className="flex-1 min-h-[300px] min-w-0 rounded-md border overflow-hidden">
-            <CodeEditor value={sourceCode} onChange={setSourceCode} language={language} />
-          </div>
-
-          {activeResult && (
-            <div className="max-h-64 overflow-y-auto">
-              <TestResultsPanel result={activeResult} paramNames={problem.paramNames} />
+            <div className="flex-1 min-h-[300px] min-w-0 rounded-md border overflow-hidden">
+              <CodeEditor value={sourceCode} onChange={setSourceCode} language={language} />
             </div>
-          )}
-        </div>
+
+            {activeResult && (
+              <div className="max-h-64 overflow-y-auto">
+                <TestResultsPanel result={activeResult} paramNames={problem.paramNames} />
+              </div>
+            )}
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );

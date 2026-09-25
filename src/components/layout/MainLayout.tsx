@@ -213,7 +213,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
 
       <SidebarInset className="flex flex-col">
         <TopNav />
-        <div className="p-4 flex-1">
+        <div className="p-4 flex-1 min-w-0">
           <Outlet />
         </div>
       </SidebarInset>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
 import MarkdownPreview from "@uiw/react-markdown-preview";
@@ -7,6 +7,11 @@ import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Loader2 } from "luc
 import { Badge } from "../../../components/ui/badge";
 import Button from "../../../components/ui/button";
 import { Skeleton } from "../../../components/ui/skeleton";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "../../../components/ui/resizable";
 import ErrorPage from "../../ErrorPage";
 import {
   useCurriculumProblemDetail,
@@ -32,6 +37,12 @@ const errorMessage = (err: unknown, fallback: string) => {
 const CurriculumSolveProblemPage: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  // If we arrived here via an in-app navigation (a history entry exists), step back to it so the
+  // caller's state (e.g. which DSA Prep tab was active) is preserved. A direct/deep link has no
+  // such entry — location.key is "default" — so fall back to the DSA Prep hub instead.
+  const goBack = () =>
+    location.key === "default" ? navigate("/dsa") : navigate(-1);
   const {
     data: problem,
     isLoading,
@@ -176,7 +187,7 @@ const CurriculumSolveProblemPage: React.FC = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate("/dsa")}
+          onClick={goBack}
           data-cy="curriculum-solve-back"
         >
           <ArrowLeft size={16} />
@@ -231,61 +242,78 @@ const CurriculumSolveProblemPage: React.FC = () => {
       </div>
 
       <div
-        className={`flex flex-col lg:flex-row gap-4 flex-1 min-h-0 min-w-0 transition-opacity duration-200 ${
+        className={`flex-1 min-h-0 min-w-0 transition-opacity duration-200 ${
           isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
         }`}
       >
-        <div className="lg:w-2/5 flex flex-col min-h-0 min-w-0 overflow-y-auto pt-2 space-y-4">
-          <MarkdownPreview source={problem.description} />
-          <div>
-            <h3 className="font-semibold mb-2">Sample output</h3>
-            <div className="space-y-2">
-              {problem.sampleTestCases.map((testCase, index) => (
-                <div
-                  key={testCase.id}
-                  className="rounded-md border p-3 text-sm font-mono whitespace-pre-wrap"
+        <ResizablePanelGroup
+          direction="horizontal"
+          className="flex-col lg:flex-row !h-full"
+        >
+          <ResizablePanel
+            defaultSize={40}
+            minSize={25}
+            className="flex flex-col min-h-0 min-w-0 overflow-y-auto pt-2 pr-2 space-y-4"
+          >
+            <div className="break-words [&_pre]:whitespace-pre-wrap [&_code]:break-words">
+              <MarkdownPreview source={problem.description} />
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">Sample output</h3>
+              <div className="space-y-2">
+                {problem.sampleTestCases.map((testCase, index) => (
+                  <div
+                    key={testCase.id}
+                    className="rounded-md border p-3 text-sm font-mono whitespace-pre-wrap break-words"
+                  >
+                    <div>Sample {index + 1}: {testCase.expectedStdout}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle className="mx-2" />
+
+          <ResizablePanel
+            defaultSize={60}
+            minSize={30}
+            className="flex flex-col min-h-0 min-w-0 gap-3"
+          >
+            <div className="flex items-center justify-end">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outlinePrimary"
+                  size="sm"
+                  onClick={handleRun}
+                  disabled={runMutation.isPending || submitMutation.isPending}
+                  data-cy="curriculum-solve-run"
                 >
-                  <div>Sample {index + 1}: {testCase.expectedStdout}</div>
-                </div>
-              ))}
+                  {runMutation.isPending ? "Running..." : "Run"}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSubmit}
+                  disabled={submitMutation.isPending || runMutation.isPending}
+                  data-cy="curriculum-solve-submit"
+                >
+                  {submitMutation.isPending ? "Judging..." : "Submit"}
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="lg:w-3/5 flex flex-col min-h-0 min-w-0 gap-3">
-          <div className="flex items-center justify-end">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outlinePrimary"
-                size="sm"
-                onClick={handleRun}
-                disabled={runMutation.isPending || submitMutation.isPending}
-                data-cy="curriculum-solve-run"
-              >
-                {runMutation.isPending ? "Running..." : "Run"}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSubmit}
-                disabled={submitMutation.isPending || runMutation.isPending}
-                data-cy="curriculum-solve-submit"
-              >
-                {submitMutation.isPending ? "Judging..." : "Submit"}
-              </Button>
+            <div className="flex-1 min-h-[300px] min-w-0 rounded-md border overflow-hidden">
+              <CodeEditor value={sourceCode} onChange={setSourceCode} language={problem.language} />
             </div>
-          </div>
 
-          <div className="flex-1 min-h-[300px] min-w-0 rounded-md border overflow-hidden">
-            <CodeEditor value={sourceCode} onChange={setSourceCode} language={problem.language} />
-          </div>
-
-          {activeResult && (
-            <div className="max-h-64 overflow-y-auto">
-              <CurriculumResultsPanel result={activeResult} />
-            </div>
-          )}
-        </div>
+            {activeResult && (
+              <div className="max-h-64 overflow-y-auto">
+                <CurriculumResultsPanel result={activeResult} />
+              </div>
+            )}
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );
