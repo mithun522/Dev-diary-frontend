@@ -4,6 +4,7 @@ import { Input } from "../../../components/ui/input";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { useCatalogCategories } from "../../../api/hooks/useTechInterviewCatalog";
+import { getStackIconMeta } from "../../../utils/stackIcons";
 import ErrorPage from "../../ErrorPage";
 
 // This tab is a compact entry point into the full catalog, not the browsing surface itself — the
@@ -51,23 +52,34 @@ const QuestionBankTab: React.FC = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {categories
             .flatMap((category) => category.stacks)
-            .map((stackSummary) => (
-              <Link
-                key={stackSummary.stack}
-                to={`/technical-interview/catalog/${encodeURIComponent(stackSummary.stack)}`}
-                data-cy="tech-interview-catalog-stack-card"
-              >
-                <Card className="cursor-pointer hover:bg-accent h-full">
-                  <CardContent className="pt-6">
-                    <h3 className="font-semibold">{stackSummary.label}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {stackSummary.topicCount} topics &middot;{" "}
-                      {stackSummary.questionCount} questions
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            .map((stackSummary) => {
+              const { icon: StackIcon, color } = getStackIconMeta(
+                stackSummary.stack
+              );
+              return (
+                <Link
+                  key={stackSummary.stack}
+                  to={`/technical-interview/catalog/${encodeURIComponent(stackSummary.stack)}`}
+                  data-cy="tech-interview-catalog-stack-card"
+                >
+                  <Card className="cursor-pointer hover:bg-accent h-full">
+                    <CardContent className="pt-6 flex items-start gap-3">
+                      <StackIcon
+                        className={`h-8 w-8 shrink-0 ${color ? "" : "text-primary"}`}
+                        style={color ? { color } : undefined}
+                      />
+                      <div>
+                        <h3 className="font-semibold">{stackSummary.label}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {stackSummary.topicCount} topics &middot;{" "}
+                          {stackSummary.questionCount} questions
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
         </div>
       ) : (
         <p className="text-center text-muted-foreground py-6">

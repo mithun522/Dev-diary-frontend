@@ -47,7 +47,7 @@ const CurriculumResultsPanel: React.FC<CurriculumResultsPanelProps> = ({ result 
                 {testCase.passed ? "Passed" : "Failed"}
               </span>
             </div>
-            <div className="mt-1 grid gap-1 text-muted-foreground font-mono text-xs whitespace-pre-wrap">
+            <div className="mt-1 grid gap-1 text-muted-foreground font-mono text-xs whitespace-pre-wrap break-words">
               <span>Expected output: {testCase.expectedStdout}</span>
               {!testCase.passed && (
                 <span>Actual output: {testCase.actualStdout}</span>

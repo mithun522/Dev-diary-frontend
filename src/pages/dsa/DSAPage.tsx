@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import {
   Tabs,
   TabsContent,
@@ -11,7 +12,19 @@ import Todo from "./todo/Todo";
 import PracticeTab from "./practice/PracticeTab";
 import CurriculumTab from "./curriculum/CurriculumTab";
 
+const DSA_TABS = ["curriculum", "practice", "progress", "todo"] as const;
+type DSATab = (typeof DSA_TABS)[number];
+
 const DSAPage: React.FC = () => {
+  // The active tab lives in the URL (?tab=practice) rather than just Tabs' own uncontrolled
+  // state, so navigating into a problem and hitting "back" lands you back on the tab you were
+  // on instead of always resetting to the first one.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab: DSATab = DSA_TABS.includes(tabParam as DSATab)
+    ? (tabParam as DSATab)
+    : "curriculum";
+
   return (
     <div className="space-y-6" data-cy="dsa-page">
       <div>
@@ -21,7 +34,19 @@ const DSAPage: React.FC = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="curriculum">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) =>
+          setSearchParams(
+            (prev) => {
+              const next = new URLSearchParams(prev);
+              next.set("tab", value);
+              return next;
+            },
+            { replace: true }
+          )
+        }
+      >
         <TabsList className="grid grid-cols-4 md:w-[500px]">
           <TabsTrigger value="curriculum" data-cy="dsa-tab-curriculum">
             Basics

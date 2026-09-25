@@ -286,7 +286,7 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "relative flex min-h-screen flex-1 flex-col bg-background transition-all duration-200",
+        "relative flex min-h-screen min-w-0 flex-1 flex-col bg-background transition-all duration-200",
         side === "left"
           ? state === "collapsed"
             ? "ml-[var(--sidebar-width-icon)]"

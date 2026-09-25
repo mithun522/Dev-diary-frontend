@@ -4,6 +4,7 @@ import { Card, CardContent } from "../../../components/ui/card";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { Input } from "../../../components/ui/input";
 import { useCatalogCategories } from "../../../api/hooks/useTechInterviewCatalog";
+import { getStackIconMeta } from "../../../utils/stackIcons";
 import ErrorPage from "../../ErrorPage";
 
 // Browse root: a section per category, a card per stack. Content is entirely server-driven — new
@@ -74,23 +75,34 @@ const CatalogBrowsePage: React.FC = () => {
             <section key={category.slug} data-cy="tech-interview-catalog-category">
               <h2 className="text-xl font-semibold mb-3">{category.label}</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {category.stacks.map((stackSummary) => (
-                  <Link
-                    key={stackSummary.stack}
-                    to={`/technical-interview/catalog/${encodeURIComponent(stackSummary.stack)}`}
-                    data-cy="tech-interview-catalog-stack-card"
-                  >
-                    <Card className="cursor-pointer hover:bg-accent h-full">
-                      <CardContent className="pt-6">
-                        <h3 className="font-semibold">{stackSummary.label}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {stackSummary.topicCount} topics &middot;{" "}
-                          {stackSummary.questionCount} questions
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+                {category.stacks.map((stackSummary) => {
+                  const { icon: StackIcon, color } = getStackIconMeta(
+                    stackSummary.stack
+                  );
+                  return (
+                    <Link
+                      key={stackSummary.stack}
+                      to={`/technical-interview/catalog/${encodeURIComponent(stackSummary.stack)}`}
+                      data-cy="tech-interview-catalog-stack-card"
+                    >
+                      <Card className="cursor-pointer hover:bg-accent h-full">
+                        <CardContent className="pt-6 flex items-start gap-3">
+                          <StackIcon
+                            className={`h-8 w-8 shrink-0 ${color ? "" : "text-primary"}`}
+                            style={color ? { color } : undefined}
+                          />
+                          <div>
+                            <h3 className="font-semibold">{stackSummary.label}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {stackSummary.topicCount} topics &middot;{" "}
+                              {stackSummary.questionCount} questions
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
             </section>
           ))}
