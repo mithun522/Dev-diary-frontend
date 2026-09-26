@@ -29,6 +29,7 @@ import {
   ShieldCheck,
   UserPlus,
   Users,
+  UsersRound,
   Video,
 } from "lucide-react";
 import Button from "../ui/button";
@@ -57,6 +58,12 @@ const BASE_NAV_ITEMS = [
     label: "Student Progress",
     icon: LineChart,
     cy: "admin-student-progress",
+  },
+  {
+    to: "/admin/students/cohorts",
+    label: "Cohorts",
+    icon: UsersRound,
+    cy: "admin-cohorts",
   },
   {
     to: "/admin/interview-sessions",

@@ -54,6 +54,14 @@ export const ADMIN_SEAT_USAGE = `${AUTH_API_URL}/admin/seats`;
 export const SUPER_ADMIN_ADMINS = `${AUTH_API_URL}/super-admin/admins`;
 export const SUPER_ADMIN_ADMIN_SEAT_LIMIT = (id: string) =>
   `${SUPER_ADMIN_ADMINS}/${id}/seat-limit`;
+// Named groups of an admin's own invited students (e.g. a batch/section) - every lookup/mutation
+// below is scoped to cohorts the caller owns; a cohort id that exists but belongs to another
+// admin 404s identically to one that doesn't exist at all, so don't special-case that response.
+export const ADMIN_COHORTS = `${AUTH_API_URL}/admin/cohorts`;
+export const ADMIN_COHORT_BY_ID = (id: string) => `${ADMIN_COHORTS}/${id}`;
+export const ADMIN_COHORT_STUDENTS = (id: string) => `${ADMIN_COHORT_BY_ID(id)}/students`;
+export const ADMIN_COHORT_STUDENT_BY_ID = (cohortId: string, studentId: string) =>
+  `${ADMIN_COHORT_STUDENTS(cohortId)}/${studentId}`;
 
 // ---- user-service ----
 export const SINGLE_USER = `${USER_API_URL}/user`;

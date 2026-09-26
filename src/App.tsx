@@ -35,6 +35,8 @@ import InviteAdminsPage from "./pages/superadmin/InviteAdminsPage";
 import InviteStudentsPage from "./pages/admin/students/InviteStudentsPage";
 import StudentProgressPage from "./pages/admin/students/StudentProgressPage";
 import StudentProgressDetailPage from "./pages/admin/students/StudentProgressDetailPage";
+import CohortsPage from "./pages/admin/students/CohortsPage";
+import CohortDetailPage from "./pages/admin/students/CohortDetailPage";
 import AdminUsersPage from "./pages/admin/users/AdminUsersPage";
 import AdminCatalogPage from "./pages/admin/dsa/AdminCatalogPage";
 import AdminCurriculumTopicsPage from "./pages/admin/dsa/AdminCurriculumTopicsPage";
@@ -147,6 +149,8 @@ const App = () => {
                   path="/admin/students/progress/:userId"
                   element={<StudentProgressDetailPage />}
                 />
+                <Route path="/admin/students/cohorts" element={<CohortsPage />} />
+                <Route path="/admin/students/cohorts/:id" element={<CohortDetailPage />} />
                 <Route
                   path="/admin/interview-sessions"
                   element={<AdminInterviewSessionsPage />}
