@@ -5,7 +5,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from "../../components/ui/tabs";
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import MarkdownPreview from "../../components/MarkdownPreview";
 import {
   Card,
   CardDescription,

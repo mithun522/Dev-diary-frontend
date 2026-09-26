@@ -6,10 +6,11 @@ import { ThemeProvider, useTheme } from "../../src/providers/ThemeProvider";
 let matchMediaMatches = false;
 
 const TestConsumer = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   return (
     <div>
       <span data-testid="current-theme">{theme}</span>
+      <span data-testid="resolved-theme">{resolvedTheme}</span>
       <button onClick={() => setTheme("dark")}>set-dark</button>
       <button onClick={() => setTheme("light")}>set-light</button>
       <button onClick={() => setTheme("system")}>set-system</button>
@@ -130,6 +131,46 @@ describe("ThemeProvider — setTheme", () => {
 
     expect(screen.getByTestId("current-theme")).toHaveTextContent("system");
     expect(document.documentElement.classList.contains("dark")).toBe(true);
+  });
+});
+
+describe("ThemeProvider — resolvedTheme", () => {
+  test("resolves to 'dark' when explicitly set to 'dark', regardless of OS preference", () => {
+    matchMediaMatches = false;
+
+    render(
+      <ThemeProvider defaultTheme="dark">
+        <TestConsumer />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
+  });
+
+  test("resolves to 'light' when explicitly set to 'light', even while the OS prefers dark", () => {
+    matchMediaMatches = true;
+
+    render(
+      <ThemeProvider defaultTheme="light">
+        <TestConsumer />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId("current-theme")).toHaveTextContent("light");
+    expect(screen.getByTestId("resolved-theme")).toHaveTextContent("light");
+    expect(document.documentElement.classList.contains("dark")).toBe(false);
+  });
+
+  test("resolves 'system' against the OS preference", () => {
+    matchMediaMatches = true;
+
+    render(
+      <ThemeProvider defaultTheme="system">
+        <TestConsumer />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
   });
 });
 

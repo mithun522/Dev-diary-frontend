@@ -2,7 +2,7 @@ import { BookOpen, Trash2 } from "lucide-react";
 import Button from "../../components/ui/button";
 import type { TechnicalQuestion } from "./Index";
 import AddTechnicalQuestionForm from "./AddTechInterview";
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import MarkdownPreview from "../../components/MarkdownPreview";
 
 interface Props {
   index: number;

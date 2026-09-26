@@ -17,15 +17,6 @@ interface CodeEditorProps {
   language?: CodeExecutionLanguage;
 }
 
-// ThemeProvider only tracks the user's chosen mode ("dark" | "light" | "system"); "system" needs
-// resolving against the OS preference the same way ThemeProvider itself does for the <html> class.
-const resolveEditorTheme = (theme: string): "dark" | "light" => {
-  if (theme === "system") {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-  return theme === "dark" ? "dark" : "light";
-};
-
 // C and C++ share the same CodeMirror grammar (@codemirror/lang-cpp) — there's no separate C mode.
 const getLanguageExtension = (language: CodeExecutionLanguage): Extension => {
   switch (language) {
@@ -50,14 +41,14 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   readOnly,
   language = CodeExecutionLanguages.JAVASCRIPT,
 }) => {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   return (
     <CodeMirror
       value={value}
       height="100%"
       width="100%"
-      theme={resolveEditorTheme(theme)}
+      theme={resolvedTheme}
       // Without line wrapping, a single long line (common when a solution is written on one
       // line) forces CodeMirror's internal scroller to its full content width; since nothing
       // upstream in the split-pane layout applies `min-w-0`, that width bubbles all the way up

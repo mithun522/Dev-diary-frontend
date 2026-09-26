@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import MarkdownPreview from "../../../components/MarkdownPreview";
 import { Badge } from "../../../components/ui/badge";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { useCatalogQuestion } from "../../../api/hooks/useTechInterviewCatalog";
