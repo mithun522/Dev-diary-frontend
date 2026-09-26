@@ -117,10 +117,16 @@ describe("fetchDsaProgress", () => {
 });
 
 describe("fetchActivityHeatmap", () => {
-  test("requests /dsa/activity/heatmap with no query params", async () => {
+  test("requests /dsa/activity/heatmap with no query params when no year is given", async () => {
     mockedAxios.get.mockResolvedValue({ data: [] });
     await fetchActivityHeatmap();
     expect(mockedAxios.get).toHaveBeenCalledWith(DSA_ACTIVITY_HEATMAP);
+  });
+
+  test("appends ?year= when a calendar year is given", async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
+    await fetchActivityHeatmap(2025);
+    expect(mockedAxios.get).toHaveBeenCalledWith(`${DSA_ACTIVITY_HEATMAP}?year=2025`);
   });
 
   test("returns response.data (unlike fetchDsaProgress, unwraps the axios envelope)", async () => {

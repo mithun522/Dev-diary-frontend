@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import ActivityHeatmap, {
   buildWeeks,
   cellTitle,
@@ -24,7 +24,7 @@ const day = (date: string, overrides: Partial<DailyActivity> = {}): DailyActivit
 });
 
 describe("levelFor", () => {
-  test("returns level 0 for zero accepted", () => {
+  test("returns level 0 for zero submissions", () => {
     expect(levelFor(0)).toBe(0);
   });
 
@@ -37,8 +37,8 @@ describe("levelFor", () => {
     [6, 3],
     [7, 4],
     [20, 4],
-  ])("maps %i accepted to level %i", (accepted, expected) => {
-    expect(levelFor(accepted)).toBe(expected);
+  ])("maps %i submissions to level %i", (submissions, expected) => {
+    expect(levelFor(submissions)).toBe(expected);
   });
 });
 
@@ -94,7 +94,9 @@ describe("buildWeeks", () => {
     expect(cell).toMatchObject({
       accepted: 3,
       submissions: 5,
+      catalogSubmissions: 3,
       catalogAccepted: 2,
+      curriculumSubmissions: 2,
       curriculumAccepted: 1,
     });
   });
@@ -133,12 +135,20 @@ describe("cellTitle", () => {
     expect(cellTitle(null)).toBeUndefined();
   });
 
-  test("reports no submissions when accepted is 0", () => {
+  test("reports no submissions when submissions is 0", () => {
     const cell = buildWeeks([day("2026-09-24")])[0].find((c) => c !== null);
     expect(cellTitle(cell ?? null)).toMatch(/No submissions on/);
   });
 
-  test("breaks down accepted/submissions by practice vs basics", () => {
+  test("reports a day with submissions but zero accepted as activity, not 'no submissions'", () => {
+    const cell = buildWeeks([
+      day("2026-09-24", { catalogSubmissions: 2, catalogAccepted: 0 }),
+    ])[0].find((c) => c !== null);
+    expect(cellTitle(cell ?? null)).not.toMatch(/No submissions/);
+    expect(cellTitle(cell ?? null)).toMatch(/2 submissions \(0 accepted\)/);
+  });
+
+  test("breaks down submissions/accepted by practice vs basics", () => {
     const cell = buildWeeks([
       day("2026-09-24", {
         catalogAccepted: 2,
@@ -148,7 +158,8 @@ describe("cellTitle", () => {
       }),
     ])[0].find((c) => c !== null);
     expect(cellTitle(cell ?? null)).toBe(
-      "3 accepted (4 submissions) on Sep 24, 2026 — Practice: 2, Basics: 1"
+      "4 submissions (3 accepted) on Sep 24, 2026 — " +
+        "Practice: 3 submissions/2 accepted, Basics: 1 submissions/1 accepted"
     );
   });
 });
@@ -158,10 +169,16 @@ describe("ActivityHeatmap component", () => {
     mockedUseDsaActivityHeatmap.mockReset();
   });
 
+  test("calls the hook with no year (trailing view) by default", () => {
+    mockedUseDsaActivityHeatmap.mockReturnValue({ data: undefined, isLoading: true, isError: false });
+    render(<ActivityHeatmap />);
+    expect(mockedUseDsaActivityHeatmap).toHaveBeenCalledWith(undefined);
+  });
+
   test("renders a loading skeleton while the hook is loading", () => {
     mockedUseDsaActivityHeatmap.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     render(<ActivityHeatmap />);
-    expect(screen.getByText("Accepted submissions over the past year")).toBeInTheDocument();
+    expect(screen.getByText("Submissions over time")).toBeInTheDocument();
   });
 
   test("renders an error page when the hook errors", () => {
@@ -170,36 +187,54 @@ describe("ActivityHeatmap component", () => {
     expect(screen.getByText("Failed to load activity heatmap")).toBeInTheDocument();
   });
 
-  test("summarizes the total accepted count across the whole dataset", () => {
+  test("summarizes total submissions and accepted count across the whole dataset", () => {
     mockedUseDsaActivityHeatmap.mockReturnValue({
       data: [
-        day("2026-09-23", { catalogAccepted: 2 }),
-        day("2026-09-24", { curriculumAccepted: 3 }),
+        day("2026-09-23", { catalogSubmissions: 3, catalogAccepted: 2 }),
+        day("2026-09-24", { curriculumSubmissions: 4, curriculumAccepted: 3 }),
       ],
       isLoading: false,
       isError: false,
     });
     render(<ActivityHeatmap />);
-    expect(screen.getByText("5 accepted submissions in the past year")).toBeInTheDocument();
+    expect(screen.getByText("7 submissions (5 accepted) in the past year")).toBeInTheDocument();
   });
 
-  test("uses singular phrasing for exactly 1 accepted submission", () => {
+  test("uses singular phrasing for exactly 1 submission", () => {
     mockedUseDsaActivityHeatmap.mockReturnValue({
-      data: [day("2026-09-24", { catalogAccepted: 1 })],
+      data: [day("2026-09-24", { catalogSubmissions: 1, catalogAccepted: 1 })],
       isLoading: false,
       isError: false,
     });
     render(<ActivityHeatmap />);
-    expect(screen.getByText("1 accepted submission in the past year")).toBeInTheDocument();
+    expect(screen.getByText("1 submission (1 accepted) in the past year")).toBeInTheDocument();
   });
 
   test("renders one titled box per real day returned by the hook", () => {
     mockedUseDsaActivityHeatmap.mockReturnValue({
-      data: [day("2026-09-24", { catalogAccepted: 1 })],
+      data: [day("2026-09-24", { catalogAccepted: 1, catalogSubmissions: 1 })],
       isLoading: false,
       isError: false,
     });
     render(<ActivityHeatmap />);
     expect(document.querySelector('[data-cy="activity-heatmap-day-2026-09-24"]')).not.toBeNull();
+  });
+
+  test("clicking a year tab re-queries the hook with that calendar year and updates the summary label", () => {
+    mockedUseDsaActivityHeatmap.mockReturnValue({
+      data: [day("2026-01-01", { catalogSubmissions: 1, catalogAccepted: 1 })],
+      isLoading: false,
+      isError: false,
+    });
+    render(<ActivityHeatmap />);
+
+    const currentYear = new Date().getFullYear();
+    const yearButton = document.querySelector(
+      `[data-cy="activity-heatmap-year-${currentYear}"]`
+    ) as HTMLElement;
+    fireEvent.click(yearButton);
+
+    expect(mockedUseDsaActivityHeatmap).toHaveBeenLastCalledWith(currentYear);
+    expect(screen.getByText(`1 submission (1 accepted) in ${currentYear}`)).toBeInTheDocument();
   });
 });

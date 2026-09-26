@@ -50,13 +50,14 @@ export const useFetchDsaProgress = () => {
   });
 };
 
-// Caller's daily catalog + curriculum submission activity for the last year, server-computed -
-// powers the Progress tab's activity heatmap. Invalidated by catalog/curriculum submit mutations
-// (see useSubmitSolution / useSubmitCurriculumSolution) since either can add a day's activity.
-export const useDsaActivityHeatmap = () => {
+// Caller's daily catalog + curriculum submission activity, server-computed - powers the Progress
+// tab's activity heatmap. `year` omitted -> trailing 365 days ending today (default view); `year`
+// given -> that full calendar year. Invalidated by catalog/curriculum submit mutations (see
+// useSubmitSolution / useSubmitCurriculumSolution) since either can add a day's activity.
+export const useDsaActivityHeatmap = (year?: number) => {
   return useQuery({
-    queryKey: ["dsa", "activity-heatmap"],
-    queryFn: fetchActivityHeatmap,
+    queryKey: ["dsa", "activity-heatmap", year ?? "trailing"],
+    queryFn: () => fetchActivityHeatmap(year),
     staleTime: 10 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

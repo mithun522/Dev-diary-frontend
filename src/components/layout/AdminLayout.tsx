@@ -23,6 +23,7 @@ import {
   Languages,
   LogOut,
   Layers,
+  LineChart,
   MonitorPlay,
   Newspaper,
   ShieldCheck,
@@ -50,6 +51,12 @@ const BASE_NAV_ITEMS = [
     label: "Invite Students",
     icon: UserPlus,
     cy: "admin-invite-students",
+  },
+  {
+    to: "/admin/students/progress",
+    label: "Student Progress",
+    icon: LineChart,
+    cy: "admin-student-progress",
   },
   {
     to: "/admin/interview-sessions",

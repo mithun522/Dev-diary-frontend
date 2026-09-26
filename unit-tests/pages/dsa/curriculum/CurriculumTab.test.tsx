@@ -187,4 +187,62 @@ describe("CurriculumTab", () => {
     expect(screen.getByDisplayValue("Python")).toBeInTheDocument();
     expect(mockedUseCurriculumProgress).toHaveBeenLastCalledWith("python");
   });
+
+  describe("overall progress summary", () => {
+    test("shows a headline solved/total and percentage across all topics", () => {
+      mockedUseCurriculumProgress.mockReturnValue({
+        data: buildProgress({ totalProblems: 20, solvedProblems: 5 }),
+        isLoading: false,
+        isError: false,
+      });
+      renderCurriculumTab();
+      expect(
+        document.querySelector('[data-cy="curriculum-overall-progress"]')
+      ).toHaveTextContent("5/20 solved (25%)");
+    });
+
+    test("shows 0% rather than dividing by zero when there are no curriculum problems at all", () => {
+      mockedUseCurriculumProgress.mockReturnValue({
+        data: buildProgress({ totalProblems: 0, solvedProblems: 0, byTopic: [] }),
+        isLoading: false,
+        isError: false,
+      });
+      renderCurriculumTab();
+      expect(
+        document.querySelector('[data-cy="curriculum-overall-progress"]')
+      ).toHaveTextContent("0/0 solved (0%)");
+    });
+
+    test("renders neither the summary nor the error banner while progress is still loading", () => {
+      mockedUseCurriculumProgress.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isError: false,
+      });
+      renderCurriculumTab();
+      expect(
+        document.querySelector('[data-cy="curriculum-overall-progress"]')
+      ).not.toBeInTheDocument();
+      expect(
+        document.querySelector('[data-cy="curriculum-progress-error"]')
+      ).not.toBeInTheDocument();
+    });
+
+    test("shows a non-blocking error banner instead of the summary when progress fails to load, without hiding the topic list", () => {
+      mockedUseCurriculumProgress.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+      });
+      renderCurriculumTab();
+      expect(
+        document.querySelector('[data-cy="curriculum-progress-error"]')
+      ).toHaveTextContent("Couldn't load your progress");
+      expect(
+        document.querySelector('[data-cy="curriculum-overall-progress"]')
+      ).not.toBeInTheDocument();
+      // Topics themselves still render — a progress failure is not fatal to the whole tab.
+      expect(screen.getByText("Basics")).toBeInTheDocument();
+    });
+  });
 });

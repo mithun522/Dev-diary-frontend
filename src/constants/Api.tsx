@@ -88,6 +88,15 @@ export const CATALOG_PROGRESS = `${CATALOG}/progress`;
 // window) - same per-day shape, just a full year instead of ~12 weeks.
 export const DSA_ACTIVITY_HEATMAP = `${DSA}/activity/heatmap`;
 
+// Admin-only: every catalog+curriculum progress bundle for the students the caller can see - a
+// plain admin gets their own invited students (server-side, via auth.users.invited_by), a
+// super-admin gets everyone. No params - the roster is derived from the caller's own identity.
+export const ADMIN_STUDENTS_PROGRESS = `${DSA_API_URL}/admin/students/progress`;
+// Same bundle, for exactly one student - used for a fresher single-student re-fetch on drill-in
+// rather than relying on stale data from the list call above.
+export const ADMIN_STUDENT_PROGRESS_BY_ID = (id: string) =>
+  `${DSA_API_URL}/admin/students/${id}/progress`;
+
 // ---- dsa-service: curriculum (topic-based beginner exercises, separate from the catalog
 // above — one row per topic/problem/language, fractional `position` for O(1) insert-between) ----
 export const CURRICULUM_TOPICS = `${DSA_API_URL}/curriculum/topics`;

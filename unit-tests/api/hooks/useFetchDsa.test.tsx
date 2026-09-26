@@ -177,17 +177,30 @@ describe("useDsaActivityHeatmap", () => {
     ...overrides,
   });
 
-  test("registers queryKey ['dsa', 'activity-heatmap'] and calls the service with no args", async () => {
+  test("registers queryKey ['dsa', 'activity-heatmap', 'trailing'] and calls the service with no year when omitted", async () => {
     mockedFetchActivityHeatmap.mockResolvedValue([activityDay("2026-09-24")]);
     const { queryClient, Wrapper } = createWrapper();
 
     const { result } = renderHook(() => useDsaActivityHeatmap(), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockedFetchActivityHeatmap).toHaveBeenCalledTimes(1);
+    expect(mockedFetchActivityHeatmap).toHaveBeenCalledWith(undefined);
     expect(
       queryClient.getQueryCache().findAll().map((q) => q.queryKey)
-    ).toContainEqual(["dsa", "activity-heatmap"]);
+    ).toContainEqual(["dsa", "activity-heatmap", "trailing"]);
+  });
+
+  test("registers queryKey ['dsa', 'activity-heatmap', year] and passes the year through when given", async () => {
+    mockedFetchActivityHeatmap.mockResolvedValue([activityDay("2025-06-01")]);
+    const { queryClient, Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useDsaActivityHeatmap(2025), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedFetchActivityHeatmap).toHaveBeenCalledWith(2025);
+    expect(
+      queryClient.getQueryCache().findAll().map((q) => q.queryKey)
+    ).toContainEqual(["dsa", "activity-heatmap", 2025]);
   });
 
   test("returns the service's array as-is (server-computed, no client-side bucketing)", async () => {
