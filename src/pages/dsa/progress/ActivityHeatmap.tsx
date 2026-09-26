@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,16 +10,18 @@ import { Skeleton } from "../../../components/ui/skeleton";
 import ErrorPage from "../../ErrorPage";
 import { useDsaActivityHeatmap } from "../../../api/hooks/useFetchDsa";
 import type { DailyActivity } from "../../../data/dsaProblemsData";
+import { cn } from "../../../components/lib/utils";
 
-// GitHub/LeetCode-style contribution heatmap: one box per day, shaded by how many of that day's
-// catalog + curriculum submissions were accepted. GET /dsa/activity/heatmap always returns every
-// day in the window (even zero-activity ones), so there are no gaps to fill in client-side.
+// GitHub/LeetCode-style contribution heatmap: one box per day. GET /dsa/activity/heatmap always
+// returns every day in the window (even zero-activity ones), so there are no gaps to fill in
+// client-side.
 
-// Fixed thresholds (not per-user quantiles) - simplest way to keep the scale legible and stable
-// day to day, matching GitHub's own fixed 5-level contribution scale.
+// Shaded by total submissions (attempts), not just accepted ones - LeetCode/GitHub shade on
+// activity, not just success, so a day with 3 failed attempts and 0 accepted still shows up as
+// active rather than looking identical to a day with nothing done.
 const LEVEL_THRESHOLDS = [0, 1, 3, 5, 7];
 const LEVEL_COLORS = [
-  "bg-muted", // 0 accepted - adapts to light/dark via the design token, unlike the fixed greens below
+  "bg-muted", // 0 submissions - adapts to light/dark via the design token, unlike the fixed greens below
   "bg-[#9be9a8] dark:bg-[#0e4429]",
   "bg-[#40c463] dark:bg-[#006d32]",
   "bg-[#30a14e] dark:bg-[#26a641]",
@@ -30,10 +32,15 @@ const MONTH_LABELS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-const levelFor = (accepted: number) => {
+// One "Last year" (rolling trailing 365 days, no `year` param) plus a couple of recent calendar
+// years - mirrors GitHub's own year-tab selector next to its contribution graph.
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS: (number | "trailing")[] = ["trailing", CURRENT_YEAR, CURRENT_YEAR - 1];
+
+const levelFor = (submissions: number) => {
   let level = 0;
   for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (accepted >= LEVEL_THRESHOLDS[i]) {
+    if (submissions >= LEVEL_THRESHOLDS[i]) {
       level = i;
       break;
     }
@@ -45,7 +52,9 @@ type Cell = {
   date: string;
   accepted: number;
   submissions: number;
+  catalogSubmissions: number;
   catalogAccepted: number;
+  curriculumSubmissions: number;
   curriculumAccepted: number;
 } | null;
 
@@ -58,7 +67,9 @@ const buildWeeks = (days: DailyActivity[]): Cell[][] => {
     date: d.date,
     accepted: d.catalogAccepted + d.curriculumAccepted,
     submissions: d.catalogSubmissions + d.curriculumSubmissions,
+    catalogSubmissions: d.catalogSubmissions,
     catalogAccepted: d.catalogAccepted,
+    curriculumSubmissions: d.curriculumSubmissions,
     curriculumAccepted: d.curriculumAccepted,
   }));
 
@@ -97,20 +108,33 @@ const formatDate = (date: string) =>
 
 const cellTitle = (cell: Cell) => {
   if (!cell) return undefined;
-  if (cell.accepted === 0) return `No submissions on ${formatDate(cell.date)}`;
+  if (cell.submissions === 0) return `No submissions on ${formatDate(cell.date)}`;
   return (
-    `${cell.accepted} accepted (${cell.submissions} submissions) on ${formatDate(cell.date)} — ` +
-    `Practice: ${cell.catalogAccepted}, Basics: ${cell.curriculumAccepted}`
+    `${cell.submissions} submissions (${cell.accepted} accepted) on ${formatDate(cell.date)} — ` +
+    `Practice: ${cell.catalogSubmissions} submissions/${cell.catalogAccepted} accepted, ` +
+    `Basics: ${cell.curriculumSubmissions} submissions/${cell.curriculumAccepted} accepted`
   );
 };
 
+const yearLabel = (year: number | "trailing") => (year === "trailing" ? "Last year" : String(year));
+
 const ActivityHeatmap: React.FC = () => {
-  const { data, isLoading, isError } = useDsaActivityHeatmap();
+  const [selectedYear, setSelectedYear] = useState<number | "trailing">("trailing");
+  const { data, isLoading, isError } = useDsaActivityHeatmap(
+    selectedYear === "trailing" ? undefined : selectedYear
+  );
 
   const weeks = useMemo(() => buildWeeks(data ?? []), [data]);
   const monthLabels = useMemo(() => monthLabelsFor(weeks), [weeks]);
-  const totalAccepted = useMemo(
-    () => (data ?? []).reduce((sum, d) => sum + d.catalogAccepted + d.curriculumAccepted, 0),
+  const { totalSubmissions, totalAccepted } = useMemo(
+    () =>
+      (data ?? []).reduce(
+        (totals, d) => ({
+          totalSubmissions: totals.totalSubmissions + d.catalogSubmissions + d.curriculumSubmissions,
+          totalAccepted: totals.totalAccepted + d.catalogAccepted + d.curriculumAccepted,
+        }),
+        { totalSubmissions: 0, totalAccepted: 0 }
+      ),
     [data]
   );
 
@@ -118,13 +142,35 @@ const ActivityHeatmap: React.FC = () => {
 
   return (
     <Card data-cy="dsa-activity-heatmap">
-      <CardHeader>
-        <CardTitle>Activity</CardTitle>
-        <CardDescription>
-          {isLoading || !data
-            ? "Accepted submissions over the past year"
-            : `${totalAccepted} accepted submission${totalAccepted === 1 ? "" : "s"} in the past year`}
-        </CardDescription>
+      <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
+        <div>
+          <CardTitle>Activity</CardTitle>
+          <CardDescription>
+            {isLoading || !data
+              ? "Submissions over time"
+              : `${totalSubmissions} submission${totalSubmissions === 1 ? "" : "s"} (${totalAccepted} accepted) in ${
+                  selectedYear === "trailing" ? "the past year" : selectedYear
+                }`}
+          </CardDescription>
+        </div>
+        <div className="flex gap-1" data-cy="activity-heatmap-year-selector">
+          {YEAR_OPTIONS.map((year) => (
+            <button
+              key={year}
+              type="button"
+              onClick={() => setSelectedYear(year)}
+              data-cy={`activity-heatmap-year-${year}`}
+              className={cn(
+                "rounded-md px-2 py-1 text-xs",
+                selectedYear === year
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted"
+              )}
+            >
+              {yearLabel(year)}
+            </button>
+          ))}
+        </div>
       </CardHeader>
       <CardContent className="pt-0">
         {isLoading || !data ? (
@@ -155,7 +201,7 @@ const ActivityHeatmap: React.FC = () => {
                         title={cellTitle(cell)}
                         data-cy={cell ? `activity-heatmap-day-${cell.date}` : undefined}
                         className={`h-[11px] w-[11px] rounded-sm ${
-                          cell ? LEVEL_COLORS[levelFor(cell.accepted)] : "invisible"
+                          cell ? LEVEL_COLORS[levelFor(cell.submissions)] : "invisible"
                         }`}
                       />
                     ))}

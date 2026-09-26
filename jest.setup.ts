@@ -9,3 +9,13 @@ if (typeof globalThis.TextEncoder === "undefined") {
 }
 
 import "@testing-library/jest-dom";
+
+// jsdom doesn't implement this either; recharts' ResponsiveContainer needs it to observe its
+// wrapper's size, even in a test render where no real layout/resizing ever happens.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}

@@ -9,35 +9,16 @@ import {
 import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
 import { useCatalogProgress } from "../../../api/hooks/useFetchCatalog";
 import { Skeleton } from "../../../components/ui/skeleton";
+import type { CatalogProgress } from "../../../data/catalogData";
 import ErrorPage from "../../ErrorPage";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
+// The presentational half - takes already-fetched data, no hook of its own - so the admin
+// Student Progress detail view can render the exact same UI for another user's data.
 // byTopic only lists topics that at least one catalog problem actually has - not a fixed enum,
 // so this only ever shows topics with real content (see CatalogProgress's own doc comment).
-const PracticeTopicCoverage: React.FC = () => {
-  const { data, isLoading, isError } = useCatalogProgress();
-
-  if (isError) return <ErrorPage message="Failed to load topic coverage" />;
-
-  if (isLoading || !data) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <Skeleton className="h-6 w-40" />
-          </CardTitle>
-          <CardDescription>
-            <Skeleton className="h-4 w-60 mt-1" />
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0 flex justify-center items-center">
-          <Skeleton className="h-60 w-60 rounded-full" />
-        </CardContent>
-      </Card>
-    );
-  }
-
+export const PracticeTopicCoverageView: React.FC<{ data: CatalogProgress }> = ({ data }) => {
   const solvedByTopic = data.byTopic.filter((t) => t.solved > 0);
 
   return (
@@ -99,6 +80,31 @@ const PracticeTopicCoverage: React.FC = () => {
       </CardContent>
     </Card>
   );
+};
+
+export const PracticeTopicCoverageSkeleton: React.FC = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <Skeleton className="h-6 w-40" />
+      </CardTitle>
+      <CardDescription>
+        <Skeleton className="h-4 w-60 mt-1" />
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="pt-0 flex justify-center items-center">
+      <Skeleton className="h-60 w-60 rounded-full" />
+    </CardContent>
+  </Card>
+);
+
+const PracticeTopicCoverage: React.FC = () => {
+  const { data, isLoading, isError } = useCatalogProgress();
+
+  if (isError) return <ErrorPage message="Failed to load topic coverage" />;
+  if (isLoading || !data) return <PracticeTopicCoverageSkeleton />;
+
+  return <PracticeTopicCoverageView data={data} />;
 };
 
 export default PracticeTopicCoverage;

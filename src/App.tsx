@@ -33,6 +33,8 @@ import SuperAdminRoute from "./components/SuperAdminRoute";
 import AcceptInvitePage from "./pages/auth/AcceptInvitePage";
 import InviteAdminsPage from "./pages/superadmin/InviteAdminsPage";
 import InviteStudentsPage from "./pages/admin/students/InviteStudentsPage";
+import StudentProgressPage from "./pages/admin/students/StudentProgressPage";
+import StudentProgressDetailPage from "./pages/admin/students/StudentProgressDetailPage";
 import AdminUsersPage from "./pages/admin/users/AdminUsersPage";
 import AdminCatalogPage from "./pages/admin/dsa/AdminCatalogPage";
 import AdminCurriculumTopicsPage from "./pages/admin/dsa/AdminCurriculumTopicsPage";
@@ -136,6 +138,14 @@ const App = () => {
                 <Route
                   path="/admin/students/invite"
                   element={<InviteStudentsPage />}
+                />
+                <Route
+                  path="/admin/students/progress"
+                  element={<StudentProgressPage />}
+                />
+                <Route
+                  path="/admin/students/progress/:userId"
+                  element={<StudentProgressDetailPage />}
                 />
                 <Route
                   path="/admin/interview-sessions"

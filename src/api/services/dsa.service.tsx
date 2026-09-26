@@ -30,9 +30,13 @@ export const fetchDsaProgress = async () => {
   return response;
 };
 
-// Server-computed daily catalog + curriculum submission activity for the caller, last year -
-// powers the Progress tab's activity heatmap.
-export const fetchActivityHeatmap = async (): Promise<DailyActivity[]> => {
-  const response = await AxiosInstance.get(DSA_ACTIVITY_HEATMAP);
+// Server-computed daily catalog + curriculum submission activity for the caller - powers the
+// Progress tab's activity heatmap. Omit `year` for the rolling trailing 365 days ending today
+// (the default view); pass a calendar year (2000-2100) for a full Jan-Dec grid, including
+// all-zero days after today for the current year - lets the UI offer a LeetCode-style year
+// selector without the grid growing/reflowing as more of the year passes.
+export const fetchActivityHeatmap = async (year?: number): Promise<DailyActivity[]> => {
+  const url = year ? `${DSA_ACTIVITY_HEATMAP}?year=${year}` : DSA_ACTIVITY_HEATMAP;
+  const response = await AxiosInstance.get(url);
   return response.data;
 };

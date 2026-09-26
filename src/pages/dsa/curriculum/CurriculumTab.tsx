@@ -17,6 +17,8 @@ import {
 } from "../../../api/hooks/useCurriculum";
 import { pascalizeUnderscore } from "../../../utils/convertToPascalCase";
 import ErrorPage from "../../ErrorPage";
+import { Progress } from "../../../components/ui/progress";
+import { AlertTriangle } from "lucide-react";
 
 // One topic's row of problems for the currently selected language — a separate component so each
 // topic only fetches its problems once expanded, not all topics up front.
@@ -127,10 +129,18 @@ const CurriculumTab: React.FC = () => {
   const { data: topics, isLoading, error } = useCurriculumTopics();
   // Scoped to the selected language so a topic's "X/Y solved" always matches the problems that
   // topic's own (language-filtered) list is about to show once expanded.
-  const { data: progress } = useCurriculumProgress(language);
+  const {
+    data: progress,
+    isLoading: isProgressLoading,
+    isError: isProgressError,
+  } = useCurriculumProgress(language);
   const progressByTopic = new Map(
     progress?.byTopic.map((topicProgress) => [topicProgress.topicId, topicProgress])
   );
+  const overallPct =
+    progress && progress.totalProblems > 0
+      ? Math.round((progress.solvedProblems / progress.totalProblems) * 100)
+      : 0;
 
   if (error) return <ErrorPage message="Failed to fetch curriculum topics" />;
 
@@ -154,6 +164,32 @@ const CurriculumTab: React.FC = () => {
           ))}
         </select>
       </div>
+
+      {isProgressError ? (
+        // Non-blocking: progress is a secondary data source layered on top of the topic list, so
+        // a failure here shouldn't hide the topics themselves the way the ErrorPage guard above
+        // does for a genuine failure to load the topic list.
+        <div
+          className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+          data-cy="curriculum-progress-error"
+        >
+          <AlertTriangle size={16} className="shrink-0" />
+          Couldn't load your progress — solved counts below may be missing or stale.
+        </div>
+      ) : !isProgressLoading && progress ? (
+        <div
+          className="rounded-lg border p-4 space-y-2"
+          data-cy="curriculum-overall-progress"
+        >
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium">Overall progress</span>
+            <span className="text-muted-foreground">
+              {progress.solvedProblems}/{progress.totalProblems} solved ({overallPct}%)
+            </span>
+          </div>
+          <Progress value={overallPct} className="h-2" />
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         {isLoading ? (
