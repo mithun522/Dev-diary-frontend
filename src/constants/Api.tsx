@@ -79,6 +79,14 @@ export const CATALOG_RUN = (id: string) => `${CATALOG}/${id}/run`;
 // Admin-only: regenerate a catalog problem's test cases.
 export const CATALOG_GENERATE_TEST_CASES = (id: string) =>
   `${CATALOG}/${id}/generate-test-cases`;
+// The caller's own aggregate progress across the whole catalog — totals, solved problem ids, and
+// per-difficulty/per-topic counts, in one request. Powers the Progress tab's Practice side.
+export const CATALOG_PROGRESS = `${CATALOG}/progress`;
+// The caller's daily catalog + curriculum submission activity for the last year (one entry per
+// calendar day, oldest first, every day present even at zero activity). Powers the Progress tab's
+// GitHub/LeetCode-style activity heatmap. Replaces the old GET /dsa/activity/weekly (84-day
+// window) - same per-day shape, just a full year instead of ~12 weeks.
+export const DSA_ACTIVITY_HEATMAP = `${DSA}/activity/heatmap`;
 
 // ---- dsa-service: curriculum (topic-based beginner exercises, separate from the catalog
 // above — one row per topic/problem/language, fractional `position` for O(1) insert-between) ----

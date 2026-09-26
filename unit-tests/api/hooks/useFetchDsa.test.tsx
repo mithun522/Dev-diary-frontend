@@ -4,16 +4,23 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
+  useDsaActivityHeatmap,
   useFetchDsaProblemByUser,
   useFetchDsaProgress,
-  useFetchDsaWeeklyActivity,
 } from "../../../src/api/hooks/useFetchDsa";
-import { fetchDsaByUser, fetchDsaProgress } from "../../../src/api/services/dsa.service";
-import { computeWeeklyActivity } from "../../../src/utils/computeWeeklyActivity";
+import {
+  fetchActivityHeatmap,
+  fetchDsaByUser,
+  fetchDsaProgress,
+} from "../../../src/api/services/dsa.service";
 import type { DSAProblem } from "../../../src/data/dsaProblemsData";
+import type { DailyActivity } from "../../../src/data/dsaProblemsData";
 
 const mockedFetchDsaByUser = fetchDsaByUser as jest.MockedFunction<typeof fetchDsaByUser>;
 const mockedFetchDsaProgress = fetchDsaProgress as jest.MockedFunction<typeof fetchDsaProgress>;
+const mockedFetchActivityHeatmap = fetchActivityHeatmap as jest.MockedFunction<
+  typeof fetchActivityHeatmap
+>;
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -160,69 +167,40 @@ describe("useFetchDsaProgress", () => {
   });
 });
 
-describe("useFetchDsaWeeklyActivity", () => {
-  test("registers queryKey ['dsa', 'weekly-activity'] prefixed with 'dsa' so add/edit/delete invalidation reaches it", async () => {
-    mockedFetchDsaByUser.mockResolvedValue({ dsa: [], totalLength: 0 });
+describe("useDsaActivityHeatmap", () => {
+  const activityDay = (date: string, overrides: Partial<DailyActivity> = {}): DailyActivity => ({
+    date,
+    catalogSubmissions: 0,
+    catalogAccepted: 0,
+    curriculumSubmissions: 0,
+    curriculumAccepted: 0,
+    ...overrides,
+  });
+
+  test("registers queryKey ['dsa', 'activity-heatmap'] and calls the service with no args", async () => {
+    mockedFetchActivityHeatmap.mockResolvedValue([activityDay("2026-09-24")]);
     const { queryClient, Wrapper } = createWrapper();
 
-    const { result } = renderHook(() => useFetchDsaWeeklyActivity(), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDsaActivityHeatmap(), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedFetchActivityHeatmap).toHaveBeenCalledTimes(1);
     expect(
       queryClient.getQueryCache().findAll().map((q) => q.queryKey)
-    ).toContainEqual(["dsa", "weekly-activity"]);
+    ).toContainEqual(["dsa", "activity-heatmap"]);
   });
 
-  test("fetches only page 1 when the first page already contains every problem", async () => {
-    mockedFetchDsaByUser.mockResolvedValue({
-      dsa: [dsaProblem("d1"), dsaProblem("d2")],
-      totalLength: 2,
-    });
+  test("returns the service's array as-is (server-computed, no client-side bucketing)", async () => {
+    const payload = [
+      activityDay("2026-09-23", { catalogAccepted: 1 }),
+      activityDay("2026-09-24", { curriculumAccepted: 2, curriculumSubmissions: 3 }),
+    ];
+    mockedFetchActivityHeatmap.mockResolvedValue(payload);
     const { Wrapper } = createWrapper();
 
-    const { result } = renderHook(() => useFetchDsaWeeklyActivity(), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDsaActivityHeatmap(), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockedFetchDsaByUser).toHaveBeenCalledTimes(1);
-    expect(mockedFetchDsaByUser).toHaveBeenCalledWith("", "", 1);
-  });
-
-  test("fetches every remaining page (unfiltered) and feeds the full concatenated set to computeWeeklyActivity", async () => {
-    // pageSize 2, totalLength 5 -> totalPages = ceil(5/2) = 3 -> fetches pages 2 and 3 as well.
-    const page1 = [dsaProblem("d1"), dsaProblem("d2")];
-    const page2 = [dsaProblem("d3"), dsaProblem("d4")];
-    const page3 = [dsaProblem("d5")];
-    mockedFetchDsaByUser.mockImplementation(async (_search, _difficulty, pageParam) => {
-      if (pageParam === 1) return { dsa: page1, totalLength: 5 };
-      if (pageParam === 2) return { dsa: page2, totalLength: 5 };
-      return { dsa: page3, totalLength: 5 };
-    });
-    const { Wrapper } = createWrapper();
-
-    const { result } = renderHook(() => useFetchDsaWeeklyActivity(), { wrapper: Wrapper });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockedFetchDsaByUser).toHaveBeenCalledTimes(3);
-    expect(mockedFetchDsaByUser).toHaveBeenCalledWith("", "", 1);
-    expect(mockedFetchDsaByUser).toHaveBeenCalledWith("", "", 2);
-    expect(mockedFetchDsaByUser).toHaveBeenCalledWith("", "", 3);
-
-    // Real computeWeeklyActivity (not mocked) run against the full concatenated set is the
-    // source of truth — proves the hook actually assembled every page before bucketing, not
-    // just page 1.
-    const expected = computeWeeklyActivity([...page1, ...page2, ...page3]);
-    expect(result.current.data).toEqual(expected);
-  });
-
-  test("does not divide by a zero pageSize when the first page is empty but totalLength is > 0", async () => {
-    mockedFetchDsaByUser.mockResolvedValue({ dsa: [], totalLength: 5 });
-    const { Wrapper } = createWrapper();
-
-    const { result } = renderHook(() => useFetchDsaWeeklyActivity(), { wrapper: Wrapper });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    // Guarded by `pageSize > 0` — only the first (empty) page is ever fetched.
-    expect(mockedFetchDsaByUser).toHaveBeenCalledTimes(1);
-    expect(result.current.data).toEqual(computeWeeklyActivity([]));
+    expect(result.current.data).toBe(payload);
   });
 });

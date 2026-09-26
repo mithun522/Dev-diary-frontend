@@ -5,9 +5,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import OverallProgress from "./progress/OverallProgress";
-import TopicCoverage from "./progress/TopicCoverage";
-import WeeklyActivity from "./progress/WeeklyActivity";
+import PracticeProgress from "./progress/PracticeProgress";
+import PracticeTopicCoverage from "./progress/PracticeTopicCoverage";
+import CurriculumProgress from "./progress/CurriculumProgress";
+import ActivityHeatmap from "./progress/ActivityHeatmap";
 import Todo from "./todo/Todo";
 import PracticeTab from "./practice/PracticeTab";
 import CurriculumTab from "./curriculum/CurriculumTab";
@@ -70,12 +71,13 @@ const DSAPage: React.FC = () => {
           <PracticeTab />
         </TabsContent>
 
-        <TabsContent value="progress" className="pt-4">
+        <TabsContent value="progress" className="pt-4 space-y-6">
           <div className="grid md:grid-cols-3 gap-6">
-            <OverallProgress />
-            <WeeklyActivity />
-            <TopicCoverage />
+            <PracticeProgress />
+            <PracticeTopicCoverage />
+            <CurriculumProgress />
           </div>
+          <ActivityHeatmap />
         </TabsContent>
         <TabsContent value="todo" className="pt-4">
           <Todo />

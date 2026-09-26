@@ -4,6 +4,7 @@ import AxiosInstance from "../../../src/utils/AxiosInstance";
 import {
   fetchCatalogProblems,
   fetchCatalogProblemDetail,
+  fetchCatalogProgress,
   fetchSubmissions,
   submitSolution,
   runSolution,
@@ -111,6 +112,33 @@ describe("fetchCatalogProblemDetail", () => {
       id: "p1",
       slug: "two-sum",
     });
+  });
+});
+
+describe("fetchCatalogProgress", () => {
+  test("requests /catalog/progress with no query params", async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: { totalProblems: 0, solvedProblems: 0, solvedProblemIds: [], byDifficulty: [], byTopic: [] },
+    });
+    await fetchCatalogProgress();
+    expect(mockedAxios.get).toHaveBeenCalledWith(`${CATALOG}/progress`);
+  });
+
+  test("returns the response body unchanged", async () => {
+    const progress = {
+      totalProblems: 10,
+      solvedProblems: 3,
+      solvedProblemIds: ["p1", "p2", "p3"],
+      byDifficulty: [{ difficulty: "EASY", total: 10, solved: 3 }],
+      byTopic: [{ topic: "ARRAY", total: 5, solved: 2 }],
+    };
+    mockedAxios.get.mockResolvedValue({ data: progress });
+    await expect(fetchCatalogProgress()).resolves.toBe(progress);
+  });
+
+  test("propagates a rejected request rather than swallowing it", async () => {
+    mockedAxios.get.mockRejectedValue(new Error("Network Error"));
+    await expect(fetchCatalogProgress()).rejects.toThrow("Network Error");
   });
 });
 

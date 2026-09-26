@@ -4,8 +4,9 @@ import AxiosInstance from "../../../src/utils/AxiosInstance";
 import {
   fetchDsaByUser,
   fetchDsaProgress,
+  fetchActivityHeatmap,
 } from "../../../src/api/services/dsa.service";
-import { DSA_BY_USER, DSA_BY_PROGRESS } from "../../../src/constants/Api";
+import { DSA_BY_USER, DSA_BY_PROGRESS, DSA_ACTIVITY_HEATMAP } from "../../../src/constants/Api";
 
 const mockedAxios = AxiosInstance as jest.Mocked<typeof AxiosInstance>;
 
@@ -112,5 +113,32 @@ describe("fetchDsaProgress", () => {
   test("propagates a rejected request rather than swallowing it", async () => {
     mockedAxios.get.mockRejectedValue(new Error("500"));
     await expect(fetchDsaProgress()).rejects.toThrow("500");
+  });
+});
+
+describe("fetchActivityHeatmap", () => {
+  test("requests /dsa/activity/heatmap with no query params", async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
+    await fetchActivityHeatmap();
+    expect(mockedAxios.get).toHaveBeenCalledWith(DSA_ACTIVITY_HEATMAP);
+  });
+
+  test("returns response.data (unlike fetchDsaProgress, unwraps the axios envelope)", async () => {
+    const days = [
+      {
+        date: "2026-09-24",
+        catalogSubmissions: 2,
+        catalogAccepted: 1,
+        curriculumSubmissions: 0,
+        curriculumAccepted: 0,
+      },
+    ];
+    mockedAxios.get.mockResolvedValue({ data: days });
+    await expect(fetchActivityHeatmap()).resolves.toBe(days);
+  });
+
+  test("propagates a rejected request rather than swallowing it", async () => {
+    mockedAxios.get.mockRejectedValue(new Error("Network Error"));
+    await expect(fetchActivityHeatmap()).rejects.toThrow("Network Error");
   });
 });
