@@ -103,3 +103,28 @@ export type Submission = JudgeResult & {
   language: CodeExecutionLanguage;
   createdAt: string;
 };
+
+export type CatalogDifficultyProgress = {
+  difficulty: CatalogDifficulty;
+  total: number;
+  solved: number;
+};
+
+// Unlike curriculum's byTopic (a fixed topic list, always fully padded), a catalog problem's
+// topics are free-form, so this only lists topics that at least one catalog problem actually has.
+export type CatalogTopicProgress = {
+  topic: string;
+  total: number;
+  solved: number;
+};
+
+// The calling user's progress across the whole catalog (Practice tab). byDifficulty is always
+// exactly the 3 entries EASY/MEDIUM/HARD, even at 0/0; byTopic only has entries for topics with
+// at least one problem.
+export type CatalogProgress = {
+  totalProblems: number;
+  solvedProblems: number;
+  solvedProblemIds: string[];
+  byDifficulty: CatalogDifficultyProgress[];
+  byTopic: CatalogTopicProgress[];
+};

@@ -399,7 +399,7 @@ describe("useRunCurriculumSolution", () => {
 });
 
 describe("useSubmitCurriculumSolution — conditional invalidation on ACCEPTED", () => {
-  test("an ACCEPTED submission invalidates all four keys: submissions, this problem, every curriculum-problems list, and progress", async () => {
+  test("an ACCEPTED submission invalidates five keys: submissions, the activity heatmap, this problem, every curriculum-problems list, and progress", async () => {
     mocked.submitCurriculumSolution.mockResolvedValue(submission({ status: "ACCEPTED" }));
     const { queryClient, Wrapper } = createWrapper();
     const invalidateSpy = jest.spyOn(queryClient, "invalidateQueries");
@@ -409,15 +409,16 @@ describe("useSubmitCurriculumSolution — conditional invalidation on ACCEPTED",
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mocked.submitCurriculumSolution).toHaveBeenCalledWith("p1", "print(1)");
-    expect(invalidateSpy).toHaveBeenCalledTimes(4);
+    expect(invalidateSpy).toHaveBeenCalledTimes(5);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["curriculum-submissions", "p1"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dsa", "activity-heatmap"] });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["curriculum-problem", "p1"] });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["curriculum-problems"] });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["curriculum-progress"] });
   });
 
   test.each(["WRONG_ANSWER", "RUNTIME_ERROR", "TIMED_OUT", "COMPILE_ERROR"] as const)(
-    "a %s submission invalidates ONLY ['curriculum-submissions', id] — no problem/problems/progress refetch",
+    "a %s submission invalidates ONLY submissions and the activity heatmap — no problem/problems/progress refetch",
     async (status) => {
       mocked.submitCurriculumSolution.mockResolvedValue(submission({ status }));
       const { queryClient, Wrapper } = createWrapper();
@@ -427,8 +428,9 @@ describe("useSubmitCurriculumSolution — conditional invalidation on ACCEPTED",
       act(() => result.current.mutate("print(1)"));
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(invalidateSpy).toHaveBeenCalledTimes(1);
+      expect(invalidateSpy).toHaveBeenCalledTimes(2);
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["curriculum-submissions", "p1"] });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dsa", "activity-heatmap"] });
     }
   );
 

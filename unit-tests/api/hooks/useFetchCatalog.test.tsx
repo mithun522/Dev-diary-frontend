@@ -7,6 +7,7 @@ import {
   useFetchCatalogProblems,
   useFetchCatalogProblemsPaged,
   useFetchCatalogProblemDetail,
+  useCatalogProgress,
   useFetchSubmissions,
   useSubmitSolution,
   useRunSolution,
@@ -15,6 +16,7 @@ import {
 import {
   fetchCatalogProblems,
   fetchCatalogProblemDetail,
+  fetchCatalogProgress,
   fetchSubmissions,
   submitSolution,
   runSolution,
@@ -27,6 +29,9 @@ const mockedFetchCatalogProblems = fetchCatalogProblems as jest.MockedFunction<
 >;
 const mockedFetchCatalogProblemDetail = fetchCatalogProblemDetail as jest.MockedFunction<
   typeof fetchCatalogProblemDetail
+>;
+const mockedFetchCatalogProgress = fetchCatalogProgress as jest.MockedFunction<
+  typeof fetchCatalogProgress
 >;
 const mockedFetchSubmissions = fetchSubmissions as jest.MockedFunction<typeof fetchSubmissions>;
 const mockedSubmitSolution = submitSolution as jest.MockedFunction<typeof submitSolution>;
@@ -324,6 +329,44 @@ describe("useFetchCatalogProblemDetail", () => {
   });
 });
 
+describe("useCatalogProgress", () => {
+  test("registers queryKey ['catalog', 'progress'] and calls the service with no args", async () => {
+    mockedFetchCatalogProgress.mockResolvedValue({
+      totalProblems: 10,
+      solvedProblems: 2,
+      solvedProblemIds: ["p1", "p2"],
+      byDifficulty: [],
+      byTopic: [],
+    });
+    const { queryClient, Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useCatalogProgress(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedFetchCatalogProgress).toHaveBeenCalledTimes(1);
+    expect(
+      queryClient.getQueryCache().findAll().map((q) => q.queryKey)
+    ).toContainEqual(["catalog", "progress"]);
+  });
+
+  test("returns the service's payload as-is", async () => {
+    const progress = {
+      totalProblems: 10,
+      solvedProblems: 2,
+      solvedProblemIds: ["p1", "p2"],
+      byDifficulty: [{ difficulty: "EASY" as const, total: 10, solved: 2 }],
+      byTopic: [],
+    };
+    mockedFetchCatalogProgress.mockResolvedValue(progress);
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useCatalogProgress(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBe(progress);
+  });
+});
+
 describe("useFetchSubmissions", () => {
   test("registers queryKey ['catalog', 'submissions', id] and calls the service with the id", async () => {
     mockedFetchSubmissions.mockResolvedValue([]);
@@ -372,7 +415,7 @@ describe("useSubmitSolution", () => {
     expect(mockedSubmitSolution).toHaveBeenCalledWith("p1", "code", "python");
   });
 
-  test("onSuccess invalidates exactly ['catalog', 'submissions', id]", async () => {
+  test("onSuccess invalidates submissions, catalog progress, and the activity heatmap", async () => {
     mockedSubmitSolution.mockResolvedValue({
       id: "s1",
       problemId: "p1",
@@ -393,8 +436,10 @@ describe("useSubmitSolution", () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(invalidateSpy).toHaveBeenCalledTimes(1);
+    expect(invalidateSpy).toHaveBeenCalledTimes(3);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["catalog", "submissions", "p1"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["catalog", "progress"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dsa", "activity-heatmap"] });
   });
 });
 

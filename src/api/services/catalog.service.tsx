@@ -1,6 +1,7 @@
 import {
   CATALOG,
   CATALOG_GENERATE_TEST_CASES,
+  CATALOG_PROGRESS,
   CATALOG_RUN,
   CATALOG_SUBMISSIONS,
 } from "../../constants/Api";
@@ -8,6 +9,7 @@ import AxiosInstance from "../../utils/AxiosInstance";
 import type {
   CatalogProblemDetail,
   CatalogProblemPage,
+  CatalogProgress,
   JudgeResult,
   SampleTestCase,
   Submission,
@@ -43,6 +45,11 @@ export const fetchCatalogProblemDetail = async (
   id: string
 ): Promise<CatalogProblemDetail> => {
   const response = await AxiosInstance.get(`${CATALOG}/${id}`);
+  return response.data;
+};
+
+export const fetchCatalogProgress = async (): Promise<CatalogProgress> => {
+  const response = await AxiosInstance.get(CATALOG_PROGRESS);
   return response.data;
 };
 

@@ -1,10 +1,10 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
+  fetchActivityHeatmap,
   fetchDsaByUser,
   fetchDsaProgress,
   type fetchDsaProps,
 } from "../services/dsa.service";
-import { computeWeeklyActivity } from "../../utils/computeWeeklyActivity";
 
 interface FetchDsaProps {
   search: string;
@@ -50,31 +50,13 @@ export const useFetchDsaProgress = () => {
   });
 };
 
-// The backend has no daily/weekly aggregate endpoint, so this pulls every one of the user's
-// problems (unfiltered, all pages) and buckets them client-side. Query key is prefixed with
-// "dsa" so add/edit/delete's `invalidateQueries({ queryKey: ["dsa"] })` naturally refreshes it too.
-export const useFetchDsaWeeklyActivity = () => {
+// Caller's daily catalog + curriculum submission activity for the last year, server-computed -
+// powers the Progress tab's activity heatmap. Invalidated by catalog/curriculum submit mutations
+// (see useSubmitSolution / useSubmitCurriculumSolution) since either can add a day's activity.
+export const useDsaActivityHeatmap = () => {
   return useQuery({
-    queryKey: ["dsa", "weekly-activity"],
-    queryFn: async () => {
-      const firstPage = await fetchDsaByUser("", "", 1);
-      let allProblems = firstPage.dsa;
-      const pageSize = firstPage.dsa.length;
-
-      if (pageSize > 0 && allProblems.length < firstPage.totalLength) {
-        const totalPages = Math.ceil(firstPage.totalLength / pageSize);
-        const remainingPages = await Promise.all(
-          Array.from({ length: totalPages - 1 }, (_, i) =>
-            fetchDsaByUser("", "", i + 2)
-          )
-        );
-        allProblems = allProblems.concat(
-          remainingPages.flatMap((page) => page.dsa)
-        );
-      }
-
-      return computeWeeklyActivity(allProblems);
-    },
+    queryKey: ["dsa", "activity-heatmap"],
+    queryFn: fetchActivityHeatmap,
     staleTime: 10 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

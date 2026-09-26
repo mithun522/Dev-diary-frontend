@@ -25,9 +25,15 @@ export type DSAProblem = {
   optimisedSolution?: string; // Markdown solution
 };
 
-// Progress data
-export type DailyProgress = {
-  date: string; // ISO date string
-  problemsSolved: number;
+// One calendar day's catalog + curriculum submission activity for the caller (server-computed,
+// GET /dsa/activity/heatmap) — "submissions" counts every attempt, "accepted" the subset that
+// scored ACCEPTED. Catalog and curriculum are independent; sum them client-side for a combined
+// per-day intensity (e.g. the Progress tab's activity heatmap).
+export type DailyActivity = {
+  date: string; // "YYYY-MM-DD", no time/timezone component
+  catalogSubmissions: number;
+  catalogAccepted: number;
+  curriculumSubmissions: number;
+  curriculumAccepted: number;
 };
 

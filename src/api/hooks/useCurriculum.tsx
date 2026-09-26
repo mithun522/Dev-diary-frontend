@@ -134,6 +134,8 @@ export const useSubmitCurriculumSolution = (id: string) => {
     mutationFn: (sourceCode: string) => submitCurriculumSolution(id, sourceCode),
     onSuccess: (submission) => {
       queryClient.invalidateQueries({ queryKey: ["curriculum-submissions", id] });
+      // Every submission attempt (accepted or not) moves the daily activity counters.
+      queryClient.invalidateQueries({ queryKey: ["dsa", "activity-heatmap"] });
       // Only an ACCEPTED submission can flip this problem's (and its topic's) solved status —
       // refetch everything that shows it: this problem's own detail, every topic's problem list
       // (partial key match, regardless of topicId/language), and the progress rollup's per-topic

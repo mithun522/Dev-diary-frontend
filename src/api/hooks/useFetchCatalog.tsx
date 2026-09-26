@@ -8,6 +8,7 @@ import {
 import {
   fetchCatalogProblemDetail,
   fetchCatalogProblems,
+  fetchCatalogProgress,
   fetchSubmissions,
   generateTestCases,
   runSolution,
@@ -107,6 +108,17 @@ export const useFetchCatalogProblemDetail = (id?: string) => {
   });
 };
 
+// The caller's aggregate catalog progress (Practice tab's Progress-tab breakdown) - invalidated
+// on every submit below since a submission can flip a problem from unsolved to solved.
+export const useCatalogProgress = () => {
+  return useQuery({
+    queryKey: ["catalog", "progress"],
+    queryFn: fetchCatalogProgress,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};
+
 export const useFetchSubmissions = (id?: string) => {
   return useQuery({
     queryKey: ["catalog", "submissions", id],
@@ -123,6 +135,8 @@ export const useSubmitSolution = (id: string) => {
       submitSolution(id, sourceCode, language),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["catalog", "submissions", id] });
+      queryClient.invalidateQueries({ queryKey: ["catalog", "progress"] });
+      queryClient.invalidateQueries({ queryKey: ["dsa", "activity-heatmap"] });
     },
   });
 };
