@@ -36,7 +36,7 @@ import { formatDate } from "../../utils/formatDate";
 import Button from "../../components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import Languages from "./Languages";
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import MarkdownPreview from "../../components/MarkdownPreview";
 import QuestionBankTab from "./catalog/QuestionBankTab";
 
 export interface TechnicalQuestion {

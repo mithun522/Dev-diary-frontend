@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import MarkdownPreview from "../../../components/MarkdownPreview";
 import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import Button from "../../../components/ui/button";

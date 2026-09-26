@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import MarkdownPreview from "../../components/MarkdownPreview";
 import {
   ArrowLeft,
   ChevronLeft,

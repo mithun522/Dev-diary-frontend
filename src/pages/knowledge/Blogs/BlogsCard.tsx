@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
 import Button from "../../../components/ui/button";
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import MarkdownPreview from "../../../components/MarkdownPreview";
 import {
   Card,
   CardContent,
